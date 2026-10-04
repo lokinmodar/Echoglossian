@@ -24,6 +24,7 @@ public class TranslationService
   private readonly ConcurrentDictionary<int, ITranslator> translatorsByEngine = new();
   private readonly Action<string>? debugLog;
   private readonly Func<string, string, string, int, bool>? isKnownFailedTranslation;
+  private readonly Func<string, string, string, int, bool>? isKnownPersistentFailedTranslation;
   private readonly Action<string, string, string, int, string, string?>? recordFailedTranslation;
   private readonly Action<int, TranslationRequestMetricOutcome, TimeSpan, string?, bool>? recordTranslationMetric;
   private readonly Action<string, string, string, int, string, TimeSpan>? recordTransientFailedTranslation;
@@ -54,19 +55,16 @@ public class TranslationService
     this.sourceLanguageResolver = ResolveCurrentSourceLanguage;
     var chosenEngine = (Echoglossian.TransEngines)config.ChosenTransEngine;
     this.translationEngineId = (int)chosenEngine;
-    this.isKnownFailedTranslation =
-        TranslationFailureCacheManager.Contains;
+    this.isKnownFailedTranslation = (sourceText, sourceLanguage, targetLanguage, engine) =>
+        TranslationFailureCacheManager.Contains(sourceText, sourceLanguage, targetLanguage, engine,
+            row => IsFailureApplicableToGoogleVariant(row, config));
+    this.isKnownPersistentFailedTranslation = (sourceText, sourceLanguage, targetLanguage, engine) =>
+        TranslationFailureCacheManager.ContainsPersistent(sourceText, sourceLanguage, targetLanguage, engine,
+            row => IsFailureApplicableToGoogleVariant(row, config));
     this.recordFailedTranslation =
         (sourceText, sourceLanguage, targetLanguage, translationEngine, failureReason, originContext) =>
-            TranslationFailurePersistenceHelper.RecordFailure(
-                ConfigDirectory,
-                sourceText,
-                sourceLanguage,
-                targetLanguage,
-                translationEngine,
-                failureReason,
-                originContext,
-                TranslationFailureCacheManager.Update);
+            TranslationFailurePersistenceRuntime.RecordFailure(sourceText, sourceLanguage, targetLanguage,
+                translationEngine, failureReason, originContext);
     this.recordTransientFailedTranslation =
         (sourceText, sourceLanguage, targetLanguage, translationEngine, failureReason, ttl) =>
             TranslationFailureCacheManager.RememberTransientFailure(
@@ -131,6 +129,7 @@ public class TranslationService
     this.sanitizeText = sanitizeText;
     this.translationEngineId = translationEngine;
     this.isKnownFailedTranslation = isKnownFailedTranslation;
+    this.isKnownPersistentFailedTranslation = isKnownFailedTranslation;
     this.recordFailedTranslation = recordFailedTranslation;
     this.recordTranslationMetric = recordTranslationMetric;
     this.recordTransientFailedTranslation = recordTransientFailedTranslation;
@@ -2123,6 +2122,11 @@ public class TranslationService
 
     if (TranslationBrokerRateLimitRetryContext.IsActive)
     {
+      if (this.isKnownPersistentFailedTranslation is not null)
+      {
+        return this.isKnownPersistentFailedTranslation(sourceText, sourceLanguage, targetLanguage, translationEngineId);
+      }
+
       return TranslationFailureCacheManager.ContainsPersistent(
           sourceText,
           sourceLanguage,
@@ -2140,6 +2144,14 @@ public class TranslationService
         sourceLanguage,
         targetLanguage,
         translationEngineId);
+  }
+
+  /// <summary>Filters version-specific negative records for the active Google implementation.</summary>
+  private static bool IsFailureApplicableToGoogleVariant(TranslationFailure row, Config config)
+  {
+    return !string.Equals(row.FailureReason, "google-v2-no-translation", StringComparison.Ordinal) ||
+           row.TranslationEngine != (int)Echoglossian.TransEngines.Google ||
+           config.GoogleTranslateVersion == 2;
   }
 
   /// <summary>

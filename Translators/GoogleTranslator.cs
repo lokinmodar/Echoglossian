@@ -10,6 +10,7 @@ namespace Echoglossian.Translators;
 /// </summary>
 public class GoogleTranslator : ITranslator
 {
+    internal const string V2NoTranslationMarker = "[eglo:google-v2-no-translation]";
     private readonly IPluginLog pluginLog;
     private readonly Config? config;
 
@@ -266,6 +267,11 @@ public class GoogleTranslator : ITranslator
                 return translatedText;
             }
 
+            if (IsV2NoTranslationResponse(json, response.StatusCode))
+            {
+                return V2NoTranslationMarker;
+            }
+
             LogRecoverableResponseFailure(
                 this.pluginLog,
                 parsedText,
@@ -282,6 +288,14 @@ public class GoogleTranslator : ITranslator
                 $"Content preview: {FormatResponsePreview(content)}");
             return string.Empty;
         }
+    }
+
+    /// <summary>Determines whether a valid V2 payload explicitly has no translation.</summary>
+    internal static bool IsV2NoTranslationResponse(JObject response, HttpStatusCode statusCode)
+    {
+        return statusCode == HttpStatusCode.OK &&
+               response["status"]?.Value<int>() == 404 &&
+               response.SelectToken("translateResponse.translateText") is null;
     }
 
     /// <summary>

@@ -136,6 +136,7 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly QuestPlateRuntimeCache questPlateRuntimeCache = new();
   private QuestPlatePersistenceWriter? questPlatePersistenceWriter;
   private ReferenceTextPersistenceWriter? referenceTextPersistenceWriter;
+  private TranslationFailurePersistenceWriter? translationFailurePersistenceWriter;
   private LlmCapabilityObservationWriter? capabilityObservationWriter;
   private Task? persistenceCompletionTask;
   private readonly HoverTooltipManager hoverTooltipManager;
@@ -274,6 +275,8 @@ public partial class Echoglossian : IDalamudPlugin
           errorLog: PluginRuntimeLog.Error);
       this.capabilityObservationWriter = new LlmCapabilityObservationWriter(this.persistenceCoordinator);
       this.referenceTextPersistenceWriter = new ReferenceTextPersistenceWriter(this.persistenceCoordinator);
+      this.translationFailurePersistenceWriter = new TranslationFailurePersistenceWriter(this.persistenceCoordinator);
+      TranslationFailurePersistenceRuntime.Register(this.translationFailurePersistenceWriter);
       this.questPlatePersistenceWriter = new QuestPlatePersistenceWriter(
           this.persistenceCoordinator,
           this.questPlateRuntimeCache);
@@ -582,6 +585,10 @@ public partial class Echoglossian : IDalamudPlugin
       LlmCapabilityObservationRuntime.Unregister(this.capabilityObservationWriter);
     }
     this.referenceTextPersistenceWriter?.DisablePublication();
+    if (this.translationFailurePersistenceWriter is not null)
+    {
+      TranslationFailurePersistenceRuntime.Unregister(this.translationFailurePersistenceWriter);
+    }
     this.ClearReferenceTextPrefetchState();
     this.persistenceCoordinator?.StopAccepting();
     this.startupAudit.Mark(PluginStartupStage.PersistenceAdmissionsStopped);

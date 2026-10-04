@@ -680,6 +680,10 @@
             </summary>
             <returns>The cached rule definitions.</returns>
         </member>
+        <member name="M:Echoglossian.Cache.LlmCapabilityCacheManager.GetObservationDefinitions">
+            <summary>Gets the committed observation snapshot without querying SQLite.</summary>
+            <returns>The cached provider-feedback observations.</returns>
+        </member>
         <member name="M:Echoglossian.Cache.LlmCapabilityCacheManager.PublishRule(Echoglossian.Translators.Capabilities.LlmCapabilityRuleDefinition)">
             <summary>
                 Publishes one persisted rule to the DB-free runtime cache.
@@ -1862,6 +1866,26 @@
                 a known failure; otherwise <see langword="false" />.
             </returns>
         </member>
+        <member name="M:Echoglossian.Cache.TranslationFailureCacheManager.Contains(System.String,System.String,System.String,System.Int32,System.Func{Echoglossian.EFCoreSqlite.Models.TranslationFailure,System.Boolean})">
+            <summary>Determines whether an applicable exact failure is cached.</summary>
+        </member>
+        <member name="M:Echoglossian.Cache.TranslationFailureCacheManager.ContainsPersistent(System.String,System.String,System.String,System.Int32)">
+            <summary>
+                Determines whether one exact translation request is cached as a
+                persistent failure, excluding transient runtime-only failures.
+            </summary>
+            <param name="sourceText">The exact sanitized source text.</param>
+            <param name="sourceLanguage">The source language code.</param>
+            <param name="targetLanguage">The target language code.</param>
+            <param name="translationEngine">The translation engine identifier.</param>
+            <returns>
+                <see langword="true" /> when a persistent exact failure exists;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Cache.TranslationFailureCacheManager.ContainsPersistent(System.String,System.String,System.String,System.Int32,System.Func{Echoglossian.EFCoreSqlite.Models.TranslationFailure,System.Boolean})">
+            <summary>Determines whether an applicable persistent exact failure is cached.</summary>
+        </member>
         <member name="M:Echoglossian.Cache.TranslationFailureCacheManager.RememberTransientFailure(System.String,System.String,System.String,System.Int32,System.String,System.TimeSpan)">
             <summary>
                 Remembers one exact translation request as a transient runtime
@@ -2972,7 +2996,8 @@
             </summary>
             <summary>
                 Provides shared DB and cache operations for canonical reference-text
-                rows.
+                rows retained for synchronous setup compatibility. Runtime prefetch
+                uses the coordinator-backed ReferenceTextPersistenceWriter instead.
             </summary>
             <summary>
                 Represents the Echoglossian plugin, which provides translation services and
@@ -3013,6 +3038,10 @@
                 ItemDetail addons, including trait-aware ActionDetail handling.
             </summary>
             <summary>
+                Hosts debug-only automatic addon-probe watches that start on login for
+                selected addons with early hidden-state value.
+            </summary>
+            <summary>
                 Provides DB-first background prefetch for canonical ItemDetail
                 payloads.
             </summary>
@@ -3022,6 +3051,11 @@
             </summary>
             <summary>
                 Handles bootstrap and teardown for the NamePlateGui translation runtime.
+            </summary>
+            <summary>
+                Handles the quest probe command used to inspect the complete quest data
+                shape from Lumina, the live quest progress resolver, and the current
+                QuestPlate database rows.
             </summary>
             <summary>
                 Handles bootstrap and teardown of the quest-toast runtime that hangs off
@@ -3039,6 +3073,9 @@
             <summary>
                 Handles bootstrap and teardown for the alternate callback-owned
                 ToastGui route that owns supported normal and error toasts.
+            </summary>
+            <summary>
+            Handles the temporary tooltip-registration diagnostic command.
             </summary>
             <summary>
                 Provides DB-first background prefetch for canonical trait payloads.
@@ -3953,6 +3990,11 @@
             Holds the translator debugger and metrics window instance.
             </summary>
         </member>
+        <member name="F:Echoglossian.Echoglossian.addonProbeWatch">
+            <summary>
+            Holds the currently active addon structure probe watch, if any.
+            </summary>
+        </member>
         <member name="F:Echoglossian.Echoglossian.Sanitizer">
             <summary>
             Holds the sanitizer instance for cleaning up text input.
@@ -4141,6 +4183,11 @@
         <member name="F:Echoglossian.Echoglossian.NumericLikePattern">
             <summary>
                 Regex used to help filtering out numeric-like strings.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
+            <summary>
+                Lists all available culture information and writes it to a file.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.MovePathUp(System.String,System.Int32)">
@@ -4565,6 +4612,28 @@
             </summary>
             <param name="workItem">The captured accepted-quest prefetch work item.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.ScheduleAcceptedQuestPrefetchQuestPlate(Echoglossian.QuestCanonicalData,Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.Echoglossian.AcceptedQuestPrefetchWorkItem)">
+            <summary>
+                Schedules the cache-first QuestPlate lookup and all later persistence
+                work without blocking the accepted-quest worker.
+            </summary>
+            <param name="questCanonicalData">The immutable canonical quest data.</param>
+            <param name="questProgressSnapshot">The managed quest snapshot.</param>
+            <param name="currentQuestSequenceText">The captured current sequence text.</param>
+            <param name="workItem">The captured operation scope and generation.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CompleteAcceptedQuestPrefetchQuestPlateAsync(Echoglossian.DBHelpers.QuestPlatePersistenceWriter,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.Echoglossian.AcceptedQuestPrefetchWorkItem,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceReadResult{Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate}})">
+            <summary>
+                Continues a completed cache-first lookup and only starts translation
+                after the canonical row is committed or read from the projection.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StartAcceptedQuestPrefetchTranslations(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope)">
+            <summary>
+                Starts broker-owned translation requests from a committed QuestPlate
+                projection, with visible TODO objectives admitted before enrichment.
+            </summary>
+        </member>
         <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestCurrentMessage(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope)">
             <summary>
                 Prefetches the current quest-body message for an accepted quest when it
@@ -4660,6 +4729,14 @@
             <param name="questCanonicalData">The canonical quest payload.</param>
             <param name="scope">The immutable operation reuse scope.</param>
             <returns>The canonical quest plate snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ScheduleAcceptedQuestPrefetchPersistence(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.TranslationReuseScope)">
+            <summary>
+                Admits a completed accepted-quest projection for coordinator-backed
+                persistence without synchronously touching the QuestPlate database.
+            </summary>
+            <param name="questPlate">The detached translated QuestPlate projection.</param>
+            <param name="scope">The captured translation reuse scope.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.BuildAcceptedQuestScopedTranslationKey(System.String,Echoglossian.TranslationReuseScope)">
             <summary>
@@ -6167,6 +6244,109 @@
             <param name="cancellationToken">The handler-owned cancellation token.</param>
             <returns>The resolved hints for the current dialogue request.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TickAddonProbeInfrastructure">
+            <summary>
+                Ticks manual and automatic addon-probe watches, including the
+                debug-only login bootstrap for the default watch set.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetActiveAddonProbeWatchCount">
+            <summary>
+                Gets how many addon-probe watches are currently active across manual
+                and managed watch sets.
+            </summary>
+            <returns>The active probe-watch count.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopAllAddonProbeWatches(System.Boolean)">
+            <summary>
+                Stops every active addon-probe watch known to the plugin.
+            </summary>
+            <param name="suppressAutoUntilLogout">
+                Whether the current login session should suppress the default
+                automatic watch set after the stop completes.
+            </param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickManualAddonProbeWatch">
+            <summary>
+                Ticks the currently active manual addon-probe watch, if any.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickManagedAddonProbeWatches">
+            <summary>
+                Ticks every managed addon-probe watch and prunes the disposed ones.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickAutoAddonProbeWatches">
+            <summary>
+                Starts the default automatic addon-probe watch set when the player
+                logs in, then resets the gate on logout.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StartDefaultAutoAddonProbeWatches">
+            <summary>
+                Starts the default automatic watch set used to capture early
+                structural state for pooled dialogue addons.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StartManagedAddonProbeWatch(System.String,System.Int32,System.TimeSpan,System.String)">
+            <summary>
+                Starts one managed addon-probe watch and tracks it for later stop or
+                pruning.
+            </summary>
+            <param name="addonName">The addon name to watch.</param>
+            <param name="index">The addon instance index.</param>
+            <param name="duration">How long the watch should stay alive.</param>
+            <param name="reason">The debug log reason attached to the startup.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopManualAddonProbeWatch">
+            <summary>
+                Stops the current manual addon-probe watch, if any.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.StopManagedAddonProbeWatches">
+            <summary>
+                Stops every managed automatic addon-probe watch.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
+            <summary>
+            Dumps a recursive probe of the requested addon to the log so we can
+            inspect its live node tree, component roots, and likely overlay anchors.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
+            <summary>
+            Parses the addon probe command arguments into an addon name, optional index,
+            and optional watch duration.
+            </summary>
+            <param name="args">The raw command arguments.</param>
+            <returns>The addon name, index, and duration to probe.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryParseAddonProbeDuration(System.String,System.TimeSpan@)">
+            <summary>
+            Parses one addon-probe duration token such as "90s" or "15m".
+            </summary>
+            <param name="token">The raw duration token.</param>
+            <param name="duration">Receives the parsed duration.</param>
+            <returns><see langword="true"/> when the token parsed successfully.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LooksLikeAddonProbeDuration(System.String)">
+            <summary>
+            Determines whether a token looks like an addon-probe duration even when the
+            value is outside the accepted range.
+            </summary>
+            <param name="token">The token to inspect.</param>
+            <returns><see langword="true"/> when the token resembles a duration.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatAddonProbeDuration(System.TimeSpan)">
+            <summary>
+            Formats one addon-probe watch duration for chat feedback.
+            </summary>
+            <param name="duration">The duration to format.</param>
+            <returns>The human-readable duration string.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
                 Parses the UI elements from the Addon sheet in the game data.
@@ -6615,6 +6795,102 @@
             </summary>
             <returns>The reusable quest-handler dependency bundle.</returns>
         </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
+            <summary>
+                Handles the quest probe command.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryResolveQuestProbeTarget(System.String,System.String@,System.String@,Lumina.Excel.Sheets.Quest@)">
+            <summary>
+                Tries to resolve the quest probe target from either a quest id or a
+                quest name.
+            </summary>
+            <param name="input">The command argument.</param>
+            <param name="questIdText">The resolved quest id as text.</param>
+            <param name="questName">The resolved quest name.</param>
+            <param name="questRow">The resolved Lumina quest row.</param>
+            <returns>True when the quest could be resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestProbe(System.String,System.String,Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs the quest data structure for inspection.
+            </summary>
+            <param name="questIdText">The quest id as text.</param>
+            <param name="questName">The quest name.</param>
+            <param name="questRow">The resolved Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestRow(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs the raw Lumina quest row properties.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestTextSheet(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Logs all rows from the quest text sheet, not just the live todo
+                entries, so we can inspect the full structure of the quest sheet.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestPlateRows(System.String,System.String)">
+            <summary>
+                Logs the QuestPlate rows currently stored for the quest.
+            </summary>
+            <param name="questIdText">The quest id text.</param>
+            <param name="questName">The quest name.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LogQuestProgressSnapshot(Echoglossian.QuestProgressSnapshot)">
+            <summary>
+                Logs the resolved live quest progression snapshot.
+            </summary>
+            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestName(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves a human-readable quest name from a quest row.
+            </summary>
+            <param name="questRow">The quest row.</param>
+            <returns>The resolved quest name, if available.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.EvaluateQuestProbeText(Lumina.Text.ReadOnly.ReadOnlySeString)">
+            <summary>
+                Converts quest text to a readable string for probe output.
+            </summary>
+            <param name="text">The quest text.</param>
+            <returns>The evaluated text string.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.FormatProbeValue(System.Object)">
+            <summary>
+                Formats a probe value for log output.
+            </summary>
+            <param name="value">The value to format.</param>
+            <returns>A human-readable value string.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.BuildQuestTextSheetName(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Builds the raw quest sheet name used by the game files.
+            </summary>
+            <param name="questRow">The resolved Lumina quest row.</param>
+            <returns>The quest text sheet name, if it can be derived.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestRowIdText(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves the quest row id as text through reflection so the probe
+                stays compatible with generated sheet shapes.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+            <returns>The quest row id as text, or an empty string if unavailable.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetQuestSheetIdText(Lumina.Excel.Sheets.Quest)">
+            <summary>
+                Resolves the quest sheet identifier used to mount the quest text
+                sheet path.
+            </summary>
+            <param name="questRow">The Lumina quest row.</param>
+            <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.CreateQuestToastRuntime">
             <summary>
                 Creates the quest-toast runtime using the same shared toast cache,
@@ -6874,6 +7150,13 @@
                 lookups.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.GetDueReferenceTextPrefetchBudget(System.DateTime,System.DateTime@,System.DateTime@)">
+            <summary>Gets the independent bounded work due at one Framework timestamp.</summary>
+            <param name="utcNow">The current Framework timestamp.</param>
+            <param name="lastReconstructionTickUtc">The last reconstruction timestamp.</param>
+            <param name="lastAdmissionTickUtc">The last translation-admission timestamp.</param>
+            <returns>The independently paced reconstruction and translation budgets.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ClearReferenceTextPrefetchState">
             <summary>
                 Clears the shared reference-text prefetch runtime state.
@@ -6912,35 +7195,78 @@
             <param name="remainingBudget">The remaining per-tick row budget.</param>
             <returns>The number of rows processed.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchReferenceText(Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration,System.UInt32)">
-            <summary>
-                Prefetches one canonical reference-text payload and any missing
-                translations.
-            </summary>
-            <param name="registration">The registration describing the sheet family.</param>
-            <param name="referenceId">The sheet-row identifier.</param>
+        <member name="M:Echoglossian.Echoglossian.TickReferenceTextPrefetchReconstructionRegistration(Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration,System.Int32)">
+            <summary>Advances only the bounded restart reconstruction for one registration.</summary>
+            <param name="registration">The registration whose existing initialization may advance.</param>
+            <param name="remainingBudget">The remaining reconstruction budget for this Framework tick.</param>
+            <returns>The reconstruction rows consumed.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchReferenceTextDescription(Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope)">
+        <member name="M:Echoglossian.Echoglossian.TickReferenceTextPrefetchQueue(Echoglossian.Echoglossian.ReferenceTextPrefetchState,System.String,System.Collections.Generic.IReadOnlyList{System.UInt32},System.Func{Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest,Echoglossian.Echoglossian.ReferenceTextPrefetchGeneration,System.Threading.Tasks.Task{Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotResult}},System.Func{System.UInt32,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload},System.Func{Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,System.String},System.Int32,System.Int32,System.Func{System.UInt32,System.Threading.Tasks.Task{System.Boolean}})">
             <summary>
-                Prefetches the translated reference-text description when it is not
-                yet persisted.
+                Initializes one registration from a bounded canonical snapshot, then
+                advances its existing per-row queue without blocking the caller.
             </summary>
-            <param name="registration">The registration describing the sheet family.</param>
-            <param name="originalPayload">The canonical original payload.</param>
-            <param name="existingRow">The currently persisted row, if any.</param>
-            <param name="sourceLanguage">The resolved source language.</param>
-            <param name="scope">The immutable operation reuse scope.</param>
+            <param name="state">The mutable registration state.</param>
+            <param name="signature">The current registration generation signature.</param>
+            <param name="referenceIds">The current sheet-row identifiers.</param>
+            <param name="loadSnapshot">Schedules one registration-level snapshot.</param>
+            <param name="capturePayload">Captures the current canonical source payload.</param>
+            <param name="buildSourceHash">Builds the registration-specific source hash.</param>
+            <param name="reconstructionBudget">The independent source-capture budget for this tick.</param>
+            <param name="remainingBudget">The maximum per-row admissions for this tick.</param>
+            <param name="schedule">Captures and admits the next reference operation.</param>
+            <returns>The admissions consumed without blocking the Framework callback.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyReferenceTextTranslation(Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration,System.UInt32,Echoglossian.TranslationReuseScope,System.String,System.String)">
-            <summary>
-                Applies one resolved reference-text translation into canonical
-                storage.
-            </summary>
-            <param name="registration">The registration describing the sheet family.</param>
-            <param name="referenceId">The sheet-row identifier.</param>
-            <param name="scope">The immutable operation reuse scope.</param>
-            <param name="translatedName">The translated name, if any.</param>
-            <param name="translatedDescription">The translated description, if any.</param>
+        <member name="M:Echoglossian.Echoglossian.TickReferenceTextPrefetchInitialization(Echoglossian.Echoglossian.ReferenceTextPrefetchState,System.Int32)">
+            <summary>Advances only one registration's bounded restart reconstruction.</summary>
+            <param name="state">The mutable registration state.</param>
+            <param name="remainingBudget">The maximum source rows to capture on this tick.</param>
+            <returns>The reconstruction rows consumed.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.HasCompleteReferenceTextSnapshotRow(Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase)">
+            <summary>Gets whether one snapshot row completely covers its canonical source payload.</summary>
+            <param name="row">The persisted snapshot row.</param>
+            <returns>True when all required translated fields are populated.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickReferenceTextPrefetchQueue(Echoglossian.Echoglossian.ReferenceTextPrefetchState,System.Int32,System.Func{System.UInt32,System.Threading.Tasks.Task{System.Boolean}})">
+            <summary>Advances a registration cursor only after its captured operation completes.</summary>
+            <param name="state">The existing registration state.</param>
+            <param name="remainingBudget">The maximum admissions for this tick.</param>
+            <param name="schedule">Captures and admits the next reference operation.</param>
+            <returns>The admissions consumed without blocking the Framework callback.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchReferenceTextOnDemand(Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration,System.UInt32,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope)">
+            <summary>Schedules a visible reference through the same bounded registration state.</summary>
+            <param name="registration">The captured sheet registration.</param>
+            <param name="referenceId">The visible reference identity.</param>
+            <param name="sourceLanguage">The caller-captured source language.</param>
+            <param name="scope">The caller-captured reuse scope.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ResolveReferenceTextPrefetchCancellationToken(Echoglossian.Persistence.PersistencePriority,System.Threading.CancellationToken,System.Threading.CancellationToken)">
+            <summary>Resolves cancellation ownership for background and visible requests.</summary>
+            <param name="priority">The originating persistence lane.</param>
+            <param name="generationCancellationToken">The background registration generation token.</param>
+            <param name="ownerCancellationToken">The plugin-owned interactive operation token.</param>
+            <returns>The cancellation token whose lifetime matches the request.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetOrStartReferenceTextPrefetchOperation(System.Collections.Generic.IDictionary{System.String,System.Threading.Tasks.Task{System.Boolean}},System.String,Echoglossian.Persistence.PersistencePriority,System.Func{System.Threading.Tasks.Task{System.Boolean}})">
+            <summary>Coalesces only reference-text operations with compatible cancellation ownership.</summary>
+            <param name="operations">The pending operation registry.</param>
+            <param name="contentKey">The canonical content identity.</param>
+            <param name="priority">The originating persistence lane and cancellation owner.</param>
+            <param name="start">Starts a new operation when no compatible operation is pending.</param>
+            <returns>The compatible pending operation or the newly started operation.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PrefetchReferenceText(Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration,System.UInt32,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.String,System.Threading.CancellationToken,Echoglossian.Persistence.PersistencePriority)">
+            <summary>Captures a sheet payload and admits background persistence work.</summary>
+            <param name="registration">The captured sheet-family registration.</param>
+            <param name="referenceId">The sheet row to capture.</param>
+            <param name="sourceLanguage">The captured source contract.</param>
+            <param name="scope">The immutable reuse scope.</param>
+            <param name="gameVersion">The captured game version.</param>
+            <param name="cancellationToken">The registration generation token.</param>
+            <param name="priority">The lane for background or visible-reference admission.</param>
+            <returns>The operation completion; false keeps the cursor retryable.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateReferenceTextTranslationRow(Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,System.String,Echoglossian.TranslationReuseScope,System.Func{System.String,System.String,System.Nullable{System.Int32},System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase},System.Func{Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase,Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase},System.String,System.String)">
             <summary>
@@ -7047,6 +7373,17 @@
             <param name="isEnabled">Gets whether this registration should run.</param>
             <param name="createRow">Builds the persisted row for this registration.</param>
             <returns>The registration.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.LoadReferenceTextPrefetchSnapshotAsync``1(Echoglossian.Cache.ReferenceTextCacheStore{``0},System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,Microsoft.EntityFrameworkCore.DbSet{``0}},Echoglossian.TranslationReuseScope,System.String,Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest,Echoglossian.Echoglossian.ReferenceTextPrefetchGeneration)">
+            <summary>Loads and publishes one registration-level canonical snapshot.</summary>
+            <typeparam name="TRow">The concrete persisted row type.</typeparam>
+            <param name="cacheStore">The existing canonical cache.</param>
+            <param name="setSelector">Selects the matching DbSet.</param>
+            <param name="scope">The captured translation reuse scope.</param>
+            <param name="gameVersion">The exact captured game version.</param>
+            <param name="snapshotRequest">The bounded registration snapshot request.</param>
+            <param name="generation">The registration generation publication gate.</param>
+            <returns>The observed snapshot result.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.GetOrCreateReferenceTextPrefetchState(System.String)">
             <summary>
@@ -7366,20 +7703,14 @@
                 Gets or sets the payload builder.
             </summary>
         </member>
-        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration.CreateRow">
-            <summary>
-                Gets or sets the canonical row creator.
-            </summary>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration.BuildSourceHash">
+            <summary>Gets the registration-specific source-hash builder.</summary>
         </member>
-        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration.FindRow">
-            <summary>
-                Gets or sets the cache-first finder.
-            </summary>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration.LoadSnapshot">
+            <summary>Gets the registration-level canonical snapshot operation.</summary>
         </member>
-        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration.InsertRow">
-            <summary>
-                Gets or sets the insert/update operation.
-            </summary>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchRegistration.Schedule">
+            <summary>Gets the cache-first background admission operation.</summary>
         </member>
         <member name="T:Echoglossian.Echoglossian.ReferenceTextPrefetchState">
             <summary>
@@ -7400,6 +7731,152 @@
             <summary>
                 Gets or sets the next queue index to process.
             </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchState.Pending">
+            <summary>Gets or sets the sole active operation for this cursor.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchState.Initialization">
+            <summary>Gets or sets the asynchronous registration initialization.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchState.Cancellation">
+            <summary>Gets cancellation for the captured registration generation.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchState.Generation">
+            <summary>Gets the active registration generation.</summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ReferenceTextPrefetchState.InvalidateGeneration">
+            <summary>Invalidates the active generation and waits for its current bounded publication.</summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ReferenceTextPrefetchState.ReplaceGeneration">
+            <summary>Invalidates the old generation and creates an isolated replacement.</summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ReferenceTextPrefetchState.PublishQueue(System.Collections.Generic.List{System.UInt32})">
+            <summary>Atomically replaces the Framework-owned admission queue.</summary>
+            <param name="queue">The fully reconstructed pending queue.</param>
+        </member>
+        <member name="T:Echoglossian.Echoglossian.ReferenceTextPrefetchTickBudget">
+            <summary>Contains independently paced Framework work budgets.</summary>
+            <param name="ReconstructionRows">The source rows allowed for restart reconstruction.</param>
+            <param name="AdmissionRows">The rows allowed for translation admission.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ReferenceTextPrefetchTickBudget.#ctor(System.Int32,System.Int32)">
+            <summary>Contains independently paced Framework work budgets.</summary>
+            <param name="ReconstructionRows">The source rows allowed for restart reconstruction.</param>
+            <param name="AdmissionRows">The rows allowed for translation admission.</param>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchTickBudget.ReconstructionRows">
+            <summary>The source rows allowed for restart reconstruction.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchTickBudget.AdmissionRows">
+            <summary>The rows allowed for translation admission.</summary>
+        </member>
+        <member name="T:Echoglossian.Echoglossian.ReferenceTextPrefetchGeneration">
+            <summary>
+                Coordinates cancellation with single-row cache publication for one
+                registration generation.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchGeneration.Cancellation">
+            <summary>Gets cancellation owned by this registration generation.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchGeneration.Token">
+            <summary>Gets the cancellation token for generation-owned work.</summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ReferenceTextPrefetchGeneration.TryPublish(System.Action)">
+            <summary>Publishes one bounded row only while this generation remains active.</summary>
+            <param name="publish">The single-row publication action.</param>
+            <returns>True when the row was published by the active generation.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ReferenceTextPrefetchGeneration.Invalidate">
+            <summary>
+                Prevents new publications, cancels work, and lets at most the
+                current single-row publication finish.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotResult">
+            <summary>Represents one immutable registration-level snapshot outcome.</summary>
+            <param name="Succeeded">Whether the snapshot read completed successfully.</param>
+            <param name="Rows">The complete canonical rows in the captured scope.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotResult.#ctor(System.Boolean,System.Collections.Generic.IReadOnlyList{Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase})">
+            <summary>Represents one immutable registration-level snapshot outcome.</summary>
+            <param name="Succeeded">Whether the snapshot read completed successfully.</param>
+            <param name="Rows">The complete canonical rows in the captured scope.</param>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotResult.Succeeded">
+            <summary>Whether the snapshot read completed successfully.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotResult.Rows">
+            <summary>The complete canonical rows in the captured scope.</summary>
+        </member>
+        <member name="T:Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotIdentity">
+            <summary>Identifies one complete canonical row by stable source content.</summary>
+            <param name="ReferenceId">The stable sheet-row identifier.</param>
+            <param name="SourceContentHash">The exact canonical source hash.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotIdentity.#ctor(System.UInt32,System.String)">
+            <summary>Identifies one complete canonical row by stable source content.</summary>
+            <param name="ReferenceId">The stable sheet-row identifier.</param>
+            <param name="SourceContentHash">The exact canonical source hash.</param>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotIdentity.ReferenceId">
+            <summary>The stable sheet-row identifier.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotIdentity.SourceContentHash">
+            <summary>The exact canonical source hash.</summary>
+        </member>
+        <member name="T:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization">
+            <summary>Observes one asynchronous snapshot before Framework publication.</summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization.#ctor(System.Collections.Generic.IReadOnlyList{System.UInt32},System.Func{Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest,Echoglossian.Echoglossian.ReferenceTextPrefetchGeneration,System.Threading.Tasks.Task{Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotResult}},System.Func{System.UInt32,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload},System.Func{Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,System.String})">
+            <summary>Initializes a snapshot observer for captured row identifiers.</summary>
+            <param name="referenceIds">The immutable row identifiers for this generation.</param>
+            <param name="loadSnapshot">Schedules the captured registration snapshot.</param>
+            <param name="capturePayload">Captures one source payload.</param>
+            <param name="buildSourceHash">Builds one canonical source hash.</param>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization.ReferenceIds">
+            <summary>Gets the immutable captured row identifiers.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization.LoadSnapshot">
+            <summary>Gets the captured registration snapshot loader.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization.CapturePayload">
+            <summary>Gets the captured source-payload resolver.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization.BuildSourceHash">
+            <summary>Gets the captured canonical source-hash builder.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization.Completion">
+            <summary>Gets completion after the result fields are published.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization.SnapshotKeys">
+            <summary>Gets the captured source identities for the bounded database query.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization.ReconstructionIndex">
+            <summary>Gets or sets the next registration row to capture.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization.Succeeded">
+            <summary>Gets whether the snapshot completed successfully.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization.CompletedIdentities">
+            <summary>Gets the completed canonical source identities.</summary>
+        </member>
+        <member name="P:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization.PendingReferenceIds">
+            <summary>Gets the fully reconstructed queue ready for atomic publication.</summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization.AddSnapshotKey(System.UInt32,System.String)">
+            <summary>Adds one source identity and advances the bounded request digest.</summary>
+            <param name="referenceId">The stable sheet-row identifier.</param>
+            <param name="sourceContentHash">The exact canonical source hash.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization.CreateSnapshotRequest">
+            <summary>Creates the immutable bounded query after reconstruction finishes.</summary>
+            <returns>The registration request and its incrementally built identity.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ReferenceTextPrefetchInitialization.Start(System.Threading.Tasks.Task{Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotResult})">
+            <summary>Starts the snapshot after bounded source capture has finished.</summary>
+            <param name="operation">The scheduled snapshot operation.</param>
         </member>
         <member name="T:Echoglossian.Echoglossian.TryCollectReferenceIdsDelegate">
             <summary>
@@ -7454,6 +7931,14 @@
                 Unregisters the alternate supported-toast runtime from Dalamud's
                 normal and error-toast callbacks.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.OnEgloTooltipRegisterLoggingCommand(System.String,System.String)">
+            <summary>
+            Starts or stops temporary logging for hover-tooltip registrations and
+            hover-hit transitions.
+            </summary>
+            <param name="command">Command name.</param>
+            <param name="args">Command arguments.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.TickTraitDetailPrefetch">
             <summary>
@@ -8157,6 +8642,22 @@
             <param name="payload">The payload to normalize.</param>
             <returns>The normalized payload copy.</returns>
         </member>
+        <member name="T:Echoglossian.DBHelpers.LlmCapabilityObservationWriter">
+            <summary>Schedules capability observations through the exclusive runtime writer.</summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.LlmCapabilityObservationWriter.#ctor(Echoglossian.Persistence.IPersistenceCoordinator)">
+            <summary>Initializes a new instance of the writer.</summary>
+            <param name="coordinator">The process-lifetime persistence coordinator.</param>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.LlmCapabilityObservationWriter.DisablePublication">
+            <summary>Stops post-commit projection publication.</summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.LlmCapabilityObservationWriter.TryRecord(Echoglossian.EFCoreSqlite.Models.LlmModelCapabilityObservation,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult}@)">
+            <summary>Schedules an immutable observation snapshot.</summary>
+            <param name="observation">The observation to record.</param>
+            <param name="completion">The completion for the scheduled work.</param>
+            <returns>The non-blocking admission outcome.</returns>
+        </member>
         <member name="T:Echoglossian.DBHelpers.LlmCapabilityPersistenceHelper">
             <summary>
                 Persists LLM capability overlays and provider-feedback observations.
@@ -8169,13 +8670,199 @@
             <param name="configDir">The plugin configuration directory.</param>
             <param name="rules">The rules to persist.</param>
         </member>
-        <member name="M:Echoglossian.DBHelpers.LlmCapabilityPersistenceHelper.RecordObservation(System.String,Echoglossian.EFCoreSqlite.Models.LlmModelCapabilityObservation)">
+        <member name="T:Echoglossian.DBHelpers.QuestPlatePersistenceWriter">
             <summary>
-                Records or refreshes one provider-feedback observation for later
-                audit.
+                Schedules cache-first QuestPlate reads through the shared persistence
+                coordinator. Worker payloads are managed QuestPlate clones only.
             </summary>
-            <param name="configDir">The plugin configuration directory.</param>
-            <param name="observation">The observation to persist.</param>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.QuestPlatePersistenceWriter.#ctor(Echoglossian.Persistence.IPersistenceCoordinator,Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache)">
+            <summary>Initializes a new instance of the writer.</summary>
+            <param name="coordinator">The shared process-lifetime coordinator.</param>
+            <param name="cache">The shared committed projection registry.</param>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.QuestPlatePersistenceWriter.DisablePublication">
+            <summary>Stops cache publication for the owning runtime generation.</summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.QuestPlatePersistenceWriter.TryFind(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.TranslationReuseScope,Echoglossian.Persistence.PersistencePriority,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceReadResult{Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate}}@)">
+            <summary>Attempts a non-blocking cache-first QuestPlate lookup.</summary>
+            <param name="probe">A game-thread-captured managed lookup payload.</param>
+            <param name="scope">The captured translation reuse scope.</param>
+            <param name="priority">The coordinator admission priority.</param>
+            <param name="completion">The terminal operation completion.</param>
+            <returns>The non-blocking admission outcome.</returns>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.QuestPlatePersistenceWriter.TryPersist(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.TranslationReuseScope,Echoglossian.Persistence.PersistencePriority,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult}@)">
+            <summary>Attempts a non-blocking coordinator-backed QuestPlate upsert.</summary>
+        </member>
+        <member name="T:Echoglossian.DBHelpers.QuestPlatePersistencePolicy">
+            <summary>Contains pure QuestPlate read candidate and selection policy.</summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.QuestPlatePersistencePolicy.SelectForRead(System.Collections.Generic.IEnumerable{Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate},Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.TranslationReuseScope)">
+            <summary>Selects a runtime row with the legacy QuestId/message/name fallback order.</summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.QuestPlatePersistencePolicy.LoadReadCandidatesAsync(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.TranslationReuseScope,System.Threading.CancellationToken)">
+            <summary>Loads the finite candidate set needed by the legacy read order.</summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.QuestPlatePersistencePolicy.LoadSaveCandidatesAsync(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,System.Threading.CancellationToken)">
+            <summary>Loads the complete finite candidate set used by legacy save lookup.</summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.QuestPlatePersistencePolicy.SelectForSave(System.Collections.Generic.IEnumerable{Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate},Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>Selects a row using the established QuestId, message, name order.</summary>
+        </member>
+        <member name="T:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter">
+            <summary>
+                Schedules canonical reference-text reads and writes through the shared
+                persistence coordinator.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.#ctor(Echoglossian.Persistence.IPersistenceCoordinator)">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter" /> class.
+            </summary>
+            <param name="coordinator">The process-lifetime persistence coordinator.</param>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.DisablePublication">
+            <summary>
+                Stops cache publication and cancels accepted reference-text database
+                work when the owning plugin lifetime ends.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.PublishRead(System.Action)">
+            <summary>Publishes an already completed read under the shared unload gate.</summary>
+            <param name="publish">The cache publication owned by one read subscriber.</param>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.TryFind``1(``0,Echoglossian.TranslationReuseScope,System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,Microsoft.EntityFrameworkCore.DbSet{``0}},System.Action{``0},System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceReadResult{``0}}@,Echoglossian.Persistence.PersistencePriority)">
+            <summary>
+                Schedules one canonical reference-text lookup at background
+                priority.
+            </summary>
+            <typeparam name="TRow">The concrete row type.</typeparam>
+            <param name="probe">The row defining the lookup identity.</param>
+            <param name="scope">The translation reuse scope.</param>
+            <param name="setSelector">Selects the matching DbSet.</param>
+            <param name="publish">The cache projection invoked after a successful read.</param>
+            <param name="completion">The terminal read completion.</param>
+            <param name="priority">The admission lane; visible requests may use interactive priority.</param>
+            <returns>The non-blocking admission outcome.</returns>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.TryLoadCompleteSnapshot``1(Echoglossian.TranslationReuseScope,System.String,Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest,System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,Microsoft.EntityFrameworkCore.DbSet{``0}},System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceReadResult{System.Collections.Generic.IReadOnlyList{``0}}}@,Echoglossian.Persistence.PersistencePriority)">
+            <summary>
+                Schedules one registration-level snapshot of complete canonical
+                rows at background priority.
+            </summary>
+            <typeparam name="TRow">The concrete row type.</typeparam>
+            <param name="scope">The translation reuse scope.</param>
+            <param name="gameVersion">The exact game-version scope.</param>
+            <param name="snapshotRequest">The bounded registration snapshot request.</param>
+            <param name="setSelector">Selects the matching DbSet.</param>
+            <param name="completion">The terminal snapshot completion.</param>
+            <param name="priority">The admission lane.</param>
+            <returns>The non-blocking admission outcome.</returns>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.TryPersist``1(``0,System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,Microsoft.EntityFrameworkCore.DbSet{``0}},System.Action{``0},System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult}@,Echoglossian.Persistence.PersistencePriority)">
+            <summary>
+                Schedules one canonical reference-text upsert at background
+                priority.
+            </summary>
+            <typeparam name="TRow">The concrete row type.</typeparam>
+            <param name="row">The immutable canonical row to persist.</param>
+            <param name="setSelector">Selects the matching DbSet.</param>
+            <param name="publish">The cache projection invoked after commit or a successful unchanged read.</param>
+            <param name="completion">The terminal write completion.</param>
+            <param name="priority">The admission lane captured with the originating request.</param>
+            <returns>The non-blocking admission outcome.</returns>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.BuildWriteIdentity``1(``0)">
+            <summary>
+                Builds the write coalescing identity from the exact persistence
+                lookup semantics.
+            </summary>
+            <typeparam name="TRow">The concrete row type.</typeparam>
+            <param name="row">The row defining the write identity.</param>
+            <returns>The collision-safe coordinator identity.</returns>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.BuildReadIdentity``1(``0,Echoglossian.TranslationReuseScope)">
+            <summary>
+                Builds the read coalescing identity from the lookup scope and
+                canonical source identity.
+            </summary>
+            <typeparam name="TRow">The concrete row type.</typeparam>
+            <param name="probe">The row defining the source identity.</param>
+            <param name="scope">The requested translation reuse scope.</param>
+            <returns>The collision-safe coordinator identity.</returns>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.BuildSnapshotIdentity``1(Echoglossian.TranslationReuseScope,System.String,System.String)">
+            <summary>Builds the coalescing identity for one registration snapshot.</summary>
+            <typeparam name="TRow">The concrete row type.</typeparam>
+            <param name="scope">The requested translation reuse scope.</param>
+            <param name="gameVersion">The exact game-version scope.</param>
+            <param name="registrationIdentity">The incrementally built source-set identity.</param>
+            <returns>The collision-safe coordinator identity.</returns>
+        </member>
+        <member name="T:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.ReferenceTextSnapshotKey">
+            <summary>Identifies one source row captured from a registration generation.</summary>
+            <param name="ReferenceId">The stable sheet-row identifier.</param>
+            <param name="SourceContentHash">The exact canonical source hash.</param>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.ReferenceTextSnapshotKey.#ctor(System.UInt32,System.String)">
+            <summary>Identifies one source row captured from a registration generation.</summary>
+            <param name="ReferenceId">The stable sheet-row identifier.</param>
+            <param name="SourceContentHash">The exact canonical source hash.</param>
+        </member>
+        <member name="P:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.ReferenceTextSnapshotKey.ReferenceId">
+            <summary>The stable sheet-row identifier.</summary>
+        </member>
+        <member name="P:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.ReferenceTextSnapshotKey.SourceContentHash">
+            <summary>The exact canonical source hash.</summary>
+        </member>
+        <member name="T:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest">
+            <summary>Describes one bounded registration-level snapshot query.</summary>
+            <param name="Keys">The captured current source identities.</param>
+            <param name="Identity">The incrementally built coordinator identity.</param>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest.#ctor(System.Collections.Generic.IReadOnlyList{Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.ReferenceTextSnapshotKey},System.String)">
+            <summary>Describes one bounded registration-level snapshot query.</summary>
+            <param name="Keys">The captured current source identities.</param>
+            <param name="Identity">The incrementally built coordinator identity.</param>
+        </member>
+        <member name="P:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest.Keys">
+            <summary>The captured current source identities.</summary>
+        </member>
+        <member name="P:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.ReferenceTextSnapshotRequest.Identity">
+            <summary>The incrementally built coordinator identity.</summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.BuildDatabaseSnapshotKey(System.UInt32,System.String)">
+            <summary>Builds the exact SQL-filterable registration identity.</summary>
+            <param name="referenceId">The stable sheet-row identifier.</param>
+            <param name="sourceContentHash">The exact canonical source hash.</param>
+            <returns>The unambiguous database candidate identity.</returns>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.BuildEquivalentLanguageValues(System.String)">
+            <summary>Builds the finite SQL candidate set for one normalized language.</summary>
+            <param name="language">The requested language value.</param>
+            <returns>Lower-case values accepted by the shared language semantics.</returns>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.HasCompleteTranslation(Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase)">
+            <summary>Gets whether all source fields have stored translations.</summary>
+            <param name="row">The persisted canonical row.</param>
+            <returns>True when the row is complete for its source payload.</returns>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.BuildIdentity(System.String[])">
+            <summary>
+                Builds an unambiguous string identity from nullable segments.
+            </summary>
+            <param name="segments">The identity segments.</param>
+            <returns>The encoded identity.</returns>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.ReferenceTextPersistenceWriter.NormalizeLanguageIdentity(System.String)">
+            <summary>
+                Converts one language value into the case-insensitive identity used
+                by <see cref="M:Echoglossian.RuntimeLanguageHelper.LanguagesMatch(System.String,System.String)" />.
+            </summary>
+            <param name="language">The source or target language value.</param>
+            <returns>The stable language identity segment.</returns>
         </member>
         <member name="T:Echoglossian.DBHelpers.TranslationFailurePersistenceHelper">
             <summary>
@@ -8198,6 +8885,18 @@
             <param name="failureReason">The failure reason to persist.</param>
             <param name="originContext">The origin context that produced the request.</param>
             <param name="cacheUpdate">The callback used to refresh the cache.</param>
+        </member>
+        <member name="T:Echoglossian.DBHelpers.TranslationFailurePersistenceRuntime">
+            <summary>Owns the process-lifetime coordinator-backed failure writer.</summary>
+        </member>
+        <member name="T:Echoglossian.DBHelpers.TranslationFailurePersistenceWriter">
+            <summary>Schedules exact persistent translation failures through the shared coordinator.</summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.TranslationFailurePersistenceWriter.#ctor(Echoglossian.Persistence.IPersistenceCoordinator)">
+            <summary>Initializes a new instance of the writer.</summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.TranslationFailurePersistenceWriter.TryPersist(System.String,System.String,System.String,System.Int32,System.String,System.String,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult}@)">
+            <summary>Schedules a coalesced background upsert without blocking a caller.</summary>
         </member>
         <member name="T:Echoglossian.ReferenceTextPersistenceHelper">
             <summary>
@@ -8240,6 +8939,31 @@
             <param name="setSelector">Selects the matching DbSet.</param>
             <returns>The matching row, or <see langword="null" />.</returns>
         </member>
+        <member name="M:Echoglossian.ReferenceTextPersistenceHelper.FindReferenceTextAsync``1(Echoglossian.EFCoreSqlite.EchoglossianDbContext,``0,Echoglossian.TranslationReuseScope,System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,Microsoft.EntityFrameworkCore.DbSet{``0}},System.Threading.CancellationToken)">
+            <summary>
+                Finds one canonical reference-text row asynchronously using an
+                explicit translation reuse scope.
+            </summary>
+            <typeparam name="TRow">The concrete row type.</typeparam>
+            <param name="context">The short-lived context that executes the lookup.</param>
+            <param name="probe">The probe row that defines the content and version identity.</param>
+            <param name="scope">The source, target, and engine reuse policy.</param>
+            <param name="setSelector">Selects the matching DbSet.</param>
+            <param name="cancellationToken">The cancellation token for the query.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.ReferenceTextPersistenceHelper.UpsertReferenceTextAsync``1(Echoglossian.EFCoreSqlite.EchoglossianDbContext,``0,System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,Microsoft.EntityFrameworkCore.DbSet{``0}},System.Threading.CancellationToken)">
+            <summary>
+                Applies one canonical reference-text upsert to the supplied
+                coordinator-owned context without saving it.
+            </summary>
+            <typeparam name="TRow">The concrete row type.</typeparam>
+            <param name="context">The coordinator-owned write context.</param>
+            <param name="row">The immutable incoming canonical row.</param>
+            <param name="setSelector">Selects the matching DbSet.</param>
+            <param name="cancellationToken">The cancellation token for the query.</param>
+            <returns>The persisted row and whether tracked state changed.</returns>
+        </member>
         <member name="M:Echoglossian.ReferenceTextPersistenceHelper.FindReferenceText``1(System.String,``0,Echoglossian.TranslationReuseScope,System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,Microsoft.EntityFrameworkCore.DbSet{``0}})">
             <summary>
                 Finds one canonical reference-text row using an explicit translation
@@ -8269,6 +8993,18 @@
             <typeparam name="TRow">The concrete row type.</typeparam>
             <param name="target">The existing stored row.</param>
             <param name="source">The incoming row.</param>
+        </member>
+        <member name="M:Echoglossian.ReferenceTextPersistenceHelper.AssignIfChanged(System.String,System.String,System.Action{System.String})">
+            <summary>
+                Assigns a string field only when its non-null-aware value changes.
+            </summary>
+            <param name="current">The currently stored value.</param>
+            <param name="incoming">The preferred incoming value.</param>
+            <param name="assign">Assigns the changed value.</param>
+            <returns>
+                <see langword="true" /> when the value changed; otherwise,
+                <see langword="false" />.
+            </returns>
         </member>
         <member name="M:Echoglossian.ReferenceTextPersistenceHelper.FirstNonEmpty(System.String,System.String)">
             <summary>
@@ -8902,6 +9638,12 @@
             <summary>
                 Gets or sets the translated string array records.   Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.EchoglossianDbContext" />
                 Gets or sets the translated string array records.   class.
+            </summary>
+            <param name="options">Configuration options.</param>
+        </member>
+        <member name="M:Echoglossian.EFCoreSqlite.EchoglossianDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.EFCoreSqlite.EchoglossianDbContext" /> class with non-generic options.
             </summary>
             <param name="options">Configuration options.</param>
         </member>
@@ -27984,6 +28726,46 @@
             <param name="addonName">The name of the add-on whose logging event listeners are to be removed. Cannot be null or empty.</param>
             <param name="events">Optional lifecycle event set to unlog. Defaults to the full event set.</param>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy">
+            <summary>
+                Encapsulates the login-session gating rules for debug-only automatic
+                addon-probe watches.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy.ShouldStartForCurrentLogin(System.Boolean,System.Boolean,System.Boolean,System.Int32)">
+            <summary>
+                Determines whether the current login session should start the default
+                automatic addon-probe watch set.
+            </summary>
+            <param name="isLoggedIn">Whether the client is currently logged in.</param>
+            <param name="hasStartedForCurrentLogin">
+                Whether the current login session already started its automatic probe
+                set.
+            </param>
+            <param name="isSuppressedUntilLogout">
+                Whether the user explicitly suppressed the automatic probe set until
+                the next logout.
+            </param>
+            <param name="activeManagedWatchCount">
+                How many managed automatic probe watches are currently alive.
+            </param>
+            <returns>
+                <see langword="true" /> when the automatic probe set should start.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy.ShouldResetForLogout(System.Boolean,System.Boolean)">
+            <summary>
+                Determines whether the automatic login-session gate should reset
+                because the player logged out.
+            </summary>
+            <param name="wasLoggedIn">
+                Whether the client was logged in on the previous tick.
+            </param>
+            <param name="isLoggedIn">Whether the client is logged in now.</param>
+            <returns>
+                <see langword="true" /> when the automatic probe gate should reset.
+            </returns>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AddonStructureProbe">
             <summary>
             Provides a generic recursive addon probe for live UI inspection.
@@ -30717,12 +31499,135 @@
             Describes a section-bounded native popup-body hover candidate without retaining native pointers.
             </summary>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache">
+            <summary>
+                Stores committed QuestPlate projections and owns one in-flight operation
+                per canonical lookup identity. This registry does not perform I/O.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.#ctor(System.Func{System.DateTimeOffset},System.Nullable{System.TimeSpan})">
+            <summary>Initializes a cache with a deterministic clock seam.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.Generation">
+            <summary>Gets the current ownership generation.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.AdvanceGeneration">
+            <summary>Invalidates every projection and in-flight owner for reload.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.IsCurrentGeneration(System.Int64)">
+            <summary>Gets whether an operation still belongs to the active generation.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.CreateKey(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.TranslationReuseScope)">
+            <summary>Builds the collision-safe identity for one runtime lookup.</summary>
+            <param name="plate">The immutable lookup payload.</param>
+            <param name="scope">The captured translation reuse scope.</param>
+            <returns>The canonical runtime key.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.TryGet(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.TranslationReuseScope,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate@)">
+            <summary>Attempts to get a committed immutable projection.</summary>
+            <param name="plate">The lookup payload.</param>
+            <param name="scope">The lookup scope.</param>
+            <param name="projection">The cloned committed projection.</param>
+            <returns>True when a committed projection is available.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.TryRegister(Echoglossian.NativeUI.Helpers.QuestPlateRuntimeKey,System.Threading.Tasks.Task{Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult})">
+            <summary>Registers the operation for a cache miss.</summary>
+            <param name="key">The canonical lookup key.</param>
+            <param name="completion">The terminal operation completion.</param>
+            <returns>True only for the operation owner.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.TryRegister(Echoglossian.NativeUI.Helpers.QuestPlateRuntimeKey,System.Threading.Tasks.TaskCompletionSource{Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult},System.Int64@)">
+            <summary>Atomically captures generation and registers one operation owner.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.TryRegisterOrJoin(Echoglossian.NativeUI.Helpers.QuestPlateRuntimeKey,System.Threading.Tasks.TaskCompletionSource{Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult},System.Int64@,System.Threading.Tasks.Task{Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult}@)">
+            <summary>Atomically either registers an owner or returns the current owner completion.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.TryRegisterWriteOrJoin(Echoglossian.NativeUI.Helpers.QuestPlateRuntimeKey,System.Threading.Tasks.TaskCompletionSource{Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult},System.Int64@,System.Threading.Tasks.Task{Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult}@,System.Threading.Tasks.Task{Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult}@)">
+            <summary>Atomically registers a write, joins an existing write, or claims a deferred write after a read.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.TryPromoteDeferredWrite(Echoglossian.NativeUI.Helpers.QuestPlateRuntimeKey,System.Int64,System.Threading.Tasks.TaskCompletionSource{Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult})">
+            <summary>Promotes a previously claimed deferred write after its read is terminal.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.TryGetCompletion(Echoglossian.NativeUI.Helpers.QuestPlateRuntimeKey,System.Threading.Tasks.Task{Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult}@)">
+            <summary>Attempts to get a same-key operation completion.</summary>
+            <param name="key">The canonical lookup key.</param>
+            <param name="completion">The existing completion.</param>
+            <returns>True when an operation is already owned.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.Publish(Echoglossian.NativeUI.Helpers.QuestPlateRuntimeKey,System.Int64,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>Publishes a projection after its database operation succeeds.</summary>
+            <param name="key">The operation key.</param>
+            <param name="projection">The completed projection.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.RemoveOperation(Echoglossian.NativeUI.Helpers.QuestPlateRuntimeKey,System.Int64)">
+            <summary>Removes a non-successful operation so a later cooldown owner can retry.</summary>
+            <param name="key">The terminal operation key.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeCache.Complete(Echoglossian.NativeUI.Helpers.QuestPlateRuntimeKey,System.Int64,Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult)">
+            <summary>Completes a registered operation and atomically records its terminal state.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeKey">
+            <summary>Identifies one canonical QuestPlate runtime operation.</summary>
+            <param name="Value">The length-prefixed lookup identity.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeKey.#ctor(System.String)">
+            <summary>Identifies one canonical QuestPlate runtime operation.</summary>
+            <param name="Value">The length-prefixed lookup identity.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeKey.Value">
+            <summary>The length-prefixed lookup identity.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult">
+            <summary>Represents a completed QuestPlate runtime operation.</summary>
+            <param name="Status">The coordinator terminal status.</param>
+            <param name="Projection">The immutable projection when found.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult.#ctor(Echoglossian.Persistence.PersistenceCompletionStatus,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate)">
+            <summary>Represents a completed QuestPlate runtime operation.</summary>
+            <param name="Status">The coordinator terminal status.</param>
+            <param name="Projection">The immutable projection when found.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult.Status">
+            <summary>The coordinator terminal status.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult.Projection">
+            <summary>The immutable projection when found.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.QueuedTranslationAdmission">
+            <summary>Describes the atomic result of attempting broker admission.</summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.QueuedTranslationAdmission.Accepted">
+            <summary>The request was accepted.</summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.QueuedTranslationAdmission.FailureCooldown">
+            <summary>A previous terminal failure is still cooling down.</summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.QueuedTranslationAdmission.AlreadyInFlight">
+            <summary>The exact identity already has an active request.</summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.QueuedTranslationAdmission.JoinedInFlight">
+            <summary>The caller subscribed to an existing active request.</summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.QueuedTranslationAdmission.RejectedShutdown">
+            <summary>The broker has started shutdown.</summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker">
             <summary>
                 Keeps a shared in-memory translation cache and drains translation
                 requests through a single paced background pump so dense UI refreshes do
                 not spam the translator or create request bursts.
             </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.QueuedTranslationRequestState.#ctor(Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.QueuedTranslationSubscriber,System.Func{System.Boolean})">
+            <summary>Initializes the subscribers and optional lifetime promotion callback.</summary>
+            <param name="subscriber">The admitting subscriber.</param>
+            <param name="tryRetain">Attempts to promote the resolver lifetime for a later subscriber.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.QueuedTranslationRequestState.Subscribers">
+            <summary>Gets all callers awaiting this exact resolver generation.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.QueuedTranslationRequestState.TryRetain">
+            <summary>Gets the atomic resolver-lifetime promotion callback.</summary>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.#ctor(Echoglossian.Echoglossian.TransEngines,System.Action{System.String},System.Action{System.String})">
             <summary>
@@ -30745,6 +31650,15 @@
             <param name="maxRateLimitRetries">The number of broker-level retries after rate-limit signals.</param>
             <param name="warningLog">Optional warning logger.</param>
             <param name="errorLog">Optional error logger.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.ShutdownToken">
+            <summary>Gets cancellation owned by the broker lifetime.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.InFlightSubscriberCount">
+            <summary>Gets the number of subscribers attached to active requests.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.PendingRequestCount">
+            <summary>Gets the number of admitted requests waiting for the broker pump.</summary>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.TryGetCached(System.String,System.String@)">
             <summary>
@@ -30787,6 +31701,47 @@
                 traced back to the owning runtime.
             </param>
         </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.Queue(System.String,System.Func{System.Threading.Tasks.Task{System.String}},System.Action{System.String},System.String,System.Action{System.Boolean})">
+            <summary>Queues work with an optional notification after the broker exhausts its retry policy.</summary>
+            <param name="key">The stable translation identity.</param>
+            <param name="resolver">The translation resolver.</param>
+            <param name="onResolved">The success callback invoked after caching.</param>
+            <param name="surfaceIdentity">The diagnostic surface identity.</param>
+            <param name="onTerminalFailure">Receives true for broker shutdown cancellation, or false for terminal provider failure.</param>
+            <returns>Whether the request was admitted.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.TryQueue(System.String,System.Func{System.Threading.Tasks.Task{System.String}},System.Action{System.String},System.String,System.Action{System.Boolean})">
+            <summary>Admits a request atomically while preserving the reason for rejection.</summary>
+            <param name="key">The stable request identity.</param>
+            <param name="resolver">The provider resolver.</param>
+            <param name="onResolved">The successful cached-result callback.</param>
+            <param name="surfaceIdentity">The diagnostic surface identity.</param>
+            <param name="onTerminalFailure">The terminal failure or shutdown callback.</param>
+            <returns>The admission decision made under the lifecycle gate.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.TryQueueOrJoin(System.String,System.Func{System.Threading.Tasks.Task{System.String}},System.Action{System.String},System.String,System.Action{System.Boolean},System.Boolean,System.Func{System.Boolean})">
+            <summary>Admits a request or subscribes to the matching active request.</summary>
+            <param name="key">The stable request identity.</param>
+            <param name="resolver">The provider resolver used only for a new request.</param>
+            <param name="onResolved">The successful cached-result callback.</param>
+            <param name="surfaceIdentity">The diagnostic surface identity.</param>
+            <param name="onTerminalFailure">The terminal failure or shutdown callback.</param>
+            <param name="retainExisting">Whether this subscriber keeps the active resolver alive.</param>
+            <param name="tryRetainOnJoin">Atomically promotes a newly admitted resolver for a retaining subscriber.</param>
+            <returns>The admission or subscription decision made under the lifecycle gate.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.TryQueueCore(System.String,System.Func{System.Threading.Tasks.Task{System.String}},System.Action{System.String},System.String,System.Action{System.Boolean},System.Boolean,System.Boolean,System.Func{System.Boolean})">
+            <summary>Admits, rejects, or joins one request under the broker lifecycle gate.</summary>
+            <param name="key">The stable request identity.</param>
+            <param name="resolver">The provider resolver used only for a new request.</param>
+            <param name="onResolved">The successful cached-result callback.</param>
+            <param name="surfaceIdentity">The diagnostic surface identity.</param>
+            <param name="onTerminalFailure">The terminal failure or shutdown callback.</param>
+            <param name="joinExisting">Whether to subscribe when the identity is already active.</param>
+            <param name="retainExisting">Whether this subscriber keeps the active resolver alive.</param>
+            <param name="tryRetainOnJoin">Atomically promotes a newly admitted resolver for a retaining subscriber.</param>
+            <returns>The admission decision.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.StartPump">
             <summary>
                 Starts the shared background pump once for the lifetime of the broker.
@@ -30808,6 +31763,21 @@
                 Resolves a single queued translation request.
             </summary>
             <param name="request">The queued translation request.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.CompleteRequest(Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.QueuedTranslationRequest)">
+            <summary>Atomically completes one active request and captures its subscribers.</summary>
+            <param name="request">The exact resolver generation completing.</param>
+            <returns>The subscribers detached from the completed request.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.NotifyResolved(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.QueuedTranslationSubscriber},System.String)">
+            <summary>Reports one success without allowing a subscriber to stop the broker pump.</summary>
+            <param name="subscribers">The subscribers detached from the completed request.</param>
+            <param name="translatedText">The resolved translation.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.NotifyTerminalFailure(System.Collections.Generic.IReadOnlyList{Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.QueuedTranslationSubscriber},System.Boolean)">
+            <summary>Reports one terminal failure without allowing a subscriber to stop the broker pump.</summary>
+            <param name="subscribers">The subscribers detached from the failed request.</param>
+            <param name="cancelled">Whether broker shutdown cancelled the request.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.TryRequeueAfterRateLimit(Echoglossian.NativeUI.Helpers.QueuedTranslationBroker.QueuedTranslationRequest,System.String)">
             <summary>
@@ -31154,6 +32124,113 @@
             </summary>
             <param name="serializedPayload">The serialized payload.</param>
             <returns>The deserialized payload, or <see langword="null" />.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchCompletion">
+            <summary>
+            Publishes one operation outcome before its completion task finishes so the
+            Framework cursor can poll without synchronously retrieving a task result.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchCompletion.#ctor(System.Threading.Tasks.Task{System.Boolean})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchCompletion" /> class.
+            </summary>
+            <param name="operation">The already scheduled reference-text operation.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchCompletion.Completion">
+            <summary>Gets the task that completes after the outcome is published.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchCompletion.Succeeded">
+            <summary>
+            Gets a value indicating whether the cursor may advance; read only after
+            <see cref="P:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchCompletion.Completion" /> has completed.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchCompletion.ObserveAsync(System.Threading.Tasks.Task{System.Boolean})">
+            <summary>Observes success, failure, and cancellation without blocking a caller.</summary>
+            <param name="operation">The already scheduled operation.</param>
+            <returns>The published cursor-advancement outcome.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchOperation">
+            <summary>
+                Owns one captured prefetch operation while the shared coordinator and
+                translation broker perform its work. The Framework only polls completion.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchOperation.RetainableCancellationScope.#ctor(System.Threading.CancellationToken,System.Threading.CancellationToken,System.Boolean)">
+            <summary>Initializes cancellation that may be retained by a longer-lived subscriber.</summary>
+            <param name="ownerToken">The initial request owner.</param>
+            <param name="shutdownToken">The process-lifetime broker shutdown owner.</param>
+            <param name="retained">Whether the resolver is already owned by the broker lifetime.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchOperation.RetainableCancellationScope.Token">
+            <summary>Gets the provider-facing cancellation token.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchOperation.RetainableCancellationScope.TryRetain">
+            <summary>Atomically promotes the resolver unless cancellation already won.</summary>
+            <returns>True when this resolver can safely serve the retaining subscriber.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchOperation.RetainableCancellationScope.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchOperation.RetainableCancellationScope.Cancel">
+            <summary>Cancels the provider for broker shutdown regardless of retention.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchOperation.RetainableCancellationScope.CancelUnlessRetained">
+            <summary>Cancels the provider only while the initial owner remains authoritative.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchOperation.RetainableCancellationScope.CancelProvider">
+            <summary>Cancels provider work without letting consumer callbacks disrupt lifecycle progress.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchOperation.Start``1(Echoglossian.DBHelpers.ReferenceTextPersistenceWriter,Echoglossian.NativeUI.Helpers.QueuedTranslationBroker,Echoglossian.Cache.ReferenceTextCacheStore{``0},System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,Microsoft.EntityFrameworkCore.DbSet{``0}},System.Func{System.String,System.String,System.Nullable{System.Int32},System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,``0},Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,System.String,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.String,System.Func{System.Collections.Generic.IReadOnlyList{Echoglossian.Translators.TranslationField},Echoglossian.SourceClientLanguage,System.String,System.String,System.Threading.CancellationToken,System.Threading.Tasks.Task{Echoglossian.Translators.TranslationFieldBatchResult}},System.Threading.CancellationToken,Echoglossian.Persistence.PersistencePriority)">
+            <summary>Admits a captured operation without running DB or translation work inline.</summary>
+            <typeparam name="TRow">The concrete canonical row type.</typeparam>
+            <param name="writer">The process-lifetime persistence adapter.</param>
+            <param name="broker">The shared translation broker captured at admission.</param>
+            <param name="cache">The existing canonical cache.</param>
+            <param name="setSelector">Selects the canonical DbSet.</param>
+            <param name="createRow">Creates a canonical row, including sheet metadata.</param>
+            <param name="payload">The captured sheet payload.</param>
+            <param name="gameVersion">The captured game version.</param>
+            <param name="source">The captured provider source language.</param>
+            <param name="scope">The immutable reuse scope.</param>
+            <param name="origin">The diagnostic surface identity.</param>
+            <param name="translate">Resolves all missing fields as a single logical batch.</param>
+            <param name="cancellationToken">Cancels this prefetch generation.</param>
+            <param name="priority">The originating request's admission lane.</param>
+            <returns>True when the attempt is complete; false requests a later tick retry.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchOperation.IsComplete(Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ReferenceTextRowBase)">
+            <summary>Checks the required canonical fields without treating unchanged translation as missing.</summary>
+            <param name="payload">The captured source fields.</param>
+            <param name="row">The persisted candidate.</param>
+            <returns>Whether every nonempty source field has a persisted translation.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchOperation.CompleteAsync``1(Echoglossian.DBHelpers.ReferenceTextPersistenceWriter,Echoglossian.NativeUI.Helpers.QueuedTranslationBroker,Echoglossian.Cache.ReferenceTextCacheStore{``0},System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,Microsoft.EntityFrameworkCore.DbSet{``0}},System.Func{System.String,System.String,System.Nullable{System.Int32},System.String,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,``0},Echoglossian.NativeUI.Helpers.ReferenceTextCanonicalPayload,System.String,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.String,System.Func{System.Collections.Generic.IReadOnlyList{Echoglossian.Translators.TranslationField},Echoglossian.SourceClientLanguage,System.String,System.String,System.Threading.CancellationToken,System.Threading.Tasks.Task{Echoglossian.Translators.TranslationFieldBatchResult}},System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceReadResult{``0}},System.Threading.CancellationToken,Echoglossian.Persistence.PersistencePriority)">
+            <summary>Finishes a captured operation off the Framework thread and observes every failure.</summary>
+            <typeparam name="TRow">The concrete canonical row type.</typeparam>
+            <param name="writer">The shared persistence adapter.</param>
+            <param name="broker">The captured shared broker.</param>
+            <param name="cache">The existing canonical cache.</param>
+            <param name="setSelector">Selects the canonical DbSet.</param>
+            <param name="createRow">Creates the complete row.</param>
+            <param name="payload">The detached source payload.</param>
+            <param name="gameVersion">The captured version.</param>
+            <param name="source">The captured provider source.</param>
+            <param name="scope">The captured reuse scope.</param>
+            <param name="origin">The diagnostic surface identity.</param>
+            <param name="translate">The batch translation resolver.</param>
+            <param name="read">The admitted coordinator read.</param>
+            <param name="cancellationToken">The generation cancellation token.</param>
+            <param name="priority">The originating request's admission lane.</param>
+            <returns>Whether the cursor may advance.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.ReferenceTextPrefetchOperation.CompleteTerminalFailure(System.String,System.String,System.Exception)">
+            <summary>Logs one exhausted operation and releases its cursor without scheduling another attempt.</summary>
+            <param name="origin">The captured diagnostic identity.</param>
+            <param name="stage">The terminal stage.</param>
+            <param name="exception">The terminal exception, if available.</param>
+            <returns>True so the current background attempt advances.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.SheetRowIdNormalizationHelper">
             <summary>
@@ -32343,6 +33420,14 @@
             </param>
             <returns>True when a request was available.</returns>
         </member>
+        <member name="M:Echoglossian.AcceptedQuestPrefetchRequestQueue.Complete(System.UInt32)">
+            <summary>
+                Releases a processing quest only after every accepted-quest operation
+                has reached a terminal state.
+            </summary>
+            <param name="questId">The quest identity to release.</param>
+            <returns>True when a processing request was completed.</returns>
+        </member>
         <member name="M:Echoglossian.AcceptedQuestPrefetchRequestQueue.Clear">
             <summary>
                 Clears every pending priority request.
@@ -33413,6 +34498,639 @@
         <member name="P:Echoglossian.QuestTodoProgressSnapshot.CacheKey">
             <summary>
                 Gets a stable key for the live todo progress snapshot.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.ReferenceTextPrefetchSnapshotObserver">
+            <summary>
+                Awaits snapshot persistence outside the unsafe plugin partial so no
+                Framework callback performs synchronous task result access.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ReferenceTextPrefetchSnapshotObserver.CompleteAsync``1(Echoglossian.DBHelpers.ReferenceTextPersistenceWriter,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceReadResult{System.Collections.Generic.IReadOnlyList{``0}}},Echoglossian.Echoglossian.ReferenceTextPrefetchGeneration,System.Action{``0})">
+            <summary>Awaits and publishes one typed registration snapshot.</summary>
+            <typeparam name="TRow">The concrete persisted row type.</typeparam>
+            <param name="writer">The owner-lifetime persistence adapter.</param>
+            <param name="completion">The admitted coordinator read.</param>
+            <param name="generation">The registration generation publication gate.</param>
+            <param name="publishRow">Publishes one row to the existing canonical cache.</param>
+            <returns>The cancellation-safe snapshot result.</returns>
+        </member>
+        <member name="M:Echoglossian.ReferenceTextPrefetchSnapshotObserver.CompleteOnWorkerAsync``1(Echoglossian.DBHelpers.ReferenceTextPersistenceWriter,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceReadResult{System.Collections.Generic.IReadOnlyList{``0}}},Echoglossian.Echoglossian.ReferenceTextPrefetchGeneration,System.Threading.CancellationToken,System.Action{``0})">
+            <summary>Awaits and publishes one snapshot after explicit worker dispatch.</summary>
+            <typeparam name="TRow">The concrete persisted row type.</typeparam>
+            <param name="writer">The owner-lifetime persistence adapter.</param>
+            <param name="completion">The admitted coordinator read.</param>
+            <param name="generation">The registration generation publication gate.</param>
+            <param name="generationToken">The registration token captured before worker dispatch.</param>
+            <param name="publishRow">Publishes one row to the existing canonical cache.</param>
+            <returns>The cancellation-safe snapshot result.</returns>
+        </member>
+        <member name="M:Echoglossian.ReferenceTextPrefetchSnapshotObserver.ObserveAsync(System.Threading.Tasks.Task{Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotResult},System.Action{Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotResult})">
+            <summary>Observes one snapshot and publishes its result before completion.</summary>
+            <param name="operation">The scheduled snapshot operation.</param>
+            <param name="publish">Publishes the immutable result to its owning state.</param>
+            <returns>The asynchronous observer task.</returns>
+        </member>
+        <member name="M:Echoglossian.ReferenceTextPrefetchSnapshotObserver.ObserveOnWorkerAsync(System.Threading.Tasks.Task{Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotResult},System.Action{Echoglossian.Echoglossian.ReferenceTextPrefetchSnapshotResult})">
+            <summary>Observes and publishes one snapshot after explicit worker dispatch.</summary>
+            <param name="operation">The scheduled snapshot operation.</param>
+            <param name="publish">Publishes the immutable result to its owning state.</param>
+            <returns>The asynchronous worker task.</returns>
+        </member>
+        <member name="T:Echoglossian.Persistence.BoundedPriorityQueue`1">
+            <summary>
+                Provides independent bounded lanes with a deterministic 3:1 interactive
+                to background dequeue policy.
+            </summary>
+            <typeparam name="T">The type of queued work item.</typeparam>
+        </member>
+        <member name="M:Echoglossian.Persistence.BoundedPriorityQueue`1.#ctor(System.Int32,System.Int32)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.Persistence.BoundedPriorityQueue`1" />
+                class.
+            </summary>
+            <param name="interactiveCapacity">The maximum interactive lane depth.</param>
+            <param name="backgroundCapacity">The maximum background lane depth.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+                <paramref name="interactiveCapacity" /> or
+                <paramref name="backgroundCapacity" /> is not positive.
+            </exception>
+        </member>
+        <member name="P:Echoglossian.Persistence.BoundedPriorityQueue`1.InteractiveDepth">
+            <summary>
+                Gets the number of accepted interactive items that have not dequeued.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.BoundedPriorityQueue`1.BackgroundDepth">
+            <summary>
+                Gets the number of accepted background items that have not dequeued.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.BoundedPriorityQueue`1.TryEnqueue(`0,Echoglossian.Persistence.PersistencePriority)">
+            <summary>
+                Attempts to add an item to its independent bounded lane.
+            </summary>
+            <param name="item">The work item to enqueue.</param>
+            <param name="priority">The lane that receives the work item.</param>
+            <returns>
+                <see langword="true" /> if the item was accepted; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Persistence.BoundedPriorityQueue`1.DequeueAsync(System.Threading.CancellationToken)">
+            <summary>
+                Dequeues the next item using the 3:1 interactive to background policy.
+            </summary>
+            <param name="cancellationToken">The token that cancels waiting.</param>
+            <returns>A task that produces the selected item.</returns>
+            <exception cref="T:System.Threading.Channels.ChannelClosedException">
+                Completion began and every accepted item has drained.
+            </exception>
+        </member>
+        <member name="M:Echoglossian.Persistence.BoundedPriorityQueue`1.Complete">
+            <summary>
+                Stops admission and wakes a blocked reader to drain accepted work.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.BoundedPriorityQueue`1.Cancel(System.Action{`0})">
+            <summary>Cancels queued items that will never be consumed.</summary>
+            <param name="cancel">Completes each removed item.</param>
+        </member>
+        <member name="M:Echoglossian.Persistence.BoundedPriorityQueue`1.CreateLane(System.Int32)">
+            <summary>
+                Creates an independent bounded work lane.
+            </summary>
+            <param name="capacity">The maximum number of accepted items.</param>
+            <returns>The bounded work lane.</returns>
+        </member>
+        <member name="M:Echoglossian.Persistence.BoundedPriorityQueue`1.IsCompletedAndDrained">
+            <summary>
+                Determines whether completion started and both lanes have drained.
+            </summary>
+            <returns>
+                <see langword="true" /> if no more item can be dequeued; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Persistence.BoundedPriorityQueue`1.SignalReader">
+            <summary>
+                Signals the reader that an enqueue or completion may require work.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.BoundedPriorityQueue`1.TryDequeue(`0@)">
+            <summary>
+                Attempts to dequeue the next item without waiting.
+            </summary>
+            <param name="item">When this method returns, contains the selected item.</param>
+            <returns>
+                <see langword="true" /> if an item was selected; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Persistence.BoundedPriorityQueue`1.TryReadInteractive(`0@)">
+            <summary>
+                Attempts to read one accepted interactive item.
+            </summary>
+            <param name="item">When this method returns, contains the read item.</param>
+            <returns>
+                <see langword="true" /> if an item was read; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Persistence.BoundedPriorityQueue`1.TryReadBackground(`0@)">
+            <summary>
+                Attempts to read one accepted background item.
+            </summary>
+            <param name="item">When this method returns, contains the read item.</param>
+            <returns>
+                <see langword="true" /> if an item was read; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Persistence.BoundedPriorityQueue`1.ResignalIfItemsRemain">
+            <summary>
+                Preserves a wake-up while accepted work remains queued.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.Persistence.EchoglossianDbContextRuntimeFactory">
+            <summary>Creates pooled, short-lived runtime database contexts.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.EchoglossianDbContextRuntimeFactory.#ctor(System.String)">
+            <summary>Initializes a new instance of the factory.</summary>
+            <param name="configDirectory">The plugin configuration directory.</param>
+        </member>
+        <member name="M:Echoglossian.Persistence.EchoglossianDbContextRuntimeFactory.CreateDbContext">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.Persistence.EchoglossianDbContextRuntimeFactory.CreateDbContextAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.Persistence.EchoglossianDbContextRuntimeFactory.PooledRuntimeDbContext">
+            <summary>Provides the single public options constructor required by the runtime context pool.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.EchoglossianDbContextRuntimeFactory.PooledRuntimeDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Echoglossian.Persistence.EchoglossianDbContextRuntimeFactory.PooledRuntimeDbContext})">
+            <summary>Initializes a new instance of the pooled runtime context.</summary>
+            <param name="options">The pooled context options.</param>
+        </member>
+        <member name="T:Echoglossian.Persistence.EchoglossianDbContextRuntimeFactory.PooledRuntimeMigrationsAssembly">
+            <summary>Maps the pooled derived context back to the existing base-context migrations.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.EchoglossianDbContextRuntimeFactory.PooledRuntimeMigrationsAssembly.#ctor(Microsoft.EntityFrameworkCore.Migrations.IMigrationsIdGenerator)">
+            <summary>Initializes a new instance of the migrations adapter.</summary>
+            <param name="idGenerator">The migration identifier generator.</param>
+        </member>
+        <member name="P:Echoglossian.Persistence.EchoglossianDbContextRuntimeFactory.PooledRuntimeMigrationsAssembly.Migrations">
+            <inheritdoc />
+        </member>
+        <member name="P:Echoglossian.Persistence.EchoglossianDbContextRuntimeFactory.PooledRuntimeMigrationsAssembly.ModelSnapshot">
+            <inheritdoc />
+        </member>
+        <member name="P:Echoglossian.Persistence.EchoglossianDbContextRuntimeFactory.PooledRuntimeMigrationsAssembly.Assembly">
+            <summary>Gets the migrations assembly containing the base context migrations.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.EchoglossianDbContextRuntimeFactory.PooledRuntimeMigrationsAssembly.FindMigrationId(System.String)">
+            <summary>Finds a migration identifier by its identifier or name.</summary>
+            <param name="nameOrId">The migration name or identifier.</param>
+            <returns>The matching migration identifier, if found.</returns>
+        </member>
+        <member name="M:Echoglossian.Persistence.EchoglossianDbContextRuntimeFactory.PooledRuntimeMigrationsAssembly.CreateMigration(System.Reflection.TypeInfo,System.String)">
+            <summary>Creates a migration for the active provider.</summary>
+            <param name="migrationClass">The migration type information.</param>
+            <param name="activeProvider">The active provider name.</param>
+            <returns>The initialized migration.</returns>
+        </member>
+        <member name="T:Echoglossian.Persistence.IPersistenceCoordinator">
+            <summary>
+                Coordinates bounded asynchronous persistence operations.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.IPersistenceCoordinator.TryScheduleRead``1(Echoglossian.Persistence.PersistenceWorkKey,Echoglossian.Persistence.PersistencePriority,System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}},System.Action{``0},System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceReadResult{``0}}@)">
+            <summary>Attempts to schedule or join one bounded read.</summary>
+            <typeparam name="T">The value returned by the read.</typeparam>
+            <param name="key">The canonical identity for coalescing.</param>
+            <param name="priority">The bounded lane that receives the read.</param>
+            <param name="readAsync">The short-lived context query.</param>
+            <param name="publish">The successful result publication.</param>
+            <param name="completion">The terminal read completion.</param>
+            <returns>The non-blocking admission outcome.</returns>
+        </member>
+        <member name="M:Echoglossian.Persistence.IPersistenceCoordinator.TryScheduleWrite(Echoglossian.Persistence.PersistenceWriteRequest,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult}@)">
+            <summary>Attempts to schedule or join one bounded write.</summary>
+            <param name="request">The canonical write request.</param>
+            <param name="completion">The terminal write completion.</param>
+            <returns>The non-blocking admission outcome.</returns>
+        </member>
+        <member name="M:Echoglossian.Persistence.IPersistenceCoordinator.GetMetrics">
+            <summary>Gets an immutable diagnostic metrics snapshot.</summary>
+            <returns>The current metrics snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.Persistence.IPersistenceCoordinator.StopAccepting">
+            <summary>Stops accepting new persistence operations.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.IPersistenceCoordinator.CompleteAsync(System.Threading.CancellationToken)">
+            <summary>Completes accepted work.</summary>
+            <param name="cancellationToken">The cancellation token for waiting.</param>
+            <returns>A task that completes when accepted work drains.</returns>
+        </member>
+        <member name="T:Echoglossian.Persistence.PersistenceAdmissionStatus">
+            <summary>
+                Specifies the outcome of attempting to admit persistence work.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Persistence.PersistenceAdmissionStatus.Accepted">
+            <summary>Specifies that a new work item was accepted.</summary>
+        </member>
+        <member name="F:Echoglossian.Persistence.PersistenceAdmissionStatus.Joined">
+            <summary>Specifies that work joined an existing pending item.</summary>
+        </member>
+        <member name="F:Echoglossian.Persistence.PersistenceAdmissionStatus.Replaced">
+            <summary>Specifies that pending work was replaced with newer work.</summary>
+        </member>
+        <member name="F:Echoglossian.Persistence.PersistenceAdmissionStatus.RejectedCapacity">
+            <summary>Specifies that no capacity was available for the work item.</summary>
+        </member>
+        <member name="F:Echoglossian.Persistence.PersistenceAdmissionStatus.RejectedShutdown">
+            <summary>Specifies that coordinator completion rejected the work item.</summary>
+        </member>
+        <member name="T:Echoglossian.Persistence.PersistenceCompletionStatus">
+            <summary>
+                Specifies the terminal outcome of admitted persistence work.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Persistence.PersistenceCompletionStatus.Succeeded">
+            <summary>Specifies that work committed a changed result.</summary>
+        </member>
+        <member name="F:Echoglossian.Persistence.PersistenceCompletionStatus.Unchanged">
+            <summary>Specifies that work completed without a database mutation.</summary>
+        </member>
+        <member name="F:Echoglossian.Persistence.PersistenceCompletionStatus.Failed">
+            <summary>Specifies that work terminated with an error.</summary>
+        </member>
+        <member name="F:Echoglossian.Persistence.PersistenceCompletionStatus.Cancelled">
+            <summary>Specifies that work terminated due to cancellation.</summary>
+        </member>
+        <member name="F:Echoglossian.Persistence.PersistenceCompletionStatus.Rejected">
+            <summary>Specifies that work was rejected before admission.</summary>
+        </member>
+        <member name="T:Echoglossian.Persistence.PersistenceReadResult`1">
+            <summary>
+                Represents the terminal result of one persistence read.
+            </summary>
+            <typeparam name="T">The value returned by the read.</typeparam>
+            <param name="Status">The terminal completion status.</param>
+            <param name="Value">The value produced by the read, if any.</param>
+            <param name="Error">The terminal error, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceReadResult`1.#ctor(Echoglossian.Persistence.PersistenceCompletionStatus,`0,System.Exception)">
+            <summary>
+                Represents the terminal result of one persistence read.
+            </summary>
+            <typeparam name="T">The value returned by the read.</typeparam>
+            <param name="Status">The terminal completion status.</param>
+            <param name="Value">The value produced by the read, if any.</param>
+            <param name="Error">The terminal error, if any.</param>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceReadResult`1.Status">
+            <summary>The terminal completion status.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceReadResult`1.Value">
+            <summary>The value produced by the read, if any.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceReadResult`1.Error">
+            <summary>The terminal error, if any.</summary>
+        </member>
+        <member name="T:Echoglossian.Persistence.PersistenceWriteResult">
+            <summary>
+                Represents the terminal result of one persistence write.
+            </summary>
+            <param name="Status">The terminal completion status.</param>
+            <param name="AffectedRows">The number of rows changed by the write.</param>
+            <param name="Error">The terminal error, if any.</param>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceWriteResult.#ctor(Echoglossian.Persistence.PersistenceCompletionStatus,System.Int32,System.Exception)">
+            <summary>
+                Represents the terminal result of one persistence write.
+            </summary>
+            <param name="Status">The terminal completion status.</param>
+            <param name="AffectedRows">The number of rows changed by the write.</param>
+            <param name="Error">The terminal error, if any.</param>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceWriteResult.Status">
+            <summary>The terminal completion status.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceWriteResult.AffectedRows">
+            <summary>The number of rows changed by the write.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceWriteResult.Error">
+            <summary>The terminal error, if any.</summary>
+        </member>
+        <member name="T:Echoglossian.Persistence.PersistenceWriteMutation">
+            <summary>
+                Represents whether a write mutation changed tracked persistence state.
+            </summary>
+            <param name="Changed">
+                <see langword="true" /> when the mutation changed state; otherwise,
+                <see langword="false" />.
+            </param>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceWriteMutation.#ctor(System.Boolean)">
+            <summary>
+                Represents whether a write mutation changed tracked persistence state.
+            </summary>
+            <param name="Changed">
+                <see langword="true" /> when the mutation changed state; otherwise,
+                <see langword="false" />.
+            </param>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceWriteMutation.Changed">
+            <summary>
+                <see langword="true" /> when the mutation changed state; otherwise,
+                <see langword="false" />.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceWriteMutation.ChangedResult">
+            <summary>
+                Gets a mutation result that changed tracked state.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceWriteMutation.UnchangedResult">
+            <summary>
+                Gets a mutation result that left tracked state unchanged.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.Persistence.PersistenceWriteRequestValidation">
+            <summary>
+                Validates the delegates required by one positional persistence write
+                request.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceWriteRequestValidation.#ctor(System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,System.Threading.CancellationToken,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteMutation}},System.Action)">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.Persistence.PersistenceWriteRequestValidation" /> class.
+            </summary>
+            <param name="ApplyAsync">The mutation applied within a transaction.</param>
+            <param name="PublishAfterCommit">The projection published after commit.</param>
+            <exception cref="T:System.ArgumentNullException">
+                <paramref name="ApplyAsync" /> or
+                <paramref name="PublishAfterCommit" /> is <see langword="null" />.
+            </exception>
+        </member>
+        <member name="T:Echoglossian.Persistence.PersistenceWriteRequest">
+            <summary>
+                Describes one write that can be applied and published after commit.
+            </summary>
+            <param name="Key">The canonical identity of the requested write.</param>
+            <param name="Priority">The bounded lane that receives the write.</param>
+            <param name="ApplyAsync">The retry-safe mutation applied within a transaction. It must create or attach entities in the supplied context and must not capture tracked entities.</param>
+            <param name="PublishAfterCommit">The projection published after commit.</param>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceWriteRequest.#ctor(Echoglossian.Persistence.PersistenceWorkKey,Echoglossian.Persistence.PersistencePriority,System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,System.Threading.CancellationToken,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteMutation}},System.Action)">
+            <summary>
+                Describes one write that can be applied and published after commit.
+            </summary>
+            <param name="Key">The canonical identity of the requested write.</param>
+            <param name="Priority">The bounded lane that receives the write.</param>
+            <param name="ApplyAsync">The retry-safe mutation applied within a transaction. It must create or attach entities in the supplied context and must not capture tracked entities.</param>
+            <param name="PublishAfterCommit">The projection published after commit.</param>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceWriteRequest.Key">
+            <summary>The canonical identity of the requested write.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceWriteRequest.Priority">
+            <summary>The bounded lane that receives the write.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceWriteRequest.ApplyAsync">
+            <summary>The retry-safe mutation applied within a transaction. It must create or attach entities in the supplied context and must not capture tracked entities.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceWriteRequest.PublishAfterCommit">
+            <summary>The projection published after commit.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceWriteRequest.CancellationToken">
+            <summary>
+                Gets the owner-lifetime cancellation applied to the complete
+                transaction.
+            </summary>
+            <value>The owner-lifetime cancellation token.</value>
+        </member>
+        <member name="T:Echoglossian.Persistence.PersistenceCoordinator">
+            <summary>
+                Owns bounded, coalesced asynchronous persistence operations.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinator.#ctor(Microsoft.EntityFrameworkCore.IDbContextFactory{Echoglossian.EFCoreSqlite.EchoglossianDbContext},Echoglossian.Persistence.PersistenceCoordinatorOptions,System.Func{System.TimeSpan,System.Threading.CancellationToken,System.Threading.Tasks.Task},System.Func{System.DateTimeOffset},System.Func{System.Exception,System.Boolean},System.Action{System.String},System.Action{System.String},System.Func{System.Threading.Tasks.Task})">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.Persistence.PersistenceCoordinator" /> class.
+            </summary>
+            <param name="contextFactory">The factory for short-lived contexts.</param>
+            <param name="options">The immutable coordinator bounds.</param>
+            <param name="delayAsync">The worker retry delay seam.</param>
+            <param name="utcNow">The UTC clock seam.</param>
+            <param name="transientFailureClassifier">The worker retry classifier seam.</param>
+            <param name="warningLog">The summarized warning sink.</param>
+            <param name="errorLog">The summarized error sink.</param>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinator.TryScheduleRead``1(Echoglossian.Persistence.PersistenceWorkKey,Echoglossian.Persistence.PersistencePriority,System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}},System.Action{``0},System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceReadResult{``0}}@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinator.TryScheduleWrite(Echoglossian.Persistence.PersistenceWriteRequest,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult}@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinator.GetMetrics">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinator.StopAccepting">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinator.CompleteAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinator.DisposeAsync">
+            <inheritdoc />
+        </member>
+        <member name="T:Echoglossian.Persistence.PersistenceMetricsSnapshot">
+            <summary>Provides an immutable persistence coordinator metrics snapshot.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceMetricsSnapshot.#ctor(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int64,System.Int64,System.Int64,System.Int32,System.Int32,System.Int32,System.Int32,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.TimeSpan)">
+            <summary>Provides an immutable persistence coordinator metrics snapshot.</summary>
+        </member>
+        <member name="T:Echoglossian.Persistence.PersistenceCoordinatorMetrics">
+            <summary>Collects coordinator metrics with lock-free counter updates.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.RecordAccepted">
+            <summary>Records accepted work.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.RecordRejected">
+            <summary>Records rejected work.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.RecordCoalesced">
+            <summary>Records a coalesced operation.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.RecordReaderStarted">
+            <summary>Records a reader becoming active.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.RecordReaderStopped">
+            <summary>Records a reader becoming inactive.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.RecordTerminalFailure">
+            <summary>Records a terminal failure.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.RecordCancelled">
+            <summary>Records cancelled work.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.RecordWriterStarted">
+            <summary>Records a writer becoming active.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.RecordWriterStopped">
+            <summary>Records a writer becoming inactive.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.RecordBatch">
+            <summary>Records one completed write batch.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.RecordCommittedWrite">
+            <summary>Records one committed write.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.RecordUnchangedWrite">
+            <summary>Records one unchanged write.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.RecordRetry">
+            <summary>Records one retry attempt.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.ObserveReadDepths(System.Int32,System.Int32)">
+            <summary>Updates the observed read lane high-water marks.</summary>
+            <param name="interactiveDepth">The current interactive depth.</param>
+            <param name="backgroundDepth">The current background depth.</param>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.ObserveWriteDepths(System.Int32,System.Int32)">
+            <summary>Updates the observed write lane high-water marks.</summary>
+            <param name="interactiveDepth">The current interactive depth.</param>
+            <param name="backgroundDepth">The current background depth.</param>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorMetrics.Snapshot(System.Int32,System.Int32,System.Int32,System.Int32,System.TimeSpan)">
+            <summary>Builds the immutable metrics snapshot.</summary>
+            <param name="readInteractiveDepth">The current read interactive depth.</param>
+            <param name="readBackgroundDepth">The current read background depth.</param>
+            <param name="writeInteractiveDepth">The current write interactive depth.</param>
+            <param name="writeBackgroundDepth">The current write background depth.</param>
+            <param name="oldestQueuedAge">The current oldest queued age.</param>
+            <returns>The immutable metrics snapshot.</returns>
+        </member>
+        <member name="T:Echoglossian.Persistence.PersistenceCoordinatorOptions">
+            <summary>
+                Defines immutable bounds for persistence coordination.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorOptions.#ctor(System.Int32,System.Int32,System.Int32,System.Int32,System.TimeSpan,System.Int32,System.Collections.Generic.IReadOnlyList{System.TimeSpan},System.Int32,System.Int32,System.TimeSpan)">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.Persistence.PersistenceCoordinatorOptions" /> class.
+            </summary>
+            <param name="interactiveCapacity">The maximum interactive work items.</param>
+            <param name="backgroundCapacity">The maximum background work items.</param>
+            <param name="readerConcurrency">The maximum concurrent readers.</param>
+            <param name="maxBatchSize">The maximum writes in one batch.</param>
+            <param name="batchCollectionWindow">The maximum batch collection interval.</param>
+            <param name="maxAttempts">The maximum total read or write attempts.</param>
+            <param name="retryDelays">The delays between persistence attempts.</param>
+            <param name="contextPoolSize">The maximum pooled contexts.</param>
+            <param name="sqliteDefaultTimeoutSeconds">The SQLite default timeout.</param>
+            <param name="shutdownTimeout">The maximum drain interval during shutdown.</param>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceCoordinatorOptions.Default">
+            <summary>
+                Gets the approved internal coordinator bounds.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceCoordinatorOptions.InteractiveCapacity">
+            <summary>Gets the maximum interactive work items.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceCoordinatorOptions.BackgroundCapacity">
+            <summary>Gets the maximum background work items.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceCoordinatorOptions.ReaderConcurrency">
+            <summary>Gets the maximum concurrent readers.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceCoordinatorOptions.MaxBatchSize">
+            <summary>Gets the maximum writes in one batch.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceCoordinatorOptions.BatchCollectionWindow">
+            <summary>Gets the maximum batch collection interval.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceCoordinatorOptions.MaxAttempts">
+            <summary>Gets the maximum total read or write attempts.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceCoordinatorOptions.RetryDelays">
+            <summary>Gets the delays between persistence attempts.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceCoordinatorOptions.ContextPoolSize">
+            <summary>Gets the maximum pooled contexts.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceCoordinatorOptions.SqliteDefaultTimeoutSeconds">
+            <summary>Gets the SQLite default timeout.</summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceCoordinatorOptions.ShutdownTimeout">
+            <summary>Gets the maximum drain interval during shutdown.</summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorOptions.ValidatePositive(System.Int32,System.String)">
+            <summary>
+                Validates a positive integer setting.
+            </summary>
+            <param name="value">The setting value.</param>
+            <param name="parameterName">The setting parameter name.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+                <paramref name="value" /> is not positive.
+            </exception>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceCoordinatorOptions.ValidatePositive(System.TimeSpan,System.String)">
+            <summary>
+                Validates a positive interval setting.
+            </summary>
+            <param name="value">The interval value.</param>
+            <param name="parameterName">The interval parameter name.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+                <paramref name="value" /> is not positive.
+            </exception>
+        </member>
+        <member name="T:Echoglossian.Persistence.PersistencePriority">
+            <summary>
+                Specifies the bounded persistence lane that accepts work.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Persistence.PersistencePriority.Interactive">
+            <summary>
+                Specifies work required by an active interactive surface.
+            </summary>
+        </member>
+        <member name="F:Echoglossian.Persistence.PersistencePriority.Background">
+            <summary>
+                Specifies opportunistic background work.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.Persistence.PersistenceWorkKey">
+            <summary>
+                Identifies one canonical persistence work item.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Persistence.PersistenceWorkKey.#ctor(System.String,System.String)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Echoglossian.Persistence.PersistenceWorkKey" />
+                struct.
+            </summary>
+            <param name="domain">The domain that owns the canonical identity.</param>
+            <param name="canonicalIdentity">The stable identity within the domain.</param>
+            <exception cref="T:System.ArgumentException">
+                <paramref name="domain" /> or <paramref name="canonicalIdentity" />
+                is blank.
+            </exception>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceWorkKey.Domain">
+            <summary>
+                Gets the domain that owns the canonical identity.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Persistence.PersistenceWorkKey.CanonicalIdentity">
+            <summary>
+                Gets the stable identity within the domain.
             </summary>
         </member>
         <member name="T:Echoglossian.PluginRuntime.Startup.PluginStartupAudit">
@@ -34634,7 +36352,7 @@
                 Draws the full Overlay tab with vertical sub-tabs.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawToastTypePage(Echoglossian.Config,System.String,System.Boolean@,Echoglossian.JournalTranslationDisplayMode@,System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.Single@,System.Int64@)">
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.GetToastGuiRouteStateText(Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState)">
             <summary>
                 Maps one effective toast route state to the localized UI label used
                 in the toast general page.
@@ -37983,6 +39701,18 @@
         <member name="P:Echoglossian.Translators.Capabilities.LlmCapabilityFailureClassification.MessageExcerpt">
             <summary>The sanitized provider error excerpt.</summary>
         </member>
+        <member name="T:Echoglossian.Translators.Capabilities.LlmCapabilityObservationRuntime">
+            <summary>Owns registration of the one runtime capability observation writer.</summary>
+        </member>
+        <member name="M:Echoglossian.Translators.Capabilities.LlmCapabilityObservationRuntime.Register(Echoglossian.DBHelpers.LlmCapabilityObservationWriter)">
+            <summary>Registers the process-lifetime writer.</summary>
+        </member>
+        <member name="M:Echoglossian.Translators.Capabilities.LlmCapabilityObservationRuntime.Unregister(Echoglossian.DBHelpers.LlmCapabilityObservationWriter)">
+            <summary>Unregisters the supplied writer and disables late publication.</summary>
+        </member>
+        <member name="M:Echoglossian.Translators.Capabilities.LlmCapabilityObservationRuntime.TryRecord(Echoglossian.EFCoreSqlite.Models.LlmModelCapabilityObservation,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult}@)">
+            <summary>Schedules an observation if the runtime is available.</summary>
+        </member>
         <member name="T:Echoglossian.Translators.Capabilities.LlmCapabilityParameterDecision">
             <summary>
                 Describes the resolved policy for one LLM capability parameter.
@@ -38104,7 +39834,7 @@
             <param name="decision">When this method returns, contains the resolved temperature decision. This parameter is treated as uninitialized.</param>
             <returns><see langword="true" /> if the value may be sent; otherwise, <see langword="false" />.</returns>
         </member>
-        <member name="M:Echoglossian.Translators.Capabilities.LlmCapabilityPolicyService.LearnFromProviderFailure(Echoglossian.Translators.Capabilities.LlmCapabilityScope,Echoglossian.Translators.Capabilities.LlmCapabilityParameterName,System.Nullable{System.Int32},System.String)">
+        <member name="M:Echoglossian.Translators.Capabilities.LlmCapabilityPolicyService.LearnFromProviderFailureAsync(Echoglossian.Translators.Capabilities.LlmCapabilityScope,Echoglossian.Translators.Capabilities.LlmCapabilityParameterName,System.Nullable{System.Int32},System.String,System.Threading.CancellationToken)">
             <summary>
                 Learns from a bounded, classified provider failure.
             </summary>
@@ -38507,14 +40237,14 @@
                 otherwise, <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.Translators.ChatGPTTranslator.LearnTemperatureFailure(System.Exception)">
+        <member name="M:Echoglossian.Translators.ChatGPTTranslator.LearnTemperatureFailureAsync(System.Exception)">
             <summary>
                 Records a sanitized exact-model temperature observation from an
                 OpenAI SDK request failure.
             </summary>
             <param name="exception">The provider exception associated with the request.</param>
         </member>
-        <member name="M:Echoglossian.Translators.ChatGPTTranslator.LearnReasoningEffortFailure(System.Exception)">
+        <member name="M:Echoglossian.Translators.ChatGPTTranslator.LearnReasoningEffortFailureAsync(System.Exception)">
             <summary>
                 Records exact-model reasoning-effort feedback from a structured
                 OpenAI SDK request failure.
@@ -39025,6 +40755,9 @@
         </member>
         <member name="M:Echoglossian.Translators.GoogleTranslator.TranslateAsync(System.String,System.String,System.String)">
             <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.Translators.GoogleTranslator.IsV2NoTranslationResponse(Newtonsoft.Json.Linq.JObject,System.Net.HttpStatusCode)">
+            <summary>Determines whether a valid V2 payload explicitly has no translation.</summary>
         </member>
         <member name="M:Echoglossian.Translators.GoogleTranslator.LogRecoverableResponseFailure(Dalamud.Plugin.Services.IPluginLog,System.String,System.Int32,System.String,System.String)">
             <summary>
@@ -39831,6 +41564,97 @@
                 required for the payload to be considered valid.
             </param>
             <returns>The structured validation result.</returns>
+        </member>
+        <member name="T:Echoglossian.Translators.Helpers.TranslationFieldEnvelopeCodec">
+            <summary>
+                Encodes named translation fields in a deterministic escaped envelope.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.Helpers.TranslationFieldEnvelopeCodec.Encode(System.Collections.Generic.IEnumerable{Echoglossian.Translators.TranslationField})">
+            <summary>
+                Encodes fields into an invariant transport envelope.
+            </summary>
+            <param name="fields">The fields to encode in order.</param>
+            <returns>The escaped transport envelope.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.Helpers.TranslationFieldEnvelopeCodec.TryDecode(System.String,System.Collections.Generic.IReadOnlyList{Echoglossian.Translators.TranslationField}@)">
+            <summary>
+                Tries to decode an envelope without imposing an expected field set.
+            </summary>
+            <param name="text">The translated transport envelope.</param>
+            <param name="fields">The decoded fields.</param>
+            <returns>
+                <see langword="true" /> when the envelope is well formed;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Translators.Helpers.TranslationFieldEnvelopeCodec.TryDecode(System.String,System.Collections.Generic.IReadOnlyList{Echoglossian.Translators.TranslationField},System.Collections.Generic.IReadOnlyList{Echoglossian.Translators.TranslationField}@)">
+            <summary>
+                Tries to decode an envelope only when it contains exactly the
+                expected ordered fields and nonempty translated values.
+            </summary>
+            <param name="text">The translated transport envelope.</param>
+            <param name="expectedFields">The requested fields in required order.</param>
+            <param name="fields">The decoded translated fields.</param>
+            <returns>
+                <see langword="true" /> when the envelope fully matches the
+                request; otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="T:Echoglossian.Translators.Helpers.TranslationFieldPipeCodec">
+            <summary>
+                Encodes named translation fields as opaque ordinal and text pairs for
+                direct machine-translation providers.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.Helpers.TranslationFieldPipeCodec.Encode(System.Collections.Generic.IEnumerable{Echoglossian.Translators.TranslationField})">
+            <summary>
+                Encodes fields using the established <c>key|text</c> convention.
+            </summary>
+            <param name="fields">The fields to encode in order.</param>
+            <returns>The escaped pipe-delimited provider payload.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.Helpers.TranslationFieldPipeCodec.TryDecode(System.String,System.Collections.Generic.IReadOnlyList{Echoglossian.Translators.TranslationField},System.Collections.Generic.IReadOnlyList{Echoglossian.Translators.TranslationField}@)">
+            <summary>
+                Tries to decode a complete ordered pipe-delimited field response.
+            </summary>
+            <param name="text">The translated provider response.</param>
+            <param name="expectedFields">The requested fields in required order.</param>
+            <param name="fields">The decoded translated fields.</param>
+            <returns>
+                <see langword="true" /> when every expected field is present in
+                order with a nonempty translated value; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Translators.Helpers.TranslationFieldPipeCodec.Escape(System.String)">
+            <summary>
+                Escapes characters that could change the pipe-pair structure.
+            </summary>
+            <param name="value">The field value to escape.</param>
+            <returns>The escaped field value.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.Helpers.TranslationFieldPipeCodec.TrySplit(System.String,System.Collections.Generic.IReadOnlyList{System.String}@)">
+            <summary>
+                Splits one pipe payload without treating escaped pipes as separators.
+            </summary>
+            <param name="text">The provider payload to split.</param>
+            <param name="parts">The escaped key and value parts.</param>
+            <returns>
+                <see langword="true" /> when the escape structure is valid;
+                otherwise, <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Translators.Helpers.TranslationFieldPipeCodec.TryUnescape(System.String,System.String@)">
+            <summary>
+                Restores the supported transport escape sequences in one value.
+            </summary>
+            <param name="value">The escaped value.</param>
+            <param name="decoded">The restored value.</param>
+            <returns>
+                <see langword="true" /> when every escape sequence is recognized;
+                otherwise, <see langword="false" />.
+            </returns>
         </member>
         <member name="T:Echoglossian.Translators.IDialogueContextAwareTranslator">
             <summary>
@@ -40927,6 +42751,34 @@
         <member name="P:Echoglossian.Translators.StructuredDialogueTranslationResponse.TextTranslated">
             <summary>The translated dialogue text.</summary>
         </member>
+        <member name="T:Echoglossian.Translators.TranslationBrokerRateLimitRetryContext">
+            <summary>
+                Carries the existing broker's rate-limit retry state through one
+                asynchronous resolver execution.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Translators.TranslationBrokerRateLimitRetryContext.IsActive">
+            <summary>
+                Gets a value indicating whether the current resolver execution is a
+                broker-owned rate-limit retry.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationBrokerRateLimitRetryContext.Enter(System.Int32)">
+            <summary>
+                Enters the context for a broker-owned rate-limit retry.
+            </summary>
+            <param name="rateLimitAttempt">The zero-based broker retry attempt.</param>
+            <returns>A scope that restores the prior context on disposal.</returns>
+        </member>
+        <member name="P:Echoglossian.Translators.TranslationBrokerRateLimitRetryContext.EmptyScope.Instance">
+            <summary>Gets the singleton empty retry scope.</summary>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationBrokerRateLimitRetryContext.EmptyScope.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationBrokerRateLimitRetryContext.RetryScope.Dispose">
+            <inheritdoc />
+        </member>
         <member name="T:Echoglossian.Translators.TranslationFailureKey">
             <summary>
                 Builds stable keys for exact translation-failure tracking.
@@ -40951,6 +42803,105 @@
             <param name="targetLanguage">The target language code.</param>
             <param name="translationEngine">The translation-engine identifier.</param>
             <returns>The stable lookup key.</returns>
+        </member>
+        <member name="T:Echoglossian.Translators.TranslationField">
+            <summary>
+                Represents one named source field in a structured translation request.
+            </summary>
+            <param name="Name">The stable field name.</param>
+            <param name="Text">The source text for the field.</param>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationField.#ctor(System.String,System.String)">
+            <summary>
+                Represents one named source field in a structured translation request.
+            </summary>
+            <param name="Name">The stable field name.</param>
+            <param name="Text">The source text for the field.</param>
+        </member>
+        <member name="P:Echoglossian.Translators.TranslationField.Name">
+            <summary>The stable field name.</summary>
+        </member>
+        <member name="P:Echoglossian.Translators.TranslationField.Text">
+            <summary>The source text for the field.</summary>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationField.Validate">
+            <summary>
+                Validates that the field has a stable name and source value.
+            </summary>
+            <exception cref="T:System.ArgumentException">
+                The field name is blank.
+            </exception>
+            <exception cref="T:System.ArgumentNullException">
+                The field text is <see langword="null" />.
+            </exception>
+        </member>
+        <member name="T:Echoglossian.Translators.TranslationFieldBatchResult">
+            <summary>
+                Represents the complete result of translating named text fields.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationFieldBatchResult.#ctor(System.Collections.Generic.IEnumerable{Echoglossian.Translators.TranslationField},System.Boolean)">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.Translators.TranslationFieldBatchResult" /> class.
+            </summary>
+            <param name="fields">The translated fields in their requested order.</param>
+            <param name="usedIndividualFallback">
+                <see langword="true" /> when the batch response was rejected and
+                fields were translated individually; otherwise,
+                <see langword="false" />.
+            </param>
+            <exception cref="T:System.ArgumentNullException">
+                <paramref name="fields" /> is <see langword="null" />.
+            </exception>
+            <exception cref="T:System.ArgumentException">
+                <paramref name="fields" /> contains duplicate field names.
+            </exception>
+        </member>
+        <member name="P:Echoglossian.Translators.TranslationFieldBatchResult.Translations">
+            <summary>
+                Gets the translated values by their stable field names.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Translators.TranslationFieldBatchResult.UsedIndividualFallback">
+            <summary>
+                Gets a value that indicates whether individual translation was used
+                after batch validation failed.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationFieldBatchResult.GetTranslation(System.String)">
+            <summary>
+                Gets one required translated field value.
+            </summary>
+            <param name="name">The stable field name.</param>
+            <returns>The translated field value.</returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">
+                No translated value exists for <paramref name="name" />.
+            </exception>
+        </member>
+        <member name="T:Echoglossian.Translators.TranslationFieldRejectedException">
+            <summary>
+                Represents an expected rejection of one named translation field after
+                provider result validation.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationFieldRejectedException.#ctor(System.String,System.String)">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.Translators.TranslationFieldRejectedException" /> class.
+            </summary>
+            <param name="fieldName">The stable rejected field name.</param>
+            <param name="failureReason">The stable validation failure reason.</param>
+        </member>
+        <member name="P:Echoglossian.Translators.TranslationFieldRejectedException.FieldName">
+            <summary>
+                Gets the stable name of the rejected field.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Translators.TranslationFieldRejectedException.FailureReason">
+            <summary>
+                Gets the stable reason that prevented accepting the field.
+            </summary>
         </member>
         <member name="T:Echoglossian.Translators.TranslationService">
             <summary>
@@ -41015,6 +42966,28 @@
             <param name="callerMemberName">The caller member name.</param>
             <param name="callerFilePath">The caller file path.</param>
             <returns>The translated text, or the sanitized source when unresolved.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationService.TranslateFieldsAsync(System.Collections.Generic.IReadOnlyList{Echoglossian.Translators.TranslationField},Echoglossian.SourceClientLanguage,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+                Translates a complete named field set through one engine-appropriate
+                request when the response preserves its field transport.
+            </summary>
+            <param name="fields">The named fields to translate.</param>
+            <param name="sourceLanguage">The operation-captured source contract.</param>
+            <param name="targetLanguage">The target translation language.</param>
+            <param name="originContext">The optional explicit origin context.</param>
+            <param name="cancellationToken">The cancellation token for the operation.</param>
+            <returns>The complete translated field result.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationService.TranslateFieldsAsync(System.Collections.Generic.IReadOnlyList{Echoglossian.Translators.TranslationField},Echoglossian.SourceClientLanguage,System.String,Echoglossian.Translators.TranslationService.TranslatorResolution,System.String,System.Threading.CancellationToken)">
+            <summary>Translates fields using the operation-captured engine resolution.</summary>
+            <param name="fields">The named fields to translate.</param>
+            <param name="sourceLanguage">The captured source contract.</param>
+            <param name="targetLanguage">The captured target language.</param>
+            <param name="translatorResolution">The captured translator and engine identity.</param>
+            <param name="originContext">The diagnostic origin.</param>
+            <param name="cancellationToken">The operation cancellation token.</param>
+            <returns>The complete translated field result.</returns>
         </member>
         <member name="M:Echoglossian.Translators.TranslationService.TranslateCore(System.String,System.String,System.String,Echoglossian.Translators.TranslationSurfaceGroup,System.Nullable{Echoglossian.SourceClientLanguage},System.String,System.String,System.String)">
             <summary>
@@ -41331,6 +43304,47 @@
             <param name="callerFilePath">The caller file path.</param>
             <returns>A task containing the translated or sanitized source text.</returns>
         </member>
+        <member name="M:Echoglossian.Translators.TranslationService.TranslateFieldsIndividuallyAsync(System.Collections.Generic.IReadOnlyList{Echoglossian.Translators.TranslationField},Echoglossian.SourceClientLanguage,System.String,System.String,System.Threading.CancellationToken,Echoglossian.Translators.TranslationService.TranslatorResolution,System.Boolean)">
+            <summary>
+                Translates every field individually using a captured translator
+                resolution after batch validation fails.
+            </summary>
+            <param name="fields">The fields to translate individually.</param>
+            <param name="sourceLanguage">The captured source-language contract.</param>
+            <param name="targetLanguage">The requested target language.</param>
+            <param name="originContext">The optional parent origin context.</param>
+            <param name="cancellationToken">The cancellation token for the operation.</param>
+            <param name="translatorResolution">The translator resolution captured for the batch.</param>
+            <returns>The complete individual-fallback result.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationService.UsesPipeFieldTransport(System.Int32)">
+            <summary>
+                Determines whether one engine should use the established pipe-based
+                direct machine-translation field transport.
+            </summary>
+            <param name="translationEngineId">The captured translation engine.</param>
+            <returns>
+                <see langword="true" /> for direct translation engines; otherwise,
+                <see langword="false" /> so LLM and unknown engines retain the
+                structured envelope.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationService.TryPrepareFieldBatch(System.Collections.Generic.IReadOnlyList{Echoglossian.Translators.TranslationField},Echoglossian.SourceClientLanguage,System.String,System.String,Echoglossian.Translators.TranslationService.TranslatorResolution,System.Collections.Generic.IReadOnlyList{Echoglossian.Translators.TranslationField}@)">
+            <summary>
+                Applies the standard translation-service admission guards before one
+                field batch reaches a provider.
+            </summary>
+            <param name="fields">The requested fields.</param>
+            <param name="sourceLanguage">The captured source-language contract.</param>
+            <param name="targetLanguage">The requested target language.</param>
+            <param name="originContext">The optional parent origin context.</param>
+            <param name="translatorResolution">The captured translator resolution.</param>
+            <param name="preparedFields">The sanitized provider field request.</param>
+            <returns>
+                <see langword="true" /> when batch admission is safe; otherwise,
+                <see langword="false" />.
+            </returns>
+        </member>
         <member name="M:Echoglossian.Translators.TranslationService.TranslateAsyncCore(System.String,System.String,System.String,System.Nullable{Echoglossian.Translators.DialogueTranslationContext},Echoglossian.Translators.TranslationSurfaceGroup,System.Nullable{Echoglossian.SourceClientLanguage},System.String,System.String,System.String,System.Threading.CancellationToken,System.Nullable{Echoglossian.Translators.TranslationService.TranslatorResolution})">
             <summary>
                 Executes one asynchronous translation with an optional captured source
@@ -41345,7 +43359,24 @@
             <param name="originContext">The optional origin context.</param>
             <param name="callerMemberName">The caller member name.</param>
             <param name="callerFilePath">The caller file path.</param>
+            <param name="cancellationToken">The cancellation token for the operation.</param>
+            <param name="translatorResolution">The optional previously resolved translator.</param>
             <returns>A task containing the translated or sanitized source text.</returns>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationService.TranslateAsyncAcceptedCore(System.String,System.String,System.String,System.Nullable{Echoglossian.Translators.DialogueTranslationContext},Echoglossian.Translators.TranslationSurfaceGroup,System.Nullable{Echoglossian.SourceClientLanguage},System.String,System.String,System.String,System.Threading.CancellationToken,System.Nullable{Echoglossian.Translators.TranslationService.TranslatorResolution})">
+            <summary>Runs the normal async translation path while preserving its acceptance outcome for structured callers.</summary>
+            <param name="text">The requested source text.</param>
+            <param name="sourceLanguage">The requested provider source code.</param>
+            <param name="targetLanguage">The requested target code.</param>
+            <param name="dialogueContext">The optional dialogue context.</param>
+            <param name="surfaceGroup">The translation surface.</param>
+            <param name="capturedSourceLanguage">The captured persistence source contract.</param>
+            <param name="originContext">The optional origin context.</param>
+            <param name="callerMemberName">The caller member name.</param>
+            <param name="callerFilePath">The caller file path.</param>
+            <param name="cancellationToken">The operation cancellation token.</param>
+            <param name="translatorResolution">The optional captured engine and translator.</param>
+            <returns>The final text together with explicit acceptance and failure information.</returns>
         </member>
         <member name="M:Echoglossian.Translators.TranslationService.AcceptTranslatedResultOrFallback(System.String,System.String,System.String,System.String,System.String,System.String,System.Int32)">
             <summary>
@@ -41545,6 +43576,9 @@
                 <see langword="true" /> when the request should be skipped because it
                 is already cached as a known failure; otherwise <see langword="false" />.
             </returns>
+        </member>
+        <member name="M:Echoglossian.Translators.TranslationService.IsFailureApplicableToGoogleVariant(Echoglossian.EFCoreSqlite.Models.TranslationFailure,Echoglossian.Config)">
+            <summary>Filters version-specific negative records for the active Google implementation.</summary>
         </member>
         <member name="M:Echoglossian.Translators.TranslationService.RecordFailedTranslation(System.String,System.String,System.String,System.String,System.String,System.Int32)">
             <summary>
@@ -42901,6 +44935,109 @@
             <param name="maxDistance">The distance at which the overlay becomes hidden.</param>
             <param name="minScale">The minimum scale reached at the maximum distance.</param>
             <returns>The resolved distance-aware presentation state.</returns>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics">
+            <summary>
+            Emits temporary, deduplicated diagnostics for texture-backed overlay render
+            passes while complex-script overlay regressions are under investigation.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.LogTextureUnavailable(Echoglossian.Config,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest,Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest,Echoglossian.UIOverlays.TextPresentation.TextureRenderAttemptOutcome,System.ValueTuple{System.Int32,System.Int64,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32})">
+            <summary>
+            Logs one texture-backed overlay render pass that did not reach a drawn
+            state because the backing texture was unavailable.
+            </summary>
+            <param name="configuration">The active plugin configuration.</param>
+            <param name="surfaceId">The overlay surface identifier.</param>
+            <param name="request">The active overlay render request.</param>
+            <param name="textRequest">The resolved text-layout request.</param>
+            <param name="outcome">The texture-render decision.</param>
+            <param name="stats">The current RTL texture backend stats.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.LogTextureDrawn(Echoglossian.Config,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest,Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2)">
+            <summary>
+            Logs one successful texture-backed overlay draw.
+            </summary>
+            <param name="configuration">The active plugin configuration.</param>
+            <param name="surfaceId">The overlay surface identifier.</param>
+            <param name="request">The active overlay render request.</param>
+            <param name="textRequest">The resolved text-layout request.</param>
+            <param name="renderedPosition">The actual rendered window position.</param>
+            <param name="renderedSize">The actual rendered window size.</param>
+            <param name="bodySize">The measured body-text size.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.ShouldLog(Echoglossian.Config)">
+            <summary>
+            Determines whether texture-overlay diagnostics should run for the current
+            language mode.
+            </summary>
+            <param name="configuration">The active plugin configuration.</param>
+            <returns><see langword="true" /> when diagnostics should log.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.ShouldEmit(System.String,System.String)">
+            <summary>
+            Determines whether a deduplicated diagnostic line should be emitted.
+            </summary>
+            <param name="key">The stable diagnostic event key.</param>
+            <param name="signature">The event-state signature.</param>
+            <returns><see langword="true" /> when the line should be emitted.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.BuildPreviewKey(System.String)">
+            <summary>
+            Builds the preview key used for deduplication.
+            </summary>
+            <param name="text">The source text.</param>
+            <returns>The stable preview key.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.BuildPreview(System.String)">
+            <summary>
+            Builds a short preview for diagnostic log lines.
+            </summary>
+            <param name="text">The source text.</param>
+            <returns>The shortened preview text.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.RoundVector(System.Numerics.Vector2,System.Single)">
+            <summary>
+            Rounds a vector to a coarse step size for deduplication.
+            </summary>
+            <param name="value">The source vector.</param>
+            <param name="step">The coarse rounding step.</param>
+            <returns>The rounded vector.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.RoundToStep(System.Single,System.Single)">
+            <summary>
+            Rounds a scalar to the requested step size.
+            </summary>
+            <param name="value">The source value.</param>
+            <param name="step">The rounding step.</param>
+            <returns>The rounded scalar.</returns>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.FormatVector(System.Numerics.Vector2)">
+            <summary>
+            Formats a vector for diagnostic log output.
+            </summary>
+            <param name="value">The vector value.</param>
+            <returns>The formatted vector.</returns>
+        </member>
+        <member name="T:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.EmissionState">
+            <summary>
+            Captures the last emitted signature and time for one diagnostic key.
+            </summary>
+            <param name="Signature">The emitted diagnostic-state signature.</param>
+            <param name="EmittedAtUtc">The time the signature was emitted.</param>
+        </member>
+        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.EmissionState.#ctor(System.String,System.DateTime)">
+            <summary>
+            Captures the last emitted signature and time for one diagnostic key.
+            </summary>
+            <param name="Signature">The emitted diagnostic-state signature.</param>
+            <param name="EmittedAtUtc">The time the signature was emitted.</param>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.EmissionState.Signature">
+            <summary>The emitted diagnostic-state signature.</summary>
+        </member>
+        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.EmissionState.EmittedAtUtc">
+            <summary>The time the signature was emitted.</summary>
         </member>
         <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.RenderScale">
             <summary>
