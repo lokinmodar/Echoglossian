@@ -65,11 +65,7 @@ internal sealed class QuestPlatePersistenceWriter
         var gate = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (!this.cache.TryRegisterOrJoin(key, gate, out var generation, out var existing))
         {
-            completion = existing!.ContinueWith(
-                static task => new PersistenceReadResult<QuestPlate?>(task.Result.Status, task.Result.Projection, null),
-                CancellationToken.None,
-                TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Default);
+            completion = ConvertReadCompletionAsync(existing!);
             return PersistenceAdmissionStatus.Joined;
         }
 
@@ -88,22 +84,7 @@ internal sealed class QuestPlatePersistenceWriter
             },
             out completion);
 
-        _ = completion.ContinueWith(
-            task =>
-            {
-                var result = task.Result;
-                var projection = result.Status == PersistenceCompletionStatus.Succeeded ? result.Value?.Clone() : null;
-                var terminal = new QuestPlateRuntimeResult(result.Status, projection);
-                if (Volatile.Read(ref this.publicationEnabled) != 0)
-                {
-                    _ = this.cache.Complete(key, generation, terminal);
-                }
-
-                _ = gate.TrySetResult(terminal);
-            },
-            CancellationToken.None,
-            TaskContinuationOptions.ExecuteSynchronously,
-            TaskScheduler.Default);
+        _ = this.CompleteReadAsync(completion, key, generation, gate);
         return status;
     }
 
@@ -120,21 +101,13 @@ internal sealed class QuestPlatePersistenceWriter
         var gate = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (!this.cache.TryRegisterWriteOrJoin(key, gate, out var generation, out var existing, out var readCompletion))
         {
-            completion = existing!.ContinueWith(
-                static task => new PersistenceWriteResult(task.Result.Status, 0, null),
-                CancellationToken.None,
-                TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Default);
+            completion = ConvertWriteCompletionAsync(existing!);
             return PersistenceAdmissionStatus.Joined;
         }
 
         if (readCompletion is not null)
         {
-            completion = gate.Task.ContinueWith(
-                static task => new PersistenceWriteResult(task.Result.Status, 0, null),
-                CancellationToken.None,
-                TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Default);
+            completion = ConvertWriteCompletionAsync(gate.Task);
             _ = this.ScheduleDeferredPersistAsync(key, generation, gate, readCompletion, captured, priority);
             return PersistenceAdmissionStatus.Joined;
         }
@@ -198,25 +171,63 @@ internal sealed class QuestPlatePersistenceWriter
                 }) { CancellationToken = this.cancellation.Token },
             out completion);
 
-        _ = completion.ContinueWith(
-            task =>
-            {
-                var result = task.Result;
-                var projection = result.Status is PersistenceCompletionStatus.Succeeded or PersistenceCompletionStatus.Unchanged
-                    ? persisted?.Clone()
-                    : null;
-                var terminal = new QuestPlateRuntimeResult(result.Status, projection);
-                if (Volatile.Read(ref this.publicationEnabled) != 0)
-                {
-                    _ = this.cache.Complete(key, generation, terminal);
-                }
-
-                _ = gate.TrySetResult(terminal);
-            },
-            CancellationToken.None,
-            TaskContinuationOptions.ExecuteSynchronously,
-            TaskScheduler.Default);
+        _ = this.CompleteWriteAsync(completion, key, generation, gate, () => persisted);
         return status;
+    }
+
+    private static async Task<PersistenceReadResult<QuestPlate?>> ConvertReadCompletionAsync(
+        Task<QuestPlateRuntimeResult> completion)
+    {
+        var result = await completion.ConfigureAwait(false);
+        return new PersistenceReadResult<QuestPlate?>(result.Status, result.Projection, null);
+    }
+
+    private static async Task<PersistenceWriteResult> ConvertWriteCompletionAsync(
+        Task<QuestPlateRuntimeResult> completion)
+    {
+        var result = await completion.ConfigureAwait(false);
+        return new PersistenceWriteResult(result.Status, 0, null);
+    }
+
+    private async Task CompleteReadAsync(
+        Task<PersistenceReadResult<QuestPlate?>> completion,
+        QuestPlateRuntimeKey key,
+        long generation,
+        TaskCompletionSource<QuestPlateRuntimeResult> gate)
+    {
+        var result = await completion.ConfigureAwait(false);
+        var projection = result.Status == PersistenceCompletionStatus.Succeeded
+            ? result.Value?.Clone()
+            : null;
+        this.CompleteCacheOperation(key, generation, gate, new QuestPlateRuntimeResult(result.Status, projection));
+    }
+
+    private async Task CompleteWriteAsync(
+        Task<PersistenceWriteResult> completion,
+        QuestPlateRuntimeKey key,
+        long generation,
+        TaskCompletionSource<QuestPlateRuntimeResult> gate,
+        Func<QuestPlate?> persisted)
+    {
+        var result = await completion.ConfigureAwait(false);
+        var projection = result.Status is PersistenceCompletionStatus.Succeeded or PersistenceCompletionStatus.Unchanged
+            ? persisted()?.Clone()
+            : null;
+        this.CompleteCacheOperation(key, generation, gate, new QuestPlateRuntimeResult(result.Status, projection));
+    }
+
+    private void CompleteCacheOperation(
+        QuestPlateRuntimeKey key,
+        long generation,
+        TaskCompletionSource<QuestPlateRuntimeResult> gate,
+        QuestPlateRuntimeResult terminal)
+    {
+        if (Volatile.Read(ref this.publicationEnabled) != 0)
+        {
+            _ = this.cache.Complete(key, generation, terminal);
+        }
+
+        _ = gate.TrySetResult(terminal);
     }
 }
 
@@ -311,13 +322,19 @@ internal static class QuestPlatePersistencePolicy
 
     private static QuestPlate? SelectPreferred(IEnumerable<QuestPlate> candidates, QuestPlate probe, TranslationReuseScope scope)
     {
-        return candidates
+        using var enumerator = candidates
             .Where(row => scope.Matches(row.OriginalLang, row.TranslationLang, row.TranslationEngine) && RuntimeLanguageHelper.LanguagesMatch(row.OriginalLang, probe.OriginalLang) && (string.IsNullOrWhiteSpace(probe.SourceContentHash) || string.Equals(row.SourceContentHash, probe.SourceContentHash, StringComparison.Ordinal)))
             .OrderByDescending(row => IdentityScore(row, probe))
             .ThenByDescending(CompletenessScore)
             .ThenByDescending(row => row.UpdatedDate ?? row.CreatedDate ?? DateTime.MinValue)
             .ThenByDescending(row => row.Id)
-            .FirstOrDefault();
+            .GetEnumerator();
+        if (enumerator.MoveNext())
+        {
+            return enumerator.Current;
+        }
+
+        return null;
     }
 
     private static int IdentityScore(QuestPlate row, QuestPlate probe)
