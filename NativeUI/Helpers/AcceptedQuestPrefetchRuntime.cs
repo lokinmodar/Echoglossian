@@ -332,22 +332,39 @@ public partial class Echoglossian
             requestSources,
             out var workItem))
     {
+      if (!string.IsNullOrWhiteSpace(requestSources))
+      {
+        _ = this.acceptedQuestPrefetchRequestedQuestQueue.Complete(questId);
+      }
+
       return;
     }
 
     this.acceptedQuestPrefetchActionPump.Enqueue(
         () =>
         {
+          Task completion;
           try
           {
-            this.ProcessAcceptedQuestPrefetchWorkItem(workItem);
+            completion = this.ProcessAcceptedQuestPrefetchWorkItem(workItem);
           }
-          finally
+          catch
           {
             if (!string.IsNullOrWhiteSpace(requestSources))
             {
               _ = this.acceptedQuestPrefetchRequestedQuestQueue.Complete(questId);
             }
+
+            return;
+          }
+
+          if (!string.IsNullOrWhiteSpace(requestSources))
+          {
+            _ = completion.ContinueWith(
+                _ => this.acceptedQuestPrefetchRequestedQuestQueue.Complete(questId),
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
           }
         });
   }
@@ -491,13 +508,13 @@ public partial class Echoglossian
   ///     schedules any missing translations through the shared paced broker.
   /// </summary>
   /// <param name="workItem">The captured accepted-quest prefetch work item.</param>
-  private void ProcessAcceptedQuestPrefetchWorkItem(
+  private Task ProcessAcceptedQuestPrefetchWorkItem(
       AcceptedQuestPrefetchWorkItem workItem)
   {
     if (workItem.Generation !=
         Volatile.Read(ref this.acceptedQuestPrefetchGeneration))
     {
-      return;
+      return Task.CompletedTask;
     }
 
     if (!QuestProgressResolver.TryResolveQuestProgress(
@@ -509,13 +526,13 @@ public partial class Echoglossian
           "resolve-failed",
           workItem.QuestProgressCapture.QuestId,
           detail: "QuestProgressResolver could not resolve live progress for this accepted quest.");
-      return;
+      return Task.CompletedTask;
     }
 
     if (workItem.Generation !=
         Volatile.Read(ref this.acceptedQuestPrefetchGeneration))
     {
-      return;
+      return Task.CompletedTask;
     }
 
     workItem.GenerationCancellationToken.ThrowIfCancellationRequested();
@@ -534,14 +551,14 @@ public partial class Echoglossian
 
     if (!workItem.RunCanonicalPrefetch)
     {
-      return;
+      return Task.CompletedTask;
     }
 
     var questCanonicalData = QuestCanonicalData.Create(
         questProgressSnapshot,
         workItem.GameVersion);
     var currentQuestSequenceText = questCanonicalData.CurrentSequenceText;
-    this.ScheduleAcceptedQuestPrefetchQuestPlate(
+    return this.ScheduleAcceptedQuestPrefetchQuestPlate(
         questCanonicalData,
         questProgressSnapshot,
         currentQuestSequenceText,
@@ -556,7 +573,7 @@ public partial class Echoglossian
   /// <param name="questProgressSnapshot">The managed quest snapshot.</param>
   /// <param name="currentQuestSequenceText">The captured current sequence text.</param>
   /// <param name="workItem">The captured operation scope and generation.</param>
-  private void ScheduleAcceptedQuestPrefetchQuestPlate(
+  private Task ScheduleAcceptedQuestPrefetchQuestPlate(
       QuestCanonicalData questCanonicalData,
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
@@ -565,7 +582,7 @@ public partial class Echoglossian
     var writer = this.questPlatePersistenceWriter;
     if (writer is null || workItem.GenerationCancellationToken.IsCancellationRequested)
     {
-      return;
+      return Task.CompletedTask;
     }
 
     var canonicalQuestPlate = this.CreateAcceptedQuestPrefetchPlate(
@@ -580,10 +597,10 @@ public partial class Echoglossian
     if (admission is PersistenceAdmissionStatus.RejectedCapacity or
         PersistenceAdmissionStatus.RejectedShutdown)
     {
-      return;
+      return Task.CompletedTask;
     }
 
-    _ = read.ContinueWith(
+    return read.ContinueWith(
         task => this.CompleteAcceptedQuestPrefetchQuestPlateAsync(
             writer,
             canonicalQuestPlate,

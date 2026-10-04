@@ -129,7 +129,10 @@ public class TranslationService
     this.sanitizeText = sanitizeText;
     this.translationEngineId = translationEngine;
     this.isKnownFailedTranslation = isKnownFailedTranslation;
-    this.isKnownPersistentFailedTranslation = isKnownFailedTranslation;
+    // Test callers that inject the broad runtime cache must still let broker
+    // retries bypass transient entries. The production constructor supplies
+    // its persistent lookup explicitly above.
+    this.isKnownPersistentFailedTranslation = null;
     this.recordFailedTranslation = recordFailedTranslation;
     this.recordTranslationMetric = recordTranslationMetric;
     this.recordTransientFailedTranslation = recordTransientFailedTranslation;

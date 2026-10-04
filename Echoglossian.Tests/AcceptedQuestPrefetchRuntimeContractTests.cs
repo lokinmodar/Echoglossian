@@ -118,7 +118,7 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
             "AcceptedQuestPrefetchRuntime.cs");
         var methodBody = ExtractMethodBody(
             source,
-            "private void ProcessAcceptedQuestPrefetchWorkItem(");
+            "private Task ProcessAcceptedQuestPrefetchWorkItem(");
         var resolutionIndex = methodBody.IndexOf(
             "QuestProgressResolver.TryResolveQuestProgress(",
             StringComparison.Ordinal);
@@ -146,12 +146,44 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
             "AcceptedQuestPrefetchRuntime.cs");
         var methodBody = ExtractMethodBody(
             source,
-            "private void ProcessAcceptedQuestPrefetchWorkItem(");
+            "private Task ProcessAcceptedQuestPrefetchWorkItem(");
 
         Assert.Contains("this.ScheduleAcceptedQuestPrefetchQuestPlate", methodBody, StringComparison.Ordinal);
         Assert.DoesNotContain("this.FindQuestPlate", methodBody, StringComparison.Ordinal);
         Assert.DoesNotContain("this.InsertQuestPlate", methodBody, StringComparison.Ordinal);
         Assert.DoesNotContain("this.UpdateQuestPlate", methodBody, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures priority requests remain deduplicated until their async
+    /// cache-first operation reaches a terminal state, while rejected capture
+    /// releases the request immediately.
+    /// </summary>
+    [Fact]
+    public void ScheduleAcceptedQuestPrefetch_CompletesPriorityRequestsAtTerminalState()
+    {
+        var source = ReadContractSource(
+            "NativeUI",
+            "Helpers",
+            "AcceptedQuestPrefetchRuntime.cs");
+        var methodBody = ExtractMethodBody(
+            source,
+            "private void ScheduleAcceptedQuestPrefetch(");
+
+        var captureFailure = methodBody.IndexOf(
+            "if (!this.TryCaptureAcceptedQuestPrefetchWorkItem(",
+            StringComparison.Ordinal);
+        var continuation = methodBody.IndexOf(
+            "completion.ContinueWith(",
+            StringComparison.Ordinal);
+
+        Assert.True(captureFailure >= 0);
+        Assert.True(
+            methodBody.IndexOf(
+                "this.acceptedQuestPrefetchRequestedQuestQueue.Complete(questId);",
+                captureFailure,
+                StringComparison.Ordinal) > captureFailure);
+        Assert.True(continuation > captureFailure);
     }
 
     /// <summary>
