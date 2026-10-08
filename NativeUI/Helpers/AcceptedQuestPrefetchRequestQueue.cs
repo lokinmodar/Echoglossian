@@ -11,14 +11,27 @@ namespace Echoglossian;
 /// </summary>
 internal sealed class AcceptedQuestPrefetchRequestQueue
 {
+  private readonly object gate = new();
+
   private readonly Queue<uint> questIds = [];
 
-  private readonly Dictionary<uint, HashSet<string>> queuedQuestSources = [];
+  private readonly Dictionary<uint, HashSet<string>> requestSourcesByQuestId = [];
+
+  private readonly HashSet<uint> processingQuestIds = [];
 
   /// <summary>
   ///     Gets the number of priority requests waiting to be prefetched.
   /// </summary>
-  public int Count => this.questIds.Count;
+  public int Count
+  {
+    get
+    {
+      lock (this.gate)
+      {
+        return this.questIds.Count;
+      }
+    }
+  }
 
   /// <summary>
   ///     Adds an accepted quest to the priority queue if it is not already
@@ -43,17 +56,20 @@ internal sealed class AcceptedQuestPrefetchRequestQueue
     }
 
     var normalizedSource = NormalizeSource(source);
-    if (this.queuedQuestSources.TryGetValue(questId, out var existingSources))
+    lock (this.gate)
     {
-      existingSources.Add(normalizedSource);
-      requestSources = FormatSources(existingSources);
-      return false;
-    }
+      if (this.requestSourcesByQuestId.TryGetValue(questId, out var existingSources))
+      {
+        existingSources.Add(normalizedSource);
+        requestSources = FormatSources(existingSources);
+        return false;
+      }
 
-    this.queuedQuestSources[questId] = [normalizedSource];
-    this.questIds.Enqueue(questId);
-    requestSources = normalizedSource;
-    return true;
+      this.requestSourcesByQuestId[questId] = [normalizedSource];
+      this.questIds.Enqueue(questId);
+      requestSources = normalizedSource;
+      return true;
+    }
   }
 
   /// <summary>
@@ -72,26 +88,51 @@ internal sealed class AcceptedQuestPrefetchRequestQueue
   {
     questId = 0;
     requestSources = string.Empty;
-    while (this.questIds.TryDequeue(out var requestedQuestId))
+    lock (this.gate)
     {
-      if (requestedQuestId == 0)
+      while (this.questIds.TryDequeue(out var requestedQuestId))
       {
-        continue;
-      }
+        if (requestedQuestId == 0 ||
+            !this.requestSourcesByQuestId.TryGetValue(
+                requestedQuestId,
+                out var sources))
+        {
+          continue;
+        }
 
-      if (!this.queuedQuestSources.Remove(
-              requestedQuestId,
-              out var sources))
-      {
-        sources = [NormalizeSource(null)];
+        _ = this.processingQuestIds.Add(requestedQuestId);
+        questId = requestedQuestId;
+        requestSources = FormatSources(sources);
+        return true;
       }
-
-      questId = requestedQuestId;
-      requestSources = FormatSources(sources);
-      return true;
     }
 
     return false;
+  }
+
+  /// <summary>
+  ///     Releases a processing quest only after every accepted-quest operation
+  ///     has reached a terminal state.
+  /// </summary>
+  /// <param name="questId">The quest identity to release.</param>
+  /// <returns>True when a processing request was completed.</returns>
+  public bool Complete(uint questId)
+  {
+    if (questId == 0)
+    {
+      return false;
+    }
+
+    lock (this.gate)
+    {
+      if (!this.processingQuestIds.Remove(questId))
+      {
+        return false;
+      }
+
+      _ = this.requestSourcesByQuestId.Remove(questId);
+      return true;
+    }
   }
 
   /// <summary>
@@ -99,8 +140,12 @@ internal sealed class AcceptedQuestPrefetchRequestQueue
   /// </summary>
   public void Clear()
   {
-    this.questIds.Clear();
-    this.queuedQuestSources.Clear();
+    lock (this.gate)
+    {
+      this.questIds.Clear();
+      this.requestSourcesByQuestId.Clear();
+      this.processingQuestIds.Clear();
+    }
   }
 
   /// <summary>

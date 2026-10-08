@@ -114,6 +114,17 @@ public static class TranslationFailureCacheManager
         string targetLanguage,
         int translationEngine)
     {
+        return Contains(sourceText, sourceLanguage, targetLanguage, translationEngine, null);
+    }
+
+    /// <summary>Determines whether an applicable exact failure is cached.</summary>
+    public static bool Contains(
+        string sourceText,
+        string sourceLanguage,
+        string targetLanguage,
+        int translationEngine,
+        Func<TranslationFailure, bool>? isApplicable)
+    {
         if (string.IsNullOrWhiteSpace(sourceText))
         {
             return false;
@@ -131,12 +142,15 @@ public static class TranslationFailureCacheManager
             {
                 return ContainsTransientFailure(
                     lookupKey,
-                    sourceText);
+                    sourceText,
+                    isApplicable,
+                    translationEngine);
             }
 
             if (rows.Any(row =>
                 TranslationPersistenceGuard.IsPersistentFailureReason(
                     row.FailureReason) &&
+                (isApplicable == null || isApplicable(row)) &&
                 string.Equals(
                     row.SourceText,
                     sourceText,
@@ -147,7 +161,9 @@ public static class TranslationFailureCacheManager
 
             return ContainsTransientFailure(
                 lookupKey,
-                sourceText);
+                sourceText,
+                isApplicable,
+                translationEngine);
         }
     }
 
@@ -169,6 +185,17 @@ public static class TranslationFailureCacheManager
         string targetLanguage,
         int translationEngine)
     {
+        return ContainsPersistent(sourceText, sourceLanguage, targetLanguage, translationEngine, null);
+    }
+
+    /// <summary>Determines whether an applicable persistent exact failure is cached.</summary>
+    public static bool ContainsPersistent(
+        string sourceText,
+        string sourceLanguage,
+        string targetLanguage,
+        int translationEngine,
+        Func<TranslationFailure, bool>? isApplicable)
+    {
         if (string.IsNullOrWhiteSpace(sourceText))
         {
             return false;
@@ -186,6 +213,7 @@ public static class TranslationFailureCacheManager
                    rows.Any(row =>
                        TranslationPersistenceGuard.IsPersistentFailureReason(
                            row.FailureReason) &&
+                       (isApplicable == null || isApplicable(row)) &&
                        string.Equals(
                            row.SourceText,
                            sourceText,
@@ -288,7 +316,9 @@ public static class TranslationFailureCacheManager
 
     private static bool ContainsTransientFailure(
         string lookupKey,
-        string sourceText)
+        string sourceText,
+        Func<TranslationFailure, bool>? isApplicable,
+        int translationEngine)
     {
         if (!TransientCache.TryGetValue(lookupKey, out var entries) ||
             entries.Count == 0)
@@ -305,10 +335,13 @@ public static class TranslationFailureCacheManager
         }
 
         return entries.Any(entry =>
-            string.Equals(
-                entry.SourceText,
-                sourceText,
-                StringComparison.Ordinal));
+            string.Equals(entry.SourceText, sourceText, StringComparison.Ordinal) &&
+            (isApplicable == null || isApplicable(new TranslationFailure
+            {
+                SourceText = entry.SourceText,
+                TranslationEngine = translationEngine,
+                FailureReason = entry.FailureReason,
+            })));
     }
 
     private static List<TransientTranslationFailure> GetTransientBucket(

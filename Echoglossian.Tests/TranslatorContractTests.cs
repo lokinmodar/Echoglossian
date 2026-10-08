@@ -13,6 +13,8 @@ using Serilog.Events;
 using System.Globalization;
 
 using Xunit;
+using System.Net;
+using Newtonsoft.Json.Linq;
 
 namespace Echoglossian.Tests;
 
@@ -21,6 +23,15 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class TranslatorContractTests
 {
+    /// <summary>Ensures the valid V2 404 payload is distinguished from malformed responses.</summary>
+    [Fact]
+    public void Google_V2Status404WithoutText_IsExplicitNoTranslation()
+    {
+        var response = JObject.Parse("{\"status\":404}");
+
+        Assert.True(GoogleTranslator.IsV2NoTranslationResponse(response, HttpStatusCode.OK));
+        Assert.False(GoogleTranslator.IsV2NoTranslationResponse(response, HttpStatusCode.BadGateway));
+    }
     /// <summary>
     ///     Ensures DeepL source-language normalization matches the current runtime contract.
     /// </summary>

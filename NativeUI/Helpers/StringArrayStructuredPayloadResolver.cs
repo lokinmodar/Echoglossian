@@ -6,6 +6,7 @@
 using System.Globalization;
 
 using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.Translators;
 
 namespace Echoglossian.NativeUI.Helpers;
 
@@ -31,6 +32,18 @@ public static class StringArrayStructuredPayloadResolver
         out StringArrayStructuredPayload? translatedPayload)
     {
         ArgumentNullException.ThrowIfNull(row);
+
+        if (row.TranslatedStructuredPayload?.Contains(
+                GoogleTranslator.V2NoTranslationMarker,
+                StringComparison.Ordinal) == true ||
+            row.TranslatedStrings?.Contains(
+                GoogleTranslator.V2NoTranslationMarker,
+                StringComparison.Ordinal) == true)
+        {
+            originalPayload = null;
+            translatedPayload = null;
+            return false;
+        }
 
         originalPayload = ResolveOriginalPayload(row);
         if (originalPayload == null)

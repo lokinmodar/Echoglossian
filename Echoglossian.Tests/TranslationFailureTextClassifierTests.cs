@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Properties;
+using Echoglossian.Translators;
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -96,5 +97,18 @@ public class TranslationFailureTextClassifierTests
 
     Assert.False(classified);
     Assert.Null(classification);
+  }
+
+  /// <summary>Ensures the V2 no-translation marker is terminal and distinct from empty output.</summary>
+  [Fact]
+  public void TryClassify_GoogleV2NoTranslationMarker_ReturnsPersistentReason()
+  {
+    var classified = TranslationFailureTextClassifier.TryClassify(
+        GoogleTranslator.V2NoTranslationMarker,
+        out var classification);
+
+    Assert.True(classified);
+    Assert.Equal("google-v2-no-translation", classification!.FailureReason);
+    Assert.True(TranslationPersistenceGuard.IsPersistentFailureReason(classification.FailureReason));
   }
 }

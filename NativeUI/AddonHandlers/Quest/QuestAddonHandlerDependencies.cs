@@ -231,6 +231,13 @@ internal sealed class QuestAddonHandlerDependencies
   /// <summary>Gets or sets the name-only quest lookup delegate.</summary>
   public required Func<QuestPlate, QuestPlate?> FindQuestPlateByName { get; init; }
 
+  /// <summary>
+  ///     Gets or sets the non-blocking cache-first QuestPlate lookup delegate
+  ///     used by callback-reachable quest surfaces.
+  /// </summary>
+  public Func<QuestPlate, SourceClientLanguage, QuestPlate?>
+      FindQuestPlateCacheFirst { get; init; } = static (_, _) => null;
+
   /// <summary>Gets or sets the dedicated popup-text lookup delegate.</summary>
   public required Func<QuestPopupText, QuestPopupText?> FindQuestPopupText { get; init; }
 

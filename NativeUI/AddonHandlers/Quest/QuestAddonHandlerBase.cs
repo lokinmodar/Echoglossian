@@ -1047,6 +1047,20 @@ internal abstract class QuestAddonHandlerBase
   }
 
   /// <summary>
+  ///     Resolves a committed QuestPlate projection, scheduling a shared
+  ///     non-blocking lookup when the projection is not cached.
+  /// </summary>
+  /// <param name="questPlate">The managed callback-captured lookup payload.</param>
+  /// <param name="sourceLanguage">The source language captured by the callback.</param>
+  /// <returns>The committed projection when already available.</returns>
+  protected QuestPlate? FindQuestPlateCacheFirst(
+      QuestPlate questPlate,
+      SourceClientLanguage sourceLanguage)
+  {
+    return this.Dependencies.FindQuestPlateCacheFirst(questPlate, sourceLanguage);
+  }
+
+  /// <summary>
   ///     Resolves dedicated popup text using the popup lookup delegate.
   /// </summary>
   /// <param name="questPopupText">The popup row to look up.</param>

@@ -989,13 +989,6 @@
       "evidence": "LlmCapabilityPersistenceHelper.UpsertRules( [occurrence 1]"
     },
     {
-      "id": "persistence-helper-call|Translators/TranslationService.cs|TranslationFailurePersistenceHelper.RecordFailure( [occurrence 1]",
-      "category": "persistence-helper-call",
-      "stage": "DB-7",
-      "path": "Translators/TranslationService.cs",
-      "evidence": "TranslationFailurePersistenceHelper.RecordFailure( [occurrence 1]"
-    },
-    {
       "id": "sync-ef-bulk-write|DBHelpers/DbOperations.cs|ExecuteUpdate( [occurrence 1]",
       "category": "sync-ef-bulk-write",
       "stage": "DB-7",

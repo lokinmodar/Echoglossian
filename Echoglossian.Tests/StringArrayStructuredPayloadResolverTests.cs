@@ -5,6 +5,7 @@
 
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.NativeUI.Helpers;
+using Echoglossian.Translators;
 
 using Xunit;
 
@@ -95,6 +96,40 @@ public class StringArrayStructuredPayloadResolverTests
         Assert.Equal(
             "Objetivo Atual",
             translatedPayload.Slots[1].TranslatedText);
+    }
+
+    /// <summary>
+    ///     Ensures a legacy structured row containing the internal Google V2
+    ///     marker cannot be returned to native UI consumers.
+    /// </summary>
+    [Fact]
+    public void TryResolvePayloads_GoogleV2Marker_ReturnsFalse()
+    {
+        var originalPayload = CreatePayload(
+            type: "Character",
+            contextKey: "Character:Profile",
+            translatedText: null);
+        var translatedPayload = CreatePayload(
+            type: "Character",
+            contextKey: "Character:Profile",
+            translatedText: GoogleTranslator.V2NoTranslationMarker);
+        var row = StringArrayDataPersistenceHelper.CreateCanonicalRow(
+            type: "Character",
+            originalLang: "en",
+            translationLang: "pt",
+            translationEngine: 0,
+            gameVersion: "7.3",
+            originalPayload: originalPayload,
+            translatedPayload: translatedPayload);
+
+        var resolved = StringArrayStructuredPayloadResolver.TryResolvePayloads(
+            row,
+            out var resolvedOriginal,
+            out var resolvedTranslated);
+
+        Assert.False(resolved);
+        Assert.Null(resolvedOriginal);
+        Assert.Null(resolvedTranslated);
     }
 
     /// <summary>

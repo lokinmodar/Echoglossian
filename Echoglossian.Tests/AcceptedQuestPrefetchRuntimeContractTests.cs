@@ -118,7 +118,7 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
             "AcceptedQuestPrefetchRuntime.cs");
         var methodBody = ExtractMethodBody(
             source,
-            "private void ProcessAcceptedQuestPrefetchWorkItem(");
+            "private Task ProcessAcceptedQuestPrefetchWorkItem(");
         var resolutionIndex = methodBody.IndexOf(
             "QuestProgressResolver.TryResolveQuestProgress(",
             StringComparison.Ordinal);
@@ -131,6 +131,81 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
         Assert.True(
             generationCheckIndex > resolutionIndex,
             "Generation must be rechecked after managed quest resolution.");
+    }
+
+    /// <summary>
+    /// Ensures the accepted-quest worker uses the committed async QuestPlate
+    /// projection rather than invoking the legacy synchronous database delegates.
+    /// </summary>
+    [Fact]
+    public void ProcessAcceptedQuestPrefetchWorkItem_UsesCacheFirstQuestPlateScheduling()
+    {
+        var source = ReadContractSource(
+            "NativeUI",
+            "Helpers",
+            "AcceptedQuestPrefetchRuntime.cs");
+        var methodBody = ExtractMethodBody(
+            source,
+            "private Task ProcessAcceptedQuestPrefetchWorkItem(");
+
+        Assert.Contains("this.ScheduleAcceptedQuestPrefetchQuestPlate", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("this.FindQuestPlate", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("this.InsertQuestPlate", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("this.UpdateQuestPlate", methodBody, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Ensures priority requests remain deduplicated until their async
+    /// cache-first operation reaches a terminal state, while rejected capture
+    /// releases the request immediately.
+    /// </summary>
+    [Fact]
+    public void ScheduleAcceptedQuestPrefetch_CompletesPriorityRequestsAtTerminalState()
+    {
+        var source = ReadContractSource(
+            "NativeUI",
+            "Helpers",
+            "AcceptedQuestPrefetchRuntime.cs");
+        var methodBody = ExtractMethodBody(
+            source,
+            "private void ScheduleAcceptedQuestPrefetch(");
+
+        var captureFailure = methodBody.IndexOf(
+            "if (!this.TryCaptureAcceptedQuestPrefetchWorkItem(",
+            StringComparison.Ordinal);
+        var continuation = methodBody.IndexOf(
+            "completion.ContinueWith(",
+            StringComparison.Ordinal);
+
+        Assert.True(captureFailure >= 0);
+        Assert.True(
+            methodBody.IndexOf(
+                "this.acceptedQuestPrefetchRequestedQuestQueue.Complete(questId);",
+                captureFailure,
+                StringComparison.Ordinal) > captureFailure);
+        Assert.True(continuation > captureFailure);
+    }
+
+    /// <summary>
+    /// Ensures visible TODO objective work is admitted before summary and
+    /// system enrichment for the same accepted quest.
+    /// </summary>
+    [Fact]
+    public void ProcessAcceptedQuestPrefetchWorkItem_PrioritizesObjectivesBeforeSummaryAndSystemRows()
+    {
+        var source = ReadContractSource(
+            "NativeUI",
+            "Helpers",
+            "AcceptedQuestPrefetchRuntime.cs");
+        var methodBody = ExtractMethodBody(
+            source,
+            "private void StartAcceptedQuestPrefetchTranslations(");
+
+        var objectives = methodBody.IndexOf("this.PrefetchAcceptedQuestObjectives(", StringComparison.Ordinal);
+        var summaries = methodBody.IndexOf("this.PrefetchAcceptedQuestSummaries(", StringComparison.Ordinal);
+        var system = methodBody.IndexOf("this.PrefetchAcceptedQuestSystemRows(", StringComparison.Ordinal);
+
+        Assert.True(objectives >= 0 && objectives < summaries && summaries < system);
     }
 
     /// <summary>
