@@ -40793,6 +40793,18 @@
             <param name="reasonPhrase">The HTTP reason phrase.</param>
             <param name="content">The response content.</param>
         </member>
+        <member name="T:Echoglossian.Translators.GoogleV2NoTranslationException">
+            <summary>
+                Signals the Google V2 success response that explicitly has no
+                translation for the requested source text.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Translators.GoogleV2NoTranslationException.#ctor">
+            <summary>
+                Initializes a new instance of the
+                <see cref="T:Echoglossian.Translators.GoogleV2NoTranslationException" /> class.
+            </summary>
+        </member>
         <member name="T:Echoglossian.Translators.GTranslateTranslator">
             <summary>
                 Provides translation services using GTranslate.

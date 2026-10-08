@@ -102,6 +102,10 @@ public class GoogleTranslator : ITranslator
                 _ => this.TranslateUsingV0(text, sourceLanguage, targetLanguage),
             };
         }
+        catch (GoogleV2NoTranslationException)
+        {
+            throw;
+        }
         catch (Exception e)
         {
             PluginRuntimeLog.Error(this.pluginLog, e.ToString());
@@ -135,6 +139,10 @@ public class GoogleTranslator : ITranslator
                     sourceLanguage,
                     targetLanguage),
             };
+        }
+        catch (GoogleV2NoTranslationException)
+        {
+            throw;
         }
         catch (Exception e)
         {
@@ -269,7 +277,7 @@ public class GoogleTranslator : ITranslator
 
             if (IsV2NoTranslationResponse(json, response.StatusCode))
             {
-                return V2NoTranslationMarker;
+                throw new GoogleV2NoTranslationException();
             }
 
             LogRecoverableResponseFailure(

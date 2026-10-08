@@ -477,10 +477,18 @@ public class TranslationService
     }
 
     var stopwatch = Stopwatch.StartNew();
-    var finalDialogueText = translatorResolution.Translator.Translate(
-        parsedText,
-        resolvedSourceLanguage.ProviderCode,
-        targetLanguage);
+    string? finalDialogueText;
+    try
+    {
+      finalDialogueText = translatorResolution.Translator.Translate(
+          parsedText,
+          resolvedSourceLanguage.ProviderCode,
+          targetLanguage);
+    }
+    catch (GoogleV2NoTranslationException)
+    {
+      finalDialogueText = GoogleTranslator.V2NoTranslationMarker;
+    }
     var acceptanceResult = this.AcceptTranslatedResultOrFallback(
         finalDialogueText,
         parsedText,
@@ -1248,7 +1256,11 @@ public class TranslationService
           callerFilePath: string.Empty,
           cancellationToken,
           translatorResolution).ConfigureAwait(false);
-      if (!acceptance.Succeeded)
+      if (!acceptance.Succeeded &&
+          !string.Equals(
+              acceptance.FailureReason,
+              "google-v2-no-translation",
+              StringComparison.Ordinal))
       {
         throw new TranslationFieldRejectedException(
             field.Name,
@@ -1505,17 +1517,25 @@ public class TranslationService
         : parsedText;
     cancellationToken.ThrowIfCancellationRequested();
     var stopwatch = Stopwatch.StartNew();
-    var finalDialogueText = useDialogueContext &&
-                            resolvedTranslatorResolution.Translator is IDialogueContextAwareTranslator contextAwareTranslator
-        ? await contextAwareTranslator.TranslateAsync(
-            providerInputText,
-            resolvedSourceLanguage.ProviderCode,
-            targetLanguage,
-            dialogueContext!.Value).WaitAsync(cancellationToken).ConfigureAwait(false)
-        : await resolvedTranslatorResolution.Translator.TranslateAsync(
-            providerInputText,
-            resolvedSourceLanguage.ProviderCode,
-            targetLanguage).WaitAsync(cancellationToken).ConfigureAwait(false);
+    string? finalDialogueText;
+    try
+    {
+      finalDialogueText = useDialogueContext &&
+                              resolvedTranslatorResolution.Translator is IDialogueContextAwareTranslator contextAwareTranslator
+          ? await contextAwareTranslator.TranslateAsync(
+              providerInputText,
+              resolvedSourceLanguage.ProviderCode,
+              targetLanguage,
+              dialogueContext!.Value).WaitAsync(cancellationToken).ConfigureAwait(false)
+          : await resolvedTranslatorResolution.Translator.TranslateAsync(
+              providerInputText,
+              resolvedSourceLanguage.ProviderCode,
+              targetLanguage).WaitAsync(cancellationToken).ConfigureAwait(false);
+    }
+    catch (GoogleV2NoTranslationException)
+    {
+      finalDialogueText = GoogleTranslator.V2NoTranslationMarker;
+    }
     var acceptanceResult = this.AcceptDialogueGlossaryResultOrFallback(
         finalDialogueText,
         glossaryProtection,

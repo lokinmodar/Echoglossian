@@ -1121,6 +1121,52 @@ public class TranslationServiceTests
     }
 
     /// <summary>
+    ///     Ensures a Google V2 no-translation result falls back, persists its
+    ///     negative identity, and short-circuits the next matching request.
+    /// </summary>
+    [Fact]
+    public void Translate_GoogleV2NoTranslation_FallsBackAndCachesFailure()
+    {
+        var translator = new GoogleV2NoTranslationTranslator();
+        var knownFailure = false;
+        string? recordedReason = null;
+        var service = new TranslationService(
+            static text => text,
+            translator,
+            translationEngine: (int)Echoglossian.TransEngines.Google,
+            isKnownFailedTranslation: (_, _, _, _) => knownFailure,
+            recordFailedTranslation: (_, _, _, _, reason, _) =>
+            {
+                recordedReason = reason;
+                knownFailure = true;
+            });
+
+        Assert.Equal("Actions", service.Translate("Actions", "en", "pt-BR"));
+        Assert.Equal("Actions", service.Translate("Actions", "en", "pt-BR"));
+        Assert.Equal("google-v2-no-translation", recordedReason);
+        Assert.Equal(1, translator.SyncCalls);
+    }
+
+    /// <summary>
+    ///     Ensures the async service boundary never returns the legacy Google
+    ///     V2 marker as visible translated text.
+    /// </summary>
+    [Fact]
+    public async Task TranslateAsync_GoogleV2NoTranslation_FallsBack()
+    {
+        var translator = new GoogleV2NoTranslationTranslator();
+        var service = new TranslationService(
+            static text => text,
+            translator,
+            translationEngine: (int)Echoglossian.TransEngines.Google);
+
+        var result = await service.TranslateAsync("Actions", "en", "pt-BR");
+
+        Assert.Equal("Actions", result);
+        Assert.Equal(1, translator.AsyncCalls);
+    }
+
+    /// <summary>
     ///     Minimal fake translator for pipeline tests.
     /// </summary>
     private class RecordingTranslator : ITranslator
@@ -1186,6 +1232,29 @@ public class TranslationServiceTests
             this.LastAsyncText = text;
             this.asyncSourceLanguages.Add(sourceLanguage);
             return Task.FromResult(this.AsyncResult);
+        }
+    }
+
+    private sealed class GoogleV2NoTranslationTranslator : ITranslator
+    {
+        /// <summary>Gets the number of synchronous provider calls.</summary>
+        internal int SyncCalls { get; private set; }
+
+        /// <summary>Gets the number of asynchronous provider calls.</summary>
+        internal int AsyncCalls { get; private set; }
+
+        /// <inheritdoc />
+        public string? Translate(string text, string sourceLanguage, string targetLanguage)
+        {
+            this.SyncCalls++;
+            throw new GoogleV2NoTranslationException();
+        }
+
+        /// <inheritdoc />
+        public Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
+        {
+            this.AsyncCalls++;
+            return Task.FromException<string?>(new GoogleV2NoTranslationException());
         }
     }
 
