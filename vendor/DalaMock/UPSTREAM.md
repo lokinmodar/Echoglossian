@@ -24,6 +24,9 @@ Upstream 6.2.0 supplies the `MockFramework.CreateDebouncer` implementation and
 the corresponding `Debouncer` type, so this vendor copy retains no local
 debouncer shim.
 
+Apart from that functional delta, vendored comments and documentation may have
+punctuation normalized to comply with this repository's no-U+2014 policy.
+
 ## Upstream Intent
 
 The remaining fix is a good upstream candidate because it corrects DalaMock's

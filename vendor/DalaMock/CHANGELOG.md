@@ -13,6 +13,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [6.2.0] - 2026-09-09
+
+### Changed
+- Added missing methods/properties
+
+### Fixed
+- Fixed DalaMock.PluginTemplate to match current mock format
+
+## [6.1.9] - 2026-09-09
+
+### Changed
+- Added missing methods
+
+### Fixed
+- No longer rely on Dalamud's cancellation token when loading async
+
+## [6.1.8] - 2026-08-08
+
+### Fixed
+- Added missing properties and methods
+
 ## [6.1.7] - 2026-06-07
 
 ### Fixed

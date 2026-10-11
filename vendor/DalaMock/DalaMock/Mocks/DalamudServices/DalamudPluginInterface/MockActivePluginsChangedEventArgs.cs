@@ -9,6 +9,7 @@ public class MockActivePluginsChangedEventArgs : IActivePluginsChangedEventArgs
     /// </summary>
     /// <param name="kind">The kind of change that triggered the event.</param>
     /// <param name="affectedInternalNames">The internal names of the plugins affected by the change.</param>
+    /// <param name="affectedPlugins">The available information about the affected plugins.</param>
     public MockActivePluginsChangedEventArgs(PluginListInvalidationKind kind, IEnumerable<string> affectedInternalNames, IEnumerable<IActivePluginsChangedEventArgs.IAffectedPlugin>? affectedPlugins = null)
     {
         this.Kind = kind;
