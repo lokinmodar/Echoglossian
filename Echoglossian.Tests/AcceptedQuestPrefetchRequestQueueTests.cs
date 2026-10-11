@@ -30,7 +30,7 @@ public class AcceptedQuestPrefetchRequestQueueTests
     Assert.True(requests.TryDequeue(out var questId, out sources));
     Assert.Equal(68799u, questId);
     Assert.Equal("JournalHandler.Translate", sources);
-    Assert.Equal(0, requests.Count);
+    Assert.Equal(1, requests.Count);
     Assert.False(requests.Request(68799, "ToDoListHandler.Refresh", out sources));
     Assert.Equal(
         "JournalHandler.Translate|ToDoListHandler.Refresh",

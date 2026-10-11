@@ -101,7 +101,7 @@ internal sealed class QuestPlatePersistenceWriter
         var gate = new TaskCompletionSource<QuestPlateRuntimeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (!this.cache.TryRegisterWriteOrJoin(key, gate, out var generation, out var existing, out var readCompletion))
         {
-            completion = ConvertWriteCompletionAsync(existing!);
+            completion = this.SchedulePersistAfterJoinAsync(captured, scope, priority, existing!);
             return PersistenceAdmissionStatus.Joined;
         }
 
@@ -113,6 +113,21 @@ internal sealed class QuestPlatePersistenceWriter
         }
 
         return this.SchedulePersist(key, generation, gate, captured, priority, out completion);
+    }
+
+    /// <summary>
+    ///     Preserves a write that arrived while a same-key write was still
+    ///     committing by admitting it after that owner reaches a terminal state.
+    /// </summary>
+    private async Task<PersistenceWriteResult> SchedulePersistAfterJoinAsync(
+        QuestPlate captured,
+        TranslationReuseScope scope,
+        PersistencePriority priority,
+        Task<QuestPlateRuntimeResult> joinedCompletion)
+    {
+        _ = await joinedCompletion.ConfigureAwait(false);
+        _ = this.TryPersist(captured, scope, priority, out var completion);
+        return await completion.ConfigureAwait(false);
     }
 
     private async Task ScheduleDeferredPersistAsync(

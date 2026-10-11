@@ -158,6 +158,17 @@ internal sealed class QuestPlateRuntimeCache
 
             if (current.IsWrite)
             {
+                if (current.Completion.IsCompleted)
+                {
+                    this.entries[key] = new Entry(completionSource, operationGeneration, isWrite: true)
+                    {
+                        Projection = current.Projection?.Clone(),
+                    };
+                    joinedCompletion = null;
+                    readCompletion = null;
+                    return true;
+                }
+
                 joinedCompletion = current.Completion;
                 readCompletion = null;
                 return false;

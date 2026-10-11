@@ -28,7 +28,7 @@ internal sealed class AcceptedQuestPrefetchRequestQueue
     {
       lock (this.gate)
       {
-        return this.questIds.Count;
+        return this.requestSourcesByQuestId.Count;
       }
     }
   }

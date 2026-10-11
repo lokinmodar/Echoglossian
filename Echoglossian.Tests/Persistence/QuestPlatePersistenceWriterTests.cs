@@ -324,6 +324,62 @@ public sealed class QuestPlatePersistenceWriterTests
         }
     }
 
+    /// <summary>
+    ///     Ensures a completed write releases ownership for a later field
+    ///     update while retaining the committed projection for cache readers.
+    /// </summary>
+    [Fact]
+    public async Task TryPersist_AfterCompletedWrite_PersistsLaterFieldUpdate()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "EchoglossianTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var factory = new EchoglossianDbContextRuntimeFactory(directory);
+            await using (var context = await factory.CreateDbContextAsync())
+            {
+                await context.Database.MigrateAsync();
+            }
+            await using var coordinator = new PersistenceCoordinator(factory, CreateOptions());
+            var cache = new QuestPlateRuntimeCache();
+            var writer = new QuestPlatePersistenceWriter(coordinator, cache);
+            var scope = new TranslationReuseScope("en", "pt-BR", 1, true);
+            var canonical = CreatePlate();
+            canonical.TranslatedQuestName = null;
+            canonical.TranslatedQuestMessage = null;
+            Assert.Equal(PersistenceAdmissionStatus.Accepted, writer.TryPersist(canonical, scope, PersistencePriority.Background, out var first));
+            Assert.Equal(PersistenceCompletionStatus.Succeeded, (await first.WaitAsync(TimeSpan.FromSeconds(5))).Status);
+
+            var later = CreatePlate();
+            later.TranslatedQuestName = "Missão posterior";
+            later.TranslatedQuestMessage = "Mensagem posterior";
+            later.ObjectiveRowsByKey["TODO#0"] = "Objetivo original";
+            later.SetTranslatedObjectiveText("TODO#0", "Objetivo original", "Objetivo posterior");
+            later.SummaryRowsByKey["SEQ#0"] = "Resumo original";
+            later.SetTranslatedSummaryText("SEQ#0", "Resumo original", "Resumo posterior");
+            later.SystemRowsByKey["SYSTEM#0"] = "Sistema original";
+            later.SetTranslatedSystemText("SYSTEM#0", "Sistema original", "Sistema posterior");
+            Assert.Equal(PersistenceAdmissionStatus.Accepted, writer.TryPersist(later, scope, PersistencePriority.Background, out var second));
+            Assert.Equal(PersistenceCompletionStatus.Succeeded, (await second.WaitAsync(TimeSpan.FromSeconds(5))).Status);
+
+            await using var verification = await factory.CreateDbContextAsync();
+            var persisted = await verification.QuestPlate.SingleAsync();
+            persisted.UpdateFieldsFromText();
+            Assert.Equal("Missão posterior", persisted.TranslatedQuestName);
+            Assert.Equal("Mensagem posterior", persisted.TranslatedQuestMessage);
+            Assert.Equal("Objetivo posterior", persisted.TranslatedObjectiveRowsByKey["TODO#0"]);
+            Assert.Equal("Resumo posterior", persisted.TranslatedSummaryRowsByKey["SEQ#0"]);
+            Assert.Equal("Sistema posterior", persisted.TranslatedSystemRowsByKey["SYSTEM#0"]);
+            Assert.True(cache.TryGet(later, scope, out var cached));
+            Assert.Equal("Mensagem posterior", cached.TranslatedQuestMessage);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     /// <summary>Creates a stable canonical QuestPlate fixture.</summary>
     /// <returns>The requested quest plate.</returns>
     private static QuestPlate CreatePlate()

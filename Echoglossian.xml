@@ -4634,7 +4634,7 @@
                 projection, with visible TODO objectives admitted before enrichment.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestCurrentMessage(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestCurrentMessage(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.Collections.Generic.ICollection{System.Threading.Tasks.Task})">
             <summary>
                 Prefetches the current quest-body message for an accepted quest when it
                 is not yet persisted.
@@ -4645,7 +4645,7 @@
             <param name="sourceLanguage">The resolved source language.</param>
             <param name="scope">The immutable operation reuse scope.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestSummaries(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestSummaries(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.Collections.Generic.ICollection{System.Threading.Tasks.Task})">
             <summary>
                 Prefetches all SEQ summary rows for an accepted quest.
             </summary>
@@ -4655,7 +4655,7 @@
             <param name="sourceLanguage">The resolved source language.</param>
             <param name="scope">The immutable operation reuse scope.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestObjectives(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestObjectives(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.Collections.Generic.ICollection{System.Threading.Tasks.Task})">
             <summary>
                 Prefetches all TODO rows for an accepted quest.
             </summary>
@@ -4665,7 +4665,7 @@
             <param name="sourceLanguage">The resolved source language.</param>
             <param name="scope">The immutable operation reuse scope.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestSystemRows(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope)">
+        <member name="M:Echoglossian.Echoglossian.PrefetchAcceptedQuestSystemRows(Echoglossian.QuestProgressSnapshot,System.String,Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.Collections.Generic.ICollection{System.Threading.Tasks.Task})">
             <summary>
                 Prefetches all SYSTEM rows for an accepted quest.
             </summary>
@@ -4753,6 +4753,24 @@
             <param name="questProgressSnapshot">The accepted-quest progress snapshot.</param>
             <param name="fieldName">The translated field name.</param>
             <returns>The diagnostic surface identity.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DispatchAcceptedQuestPrefetchTranslationAsync(System.String,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.Func{System.String},System.Func{System.String,Echoglossian.TranslationReuseScope,System.Boolean,System.Threading.Tasks.Task})">
+            <summary>
+                Dispatches one accepted-quest translation and retains its completion
+                through the broker callback and the resulting persistence terminal.
+            </summary>
+            <param name="payloadIdentity">The accepted-quest payload identity.</param>
+            <param name="sourceLanguage">The operation-captured source contract.</param>
+            <param name="scope">The operation-captured reuse scope.</param>
+            <param name="resolver">The translation resolver.</param>
+            <param name="onCompleted">The async persistence callback.</param>
+            <returns>The broker admission and terminal completion.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.CompleteAcceptedQuestPrefetchTranslationAsync(System.String,Echoglossian.TranslationReuseScope,System.Boolean,System.Func{System.String,Echoglossian.TranslationReuseScope,System.Boolean,System.Threading.Tasks.Task},System.Threading.Tasks.TaskCompletionSource)">
+            <summary>
+                Completes a broker subscriber only after its persistence callback has
+                reached a terminal state.
+            </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.DispatchAcceptedQuestPrefetchTranslation(System.String,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,Echoglossian.TryGetPrefetchTranslationDelegate,Echoglossian.QueuePrefetchTranslationDelegate,System.Func{System.String},System.Action{System.String,Echoglossian.TranslationReuseScope,System.Boolean})">
             <summary>
@@ -8703,6 +8721,12 @@
         </member>
         <member name="M:Echoglossian.DBHelpers.QuestPlatePersistenceWriter.TryPersist(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.TranslationReuseScope,Echoglossian.Persistence.PersistencePriority,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult}@)">
             <summary>Attempts a non-blocking coordinator-backed QuestPlate upsert.</summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.QuestPlatePersistenceWriter.SchedulePersistAfterJoinAsync(Echoglossian.EFCoreSqlite.Models.Journal.QuestPlate,Echoglossian.TranslationReuseScope,Echoglossian.Persistence.PersistencePriority,System.Threading.Tasks.Task{Echoglossian.NativeUI.Helpers.QuestPlateRuntimeResult})">
+            <summary>
+                Preserves a write that arrived while a same-key write was still
+                committing by admitting it after that owner reaches a terminal state.
+            </summary>
         </member>
         <member name="T:Echoglossian.DBHelpers.QuestPlatePersistencePolicy">
             <summary>Contains pure QuestPlate read candidate and selection policy.</summary>

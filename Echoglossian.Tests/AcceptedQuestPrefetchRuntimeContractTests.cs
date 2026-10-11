@@ -187,6 +187,29 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
     }
 
     /// <summary>
+    /// Ensures the priority request completion includes joined broker callbacks
+    /// and the persistence work they schedule.
+    /// </summary>
+    [Fact]
+    public void AcceptedQuestPrefetchTranslation_RetainsPriorityOwnershipThroughBrokerAndPersistence()
+    {
+        var source = ReadContractSource(
+            "NativeUI",
+            "Helpers",
+            "AcceptedQuestPrefetchRuntime.cs");
+        var dispatchBody = ExtractMethodBody(
+            source,
+            "private (PrefetchTranslationDispatchResult Admission, Task Completion)\n      DispatchAcceptedQuestPrefetchTranslationAsync(");
+        var persistenceBody = ExtractMethodBody(
+            source,
+            "private Task ScheduleAcceptedQuestPrefetchPersistence(");
+
+        Assert.Contains("TryQueueOrJoin(", dispatchBody, StringComparison.Ordinal);
+        Assert.Contains("CompleteAcceptedQuestPrefetchTranslationAsync(", dispatchBody, StringComparison.Ordinal);
+        Assert.Contains("return completion;", persistenceBody, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Ensures visible TODO objective work is admitted before summary and
     /// system enrichment for the same accepted quest.
     /// </summary>
@@ -199,13 +222,14 @@ public sealed class AcceptedQuestPrefetchRuntimeContractTests
             "AcceptedQuestPrefetchRuntime.cs");
         var methodBody = ExtractMethodBody(
             source,
-            "private void StartAcceptedQuestPrefetchTranslations(");
+            "private Task StartAcceptedQuestPrefetchTranslations(");
 
         var objectives = methodBody.IndexOf("this.PrefetchAcceptedQuestObjectives(", StringComparison.Ordinal);
         var summaries = methodBody.IndexOf("this.PrefetchAcceptedQuestSummaries(", StringComparison.Ordinal);
         var system = methodBody.IndexOf("this.PrefetchAcceptedQuestSystemRows(", StringComparison.Ordinal);
 
         Assert.True(objectives >= 0 && objectives < summaries && summaries < system);
+        Assert.Contains("Task.WhenAll(completions)", methodBody, StringComparison.Ordinal);
     }
 
     /// <summary>
