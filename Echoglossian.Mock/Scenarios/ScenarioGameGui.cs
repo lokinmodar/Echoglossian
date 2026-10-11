@@ -15,6 +15,7 @@ using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Text;
 
 namespace Echoglossian.Mock.Scenarios;
 
@@ -131,10 +132,23 @@ public sealed class ScenarioGameGui : IGameGui, IMockService
     }
 
     /// <inheritdoc/>
+    AtkUnitBasePtr IGameGui.GetAddonByName(ReadOnlySpan<byte> name, int index)
+    {
+        return this.GetAddonByName(Encoding.UTF8.GetString(name), index);
+    }
+
+    /// <inheritdoc/>
     public unsafe T* GetAddonByName<T>(string name, int index = 1)
         where T : unmanaged
     {
         return (T*)this.GetAddonByName(name, index);
+    }
+
+    /// <inheritdoc/>
+    public unsafe T* GetAddonByName<T>(ReadOnlySpan<byte> name, int index = 1)
+        where T : unmanaged
+    {
+        return (T*)this.GetAddonByName(Encoding.UTF8.GetString(name), index);
     }
 
     /// <inheritdoc/>
@@ -147,6 +161,12 @@ public sealed class ScenarioGameGui : IGameGui, IMockService
     AgentInterfacePtr IGameGui.FindAgentInterface(string addonName)
     {
         return this.FindAgentInterface(addonName);
+    }
+
+    /// <inheritdoc/>
+    AgentInterfacePtr IGameGui.FindAgentInterface(ReadOnlySpan<byte> addonName)
+    {
+        return this.FindAgentInterface(Encoding.UTF8.GetString(addonName));
     }
 
     /// <inheritdoc/>

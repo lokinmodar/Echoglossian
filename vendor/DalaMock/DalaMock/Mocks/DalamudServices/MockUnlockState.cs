@@ -19,6 +19,9 @@ public class MockUnlockState : IUnlockState, IMockService
     /// <inheritdoc/>
     public bool IsTitleListLoaded { get; set; }
 
+    /// <inheritdoc/>
+    public bool IsXBMPetListLoaded { get; set; }
+
     public HashSet<uint> AchievementComplete = new();
     public HashSet<uint> ActionUnlocked = new();
     public HashSet<uint> AdventureComplete = new();
@@ -64,6 +67,7 @@ public class MockUnlockState : IUnlockState, IMockService
     public HashSet<uint> TitleUnlocked = new();
     public HashSet<uint> TraitUnlocked = new();
     public HashSet<uint> TripleTriadCardUnlocked = new();
+    public HashSet<uint> XBMPetUnlocked = new();
 
     public HashSet<uint> UnlockLinks = new();
     public Dictionary<uint, byte> UnlockLinkProgression = new();
@@ -247,6 +251,10 @@ public class MockUnlockState : IUnlockState, IMockService
     /// <inheritdoc/>
     public bool IsTripleTriadCardUnlocked(TripleTriadCard row)
         => Check(this.TripleTriadCardUnlocked, row.RowId);
+
+    /// <inheritdoc/>
+    public bool IsXBMPetUnlocked(XBMPet row)
+        => Check(this.XBMPetUnlocked, row.RowId);
 
     /// <inheritdoc/>
     public bool IsUnlockLinkUnlocked(uint unlockLink)
@@ -512,6 +520,11 @@ public class MockUnlockState : IUnlockState, IMockService
         if (rowRef.TryGetValue<TripleTriadCard>(out var tripleTriadCardRow))
         {
             return this.IsTripleTriadCardUnlocked(tripleTriadCardRow);
+        }
+
+        if (rowRef.TryGetValue<XBMPet>(out var xbmPetRow))
+        {
+            return this.IsXBMPetUnlocked(xbmPetRow);
         }
 
         return false;

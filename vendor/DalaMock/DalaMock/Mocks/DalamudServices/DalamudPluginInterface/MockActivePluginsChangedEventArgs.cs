@@ -9,10 +9,11 @@ public class MockActivePluginsChangedEventArgs : IActivePluginsChangedEventArgs
     /// </summary>
     /// <param name="kind">The kind of change that triggered the event.</param>
     /// <param name="affectedInternalNames">The internal names of the plugins affected by the change.</param>
-    public MockActivePluginsChangedEventArgs(PluginListInvalidationKind kind, IEnumerable<string> affectedInternalNames)
+    public MockActivePluginsChangedEventArgs(PluginListInvalidationKind kind, IEnumerable<string> affectedInternalNames, IEnumerable<IActivePluginsChangedEventArgs.IAffectedPlugin>? affectedPlugins = null)
     {
         this.Kind = kind;
         this.AffectedInternalNames = affectedInternalNames;
+        this.AffectedPlugins = affectedPlugins ?? [];
     }
 
     /// <inheritdoc/>
@@ -20,4 +21,7 @@ public class MockActivePluginsChangedEventArgs : IActivePluginsChangedEventArgs
 
     /// <inheritdoc/>
     public IEnumerable<string> AffectedInternalNames { get; set; }
+
+    /// <inheritdoc/>
+    public IEnumerable<IActivePluginsChangedEventArgs.IAffectedPlugin> AffectedPlugins { get; set; }
 }

@@ -107,4 +107,9 @@ public class MockDtrBarEntry : MockReadOnlyDtrEntryBar, IDtrBarEntry
     {
         this.mockDtrBar.Remove(this.Title);
     }
+
+    public void Dispose()
+    {
+        this.Remove();
+    }
 }

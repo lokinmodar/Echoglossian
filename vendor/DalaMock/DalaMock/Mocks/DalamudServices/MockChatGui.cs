@@ -34,7 +34,7 @@ public class MockChatGui : IChatGui, IMockService
     {
         var stringBuilder = new Lumina.Text.SeStringBuilder();
         stringBuilder.Append(message);
-        this.PrintError(stringBuilder.ToSeString(), messageTag, tagColor);
+        this.PrintError(stringBuilder.ToReadOnlySeString().ToDalamudString(), messageTag, tagColor);
     }
 
     /// <inheritdoc />
@@ -95,7 +95,7 @@ public class MockChatGui : IChatGui, IMockService
     {
         var stringBuilder = new Lumina.Text.SeStringBuilder();
         stringBuilder.Append(message);
-        this.Print(stringBuilder.ToSeString(), messageTag, tagColor);
+        this.Print(stringBuilder.ToReadOnlySeString().ToDalamudString(), messageTag, tagColor);
     }
 
     public virtual void OnChatMessage(IHandleableChatMessage message)

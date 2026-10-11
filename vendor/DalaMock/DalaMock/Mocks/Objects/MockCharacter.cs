@@ -40,6 +40,8 @@ public class MockCharacter : ICharacter
     private StatusFlags statusFlags;
     private RowRef<Mount>? currentMount;
     private RowRef<Companion>? currentMinion;
+    private byte currentDistance;
+    private byte nextDistance;
 
     public MockCharacter(MockClientState clientState)
     {
@@ -145,12 +147,20 @@ public class MockCharacter : ICharacter
     }
 
     /// <inheritdoc/>
-    [ImGuiGroup("Position")]
-    public byte CurrentDistance { get; set; }
+    [ImGuiGroup("Basic")]
+    public byte CurrentDistance
+    {
+        get => this.currentDistance;
+        set => this.currentDistance = value;
+    }
 
     /// <inheritdoc/>
-    [ImGuiGroup("Position")]
-    public byte NextDistance { get; set; }
+    [ImGuiGroup("Basic")]
+    public byte NextDistance
+    {
+        get => this.nextDistance;
+        set => this.nextDistance = value;
+    }
 
     /// <inheritdoc/>
     [ImGuiGroup("Basic")]

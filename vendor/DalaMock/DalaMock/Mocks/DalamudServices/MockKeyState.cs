@@ -78,7 +78,27 @@ public class MockKeyState : IKeyState, IDisposable, IMockService
         => this.IsVirtualKeyValid((int)vkCode);
 
     /// <inheritdoc/>
+    public bool IsExtendedVirtualKeyValid(int vkCode) => false;
+
+    /// <inheritdoc/>
+    public bool IsExtendedVirtualKeyValid(VirtualKey vkCode) => false;
+
+    /// <inheritdoc/>
+    public bool TryGetSeVirtualKey(int vkCode, out int seVkCode)
+    {
+        seVkCode = this.ConvertVirtualKey(vkCode);
+        return seVkCode != 0;
+    }
+
+    /// <inheritdoc/>
+    public bool TryGetSeVirtualKey(VirtualKey vkCode, out int seVkCode)
+        => this.TryGetSeVirtualKey((int)vkCode, out seVkCode);
+
+    /// <inheritdoc/>
     public IEnumerable<VirtualKey> GetValidVirtualKeys() => (VirtualKey[])Enum.GetValuesAsUnderlyingType<VirtualKey>();
+
+    /// <inheritdoc/>
+    public IEnumerable<VirtualKey> GetExtendedVirtualKeys() => [];
 
     /// <inheritdoc/>
     public void ClearAll()

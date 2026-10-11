@@ -4,9 +4,9 @@ This folder vendors the minimum DalaMock source needed by `Echoglossian.Mock` an
 `Echoglossian.Mock.Tests`.
 
 - Upstream repository: https://github.com/Critical-Impact/DalaMock
-- Upstream tag: `6.1.7`
-- Upstream commit: `2fd273393d55c9850bfce2314520a50254954b12`
-- Upstream tag date: June 7, 2026
+- Upstream tag: `6.2.0`
+- Upstream commit: `1eb468494f9bc5f123b54a5c5d20c3fd182f8ca9`
+- Upstream tag date: October 3, 2026
 
 ## Local Patch
 
@@ -20,9 +20,9 @@ the hosted preview and mock rails:
    - the local patch prefers the explicit assembly location and avoids adapter
      base-type resolution that can collapse to `System.Private.CoreLib`
 
-The prior local `MockFramework.CreateDebouncer` patch was removed because stable
-Dalamud 15.0.2.3 does not expose `IDebouncer`; keeping that staging-only member
-breaks builds against stable Dalamud binaries.
+Upstream 6.2.0 supplies the `MockFramework.CreateDebouncer` implementation and
+the corresponding `Debouncer` type, so this vendor copy retains no local
+debouncer shim.
 
 ## Upstream Intent
 

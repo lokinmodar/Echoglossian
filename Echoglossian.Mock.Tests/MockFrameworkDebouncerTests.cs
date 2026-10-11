@@ -4,7 +4,7 @@
 // </copyright>
 
 using System;
-using System.Reflection;
+using System.Threading;
 using DalaMock.Core.Mocks.DalamudServices;
 using FluentAssertions;
 using Xunit;
@@ -12,93 +12,76 @@ using Xunit;
 namespace Echoglossian.Mock.Tests;
 
 /// <summary>
-/// Covers the DalaMock implementation of Dalamud framework debouncing.
+/// Covers the public DalaMock implementation of Dalamud framework debouncing.
 /// </summary>
 public sealed class MockFrameworkDebouncerTests
 {
     /// <summary>
-    /// Ensures a timer callback from a superseded debounce generation does not
-    /// queue the action on the next framework tick.
+    /// Ensures cancellation prevents a pending debounced action from running.
     /// </summary>
     [Fact]
-    public void Superseded_timer_generation_does_not_queue_action()
+    public void Cancel_prevents_pending_action_from_running()
     {
         var framework = new MockFramework();
         var actionCount = 0;
-        using var debouncer = framework.CreateDebouncer(
-            TimeSpan.FromHours(1),
+        var debouncer = framework.CreateDebouncer(
+            TimeSpan.FromMilliseconds(20),
             () => actionCount++);
 
         debouncer.Debounce();
-        debouncer.Debounce();
-
-        InvokeTimerElapsed(debouncer, 1L);
-        framework.FireUpdate();
-
-        actionCount.Should().Be(0);
-    }
-
-    /// <summary>
-    /// Ensures cancellation still invalidates an action after timer expiry but
-    /// before the framework executes the queued callback.
-    /// </summary>
-    [Fact]
-    public void Cancel_after_timer_expiry_invalidates_queued_action()
-    {
-        var framework = new MockFramework();
-        var actionCount = 0;
-        using var debouncer = framework.CreateDebouncer(
-            TimeSpan.FromHours(1),
-            () => actionCount++);
-
-        debouncer.Debounce();
-        InvokeTimerElapsed(debouncer, 1L);
         debouncer.Cancel();
+        Thread.Sleep(30);
         framework.FireUpdate();
 
         actionCount.Should().Be(0);
+        debouncer.IsPending.Should().BeFalse();
     }
 
     /// <summary>
-    /// Ensures re-debouncing after timer expiry invalidates the already queued
-    /// callback while retaining the replacement generation.
+    /// Ensures a pending action runs once after its debounce interval.
     /// </summary>
     [Fact]
-    public void Redebounce_after_timer_expiry_invalidates_old_queued_action()
+    public void Pending_action_runs_once_after_debounce_interval()
     {
         var framework = new MockFramework();
         var actionCount = 0;
-        using var debouncer = framework.CreateDebouncer(
-            TimeSpan.FromHours(1),
+        var debouncer = framework.CreateDebouncer(
+            TimeSpan.FromMilliseconds(20),
             () => actionCount++);
 
         debouncer.Debounce();
-        InvokeTimerElapsed(debouncer, 1L);
-        debouncer.Debounce();
-        framework.FireUpdate();
-
-        actionCount.Should().Be(0);
-
-        InvokeTimerElapsed(debouncer, 2L);
+        Thread.Sleep(30);
         framework.FireUpdate();
 
         actionCount.Should().Be(1);
+        debouncer.IsPending.Should().BeFalse();
     }
 
-    private static void InvokeTimerElapsed(object debouncer, long generation)
+    /// <summary>
+    /// Ensures a repeated request postpones the action until the final debounce interval elapses.
+    /// </summary>
+    [Fact]
+    public void Repeated_request_postpones_action_until_final_interval()
     {
-        var debouncerType = typeof(MockFramework).GetNestedType(
-            "MockDebouncer",
-            BindingFlags.NonPublic);
-        debouncerType.Should().NotBeNull();
-        var onTimerElapsed = debouncerType!.GetMethod(
-            "OnTimerElapsed",
-            BindingFlags.Instance | BindingFlags.NonPublic,
-            binder: null,
-            types: new[] { typeof(long) },
-            modifiers: null);
-        onTimerElapsed.Should().NotBeNull();
+        var framework = new MockFramework();
+        var actionCount = 0;
+        var debouncer = framework.CreateDebouncer(
+            TimeSpan.FromMilliseconds(50),
+            () => actionCount++);
 
-        onTimerElapsed!.Invoke(debouncer, new object[] { generation });
+        debouncer.Debounce();
+        Thread.Sleep(30);
+        debouncer.Debounce();
+        Thread.Sleep(30);
+        framework.FireUpdate();
+
+        actionCount.Should().Be(0);
+        debouncer.IsPending.Should().BeTrue();
+
+        Thread.Sleep(30);
+        framework.FireUpdate();
+
+        actionCount.Should().Be(1);
+        debouncer.IsPending.Should().BeFalse();
     }
 }
