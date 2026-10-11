@@ -2,7 +2,7 @@ namespace DalaMock.Core.Fonts.Atlas;
 
 /// <summary>
 /// Combined pre- and post-build toolkit used by <see cref="MockFontAtlas"/>. A single instance
-/// flips <see cref="BuildStep"/> between passes — <see cref="FontAtlasBuildToolkitUtilities.OnPreBuild"/>
+/// flips <see cref="BuildStep"/> between passes  -  <see cref="FontAtlasBuildToolkitUtilities.OnPreBuild"/>
 /// and <see cref="FontAtlasBuildToolkitUtilities.OnPostBuild"/> gate the user's callbacks on this value.
 /// </summary>
 internal sealed unsafe class MockFontAtlasBuildToolkit

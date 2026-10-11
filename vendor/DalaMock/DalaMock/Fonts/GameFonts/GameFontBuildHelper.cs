@@ -54,8 +54,8 @@ internal static class GameFontBuildHelper
     /// <paramref name="sizePx"/>) as custom rects on <paramref name="atlas"/> (pre-Build step) and
     /// returns a bake job for the post-build / upload steps, or null on failure.
     /// <para>
-    /// <paramref name="gameFont"/> is set as soon as the font slot is registered with the atlas —
-    /// even if setup later fails and null is returned — so the caller can tell a fallback font is
+    /// <paramref name="gameFont"/> is set as soon as the font slot is registered with the atlas.
+    /// even if setup later fails and null is returned  -  so the caller can tell a fallback font is
     /// not needed (which would otherwise shift every subsequent font index).
     /// </para>
     /// </summary>

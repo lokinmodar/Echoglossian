@@ -114,7 +114,7 @@ state.
 
 ## Root Cause and Contributing Factors
 
-### Validated incident mechanism — high confidence
+### Validated incident mechanism - high confidence
 
 The overlay rendered an RTL translation through `PlainImGui` instead of
 `RtlTexture`. This conclusion is based on the visual signature, successful
@@ -122,7 +122,7 @@ production-rasterizer reproduction in the correct backend, and the renderer's
 no-fallback contract. The branch now enforces one configured target-language
 identity across translator request handling and overlay presentation metadata.
 
-### Architectural root cause — high confidence
+### Architectural root cause - high confidence
 
 Language identity is duplicated across mutable state:
 
@@ -135,7 +135,7 @@ No invariant requires these values to agree at the point where translated text
 is presented. The backend request also carries only the numeric configuration
 language rather than the exact translator target that produced the text.
 
-### Reporter-specific runtime trigger — still unobserved
+### Reporter-specific runtime trigger - still unobserved
 
 The most likely trigger is stale or divergent target-language state during or
 after configuration/runtime refresh. No normal source path in the release diff
@@ -144,7 +144,7 @@ log or instrumentation capture from an affected installation. The local fix
 addresses the divergence mechanism directly even though the exact field values
 on the reporter's August 27, 2026 installation were never captured.
 
-### Release escape — high confidence
+### Release escape - high confidence
 
 The RTL tests cover policy membership, request values, cache behavior,
 `StringFormat` flags, bitmap dimensions, and texture limits. They do not prove

@@ -14,7 +14,7 @@ namespace Echoglossian;
 ///
 ///     Hash input: all SEQ, TODO, and SYSTEM rows concatenated as
 ///     "{key}={value}\n" pairs sorted by key. Result is the first 16 hex
-///     characters of the SHA-256 digest (64-bit fingerprint — sufficient for
+///     characters of the SHA-256 digest (64-bit fingerprint  -  sufficient for
 ///     change detection, not a security primitive).
 /// </summary>
 internal static class QuestContentHash
@@ -70,7 +70,7 @@ internal static class QuestContentHash
         var inputBytes = Encoding.UTF8.GetBytes(input);
         var hashBytes = SHA256.HashData(inputBytes);
 
-        // Return first 8 bytes (16 hex chars) — enough for change detection.
+        // Return first 8 bytes (16 hex chars)  -  enough for change detection.
         return Convert.ToHexString(hashBytes, 0, 8).ToLowerInvariant();
     }
 }

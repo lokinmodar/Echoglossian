@@ -1,4 +1,4 @@
-﻿// <copyright file="BattleTalkMessage.partial.cs" company="lokinmodar">
+// <copyright file="BattleTalkMessage.partial.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -122,7 +122,7 @@ public partial class BattleTalkMessage : IMultiTextEntity
   /// <inheritdoc />
   public void SetGameVersion(string version)
   {
-    /* Ignored — BattleTalkMessage does not use game version */
+    /* Ignored  -  BattleTalkMessage does not use game version */
   }
 
   public byte[]? GetRTLLangTranslationImageData()

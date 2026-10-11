@@ -7,7 +7,7 @@ namespace DalaMock.Core.Fonts;
 /// <para>
 /// Font slot 1 is the "default" UI font (what <c>UiBuilder.DefaultFont</c> / <c>io.FontDefault</c>
 /// resolve to). It is normally the AXIS game font (or a NotoSansCJKjp fallback); when a default-font
-/// override is set it is baked from that spec instead — game families via the custom-rect
+/// override is set it is baked from that spec instead  -  game families via the custom-rect
 /// <see cref="GameFontBuildHelper"/> path, everything else from a TTF/OTF.
 /// </para>
 /// </summary>
@@ -230,7 +230,7 @@ internal sealed unsafe class GlobalFontManager
         {
             throw new InvalidOperationException(
                 "Font data passed to AddFontFromBytesOwned is empty. "
-                + "A zero-length buffer would cause a native crash inside ImGui — the embedded resource may not have been packaged correctly.");
+                + "A zero-length buffer would cause a native crash inside ImGui  -  the embedded resource may not have been packaged correctly.");
         }
 
         var native = (byte*)ImGui.MemAlloc((nuint)data.Length);

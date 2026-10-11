@@ -28,22 +28,22 @@
 
 ### New files
 
-- `NativeUI/Helpers/OwnedAsyncOperationSet.cs` — lifecycle owner for started tasks; observes exceptions and cancels on disposal without scheduling or pacing requests.
-- `Echoglossian.Tests/OwnedAsyncOperationSetTests.cs` — suspended-operation, cancellation, and exception-observation tests.
+- `NativeUI/Helpers/OwnedAsyncOperationSet.cs`  -  lifecycle owner for started tasks; observes exceptions and cancels on disposal without scheduling or pacing requests.
+- `Echoglossian.Tests/OwnedAsyncOperationSetTests.cs`  -  suspended-operation, cancellation, and exception-observation tests.
 
 ### Modified files
 
-- `Translators/Helpers/DialogueContextPromptHelper.cs` — dialogue request usability, current-speaker prompt metadata, and cache identity.
-- `Translators/TranslationService.cs` — first-turn dialogue-aware routing and cancellation overloads.
-- `Translators/DialogueTranslationSessionStore.cs` — retain the current managed speaker/source contract unchanged while accepting configured bounds later.
-- `DBHelpers/DbOperations.cs` — async Talk/BattleTalk lookup methods preserving current ordering/language semantics.
-- `NativeUI/AddonHandlers/Talk/TalkHandler.cs` — remove refresh-time DB access, use async lookup and owned operation.
-- `NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs` — use async lookup and owned operation.
-- `NativeUI/Helpers/AddonHandlerWiring.cs` — inject async lookup delegates.
-- `Echoglossian.Tests/DialogueContextPromptHelperTests.cs` — first-turn speaker/cache regressions.
-- `Echoglossian.Tests/TranslationServiceTests.cs` — first-turn routing and cancellation.
-- `Echoglossian.Tests/NativeDialogueHandlerLifecycleTests.cs` — callback responsiveness and stale-publication tests.
-- `Echoglossian.Tests/DbOperationsTests.cs` — async Talk/BattleTalk lookup parity tests.
+- `Translators/Helpers/DialogueContextPromptHelper.cs`  -  dialogue request usability, current-speaker prompt metadata, and cache identity.
+- `Translators/TranslationService.cs`  -  first-turn dialogue-aware routing and cancellation overloads.
+- `Translators/DialogueTranslationSessionStore.cs`  -  retain the current managed speaker/source contract unchanged while accepting configured bounds later.
+- `DBHelpers/DbOperations.cs`  -  async Talk/BattleTalk lookup methods preserving current ordering/language semantics.
+- `NativeUI/AddonHandlers/Talk/TalkHandler.cs`  -  remove refresh-time DB access, use async lookup and owned operation.
+- `NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs`  -  use async lookup and owned operation.
+- `NativeUI/Helpers/AddonHandlerWiring.cs`  -  inject async lookup delegates.
+- `Echoglossian.Tests/DialogueContextPromptHelperTests.cs`  -  first-turn speaker/cache regressions.
+- `Echoglossian.Tests/TranslationServiceTests.cs`  -  first-turn routing and cancellation.
+- `Echoglossian.Tests/NativeDialogueHandlerLifecycleTests.cs`  -  callback responsiveness and stale-publication tests.
+- `Echoglossian.Tests/DbOperationsTests.cs`  -  async Talk/BattleTalk lookup parity tests.
 - `Echoglossian.Mock.Tests` dialogue lifecycle fixture, if the current harness can drive Talk/BattleTalk refresh payloads.
 
 ## Interfaces produced and consumed

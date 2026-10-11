@@ -17,10 +17,10 @@ went beyond basic autocomplete or inline suggestions.
 
 Select one when applicable:
 
-- [ ] `Assist` — human-led work with AI used for specific tasks
-- [ ] `Pair` — active human/AI collaboration throughout
-- [ ] `Copilot` — AI did most of the writing while the human planned and reviewed
-- [ ] `Auto` — AI acted mostly autonomously with minimal human direction
+- [ ] `Assist`: human-led work with AI used for specific tasks
+- [ ] `Pair`: active human/AI collaboration throughout
+- [ ] `Copilot`: AI did most of the writing while the human planned and reviewed
+- [ ] `Auto`: AI acted mostly autonomously with minimal human direction
 
 For Echoglossian release and submission work, this note does not mean every PR
 requires disclosure. When disclosure is required, do not choose `Auto` solely

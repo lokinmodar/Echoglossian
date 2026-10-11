@@ -2,7 +2,7 @@ namespace DalaMock.Core.Fonts.Handles;
 
 /// <summary>
 /// No-op <see cref="IFontHandle"/> for use by <see cref="NullUiBuilder"/> (headless mode).
-/// Push/Pop don't touch ImGui — callers that try to render with this handle won't crash but
+/// Push/Pop don't touch ImGui  -  callers that try to render with this handle won't crash but
 /// also won't see any custom font effect.
 /// </summary>
 internal sealed class NullFontHandle : IFontHandle

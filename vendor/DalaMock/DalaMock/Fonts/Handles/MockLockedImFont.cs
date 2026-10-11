@@ -22,7 +22,7 @@ internal sealed class MockLockedImFont : ILockedImFont
     {
         // The release callback (if any) closes over a counter on the atlas snapshot;
         // re-invoking it via a fresh MockLockedImFont increments that counter implicitly
-        // through the atlas's own NewRef hook. For mock purposes — no-op semantics suffice
+        // through the atlas's own NewRef hook. For mock purposes  -  no-op semantics suffice
         // because GC won't reclaim ImFontPtr-backed memory mid-frame.
         return new MockLockedImFont(this.ImFont, this.releaseAction);
     }

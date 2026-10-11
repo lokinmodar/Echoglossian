@@ -28,34 +28,34 @@
 
 ### New files
 
-- `EFCoreSqlite/Models/Journal/QuestDialogueMetadata.cs` — dedicated persisted entity for derived quest dialogue hints.
-- `NativeUI/Helpers/DialogueInterlocutorMetadata.cs` — immutable lookup/hint/snapshot records shared by DB, resolver, and handlers.
-- `NativeUI/Helpers/QuestDialogueMetadataDerivation.cs` — quest-sheet DIALOG row acquisition and deterministic metadata derivation.
-- `NativeUI/Helpers/DialogueInterlocutorMetadataResolver.cs` — accepted-quest lookup plus live-actor/player hint fusion.
-- `Echoglossian.Tests/QuestDialogueMetadataPersistenceTests.cs` — DB upsert and exact-match lookup coverage.
-- `Echoglossian.Tests/QuestDialogueMetadataDerivationTests.cs` — deterministic quest-sheet derivation coverage.
-- `Echoglossian.Tests/DialogueInterlocutorMetadataResolverTests.cs` — tiered precedence and player/live fusion coverage.
+- `EFCoreSqlite/Models/Journal/QuestDialogueMetadata.cs`  -  dedicated persisted entity for derived quest dialogue hints.
+- `NativeUI/Helpers/DialogueInterlocutorMetadata.cs`  -  immutable lookup/hint/snapshot records shared by DB, resolver, and handlers.
+- `NativeUI/Helpers/QuestDialogueMetadataDerivation.cs`  -  quest-sheet DIALOG row acquisition and deterministic metadata derivation.
+- `NativeUI/Helpers/DialogueInterlocutorMetadataResolver.cs`  -  accepted-quest lookup plus live-actor/player hint fusion.
+- `Echoglossian.Tests/QuestDialogueMetadataPersistenceTests.cs`  -  DB upsert and exact-match lookup coverage.
+- `Echoglossian.Tests/QuestDialogueMetadataDerivationTests.cs`  -  deterministic quest-sheet derivation coverage.
+- `Echoglossian.Tests/DialogueInterlocutorMetadataResolverTests.cs`  -  tiered precedence and player/live fusion coverage.
 
 ### Modified files
 
-- `Echoglossian.cs` — add `IPlayerState` plugin service access for the live player snapshot path.
-- `EFCoreSqlite/EchoglossianDBContext.cs` — table, `DbSet`, and indexes for `QuestDialogueMetadata`.
-- `EFCoreSqlite/Migrations/` — generated `AddQuestDialogueMetadata` migration files.
-- `DBHelpers/DbOperations.cs` — async exact-match lookup and batch upsert for quest dialogue metadata.
-- `NativeUI/Helpers/QuestContentHash.cs` — add a deterministic single-line hash helper reused by derivation and runtime lookup.
-- `NativeUI/Helpers/AcceptedQuestPrefetchRuntime.cs` — schedule owned background metadata generation from the existing accepted-quest capture flow.
-- `NativeUI/Helpers/AddonHandlerWiring.cs` — inject the new async dialogue-hint resolver into `TalkHandler` and `BattleTalkHandler`.
-- `NativeUI/AddonHandlers/Talk/TalkHandler.cs` — resolve and apply interlocutor hints before first-line translation.
-- `NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs` — same as `TalkHandler`.
-- `Translators/DialogueTranslationContext.cs` — extend runtime dialogue context with optional speaker/addressee metadata.
-- `Translators/DialogueTranslationSessionStore.cs` — accept resolved hint metadata when building one request context.
-- `Translators/StructuredDialogueTranslationMetadata.cs` — add explicit speaker/addressee gender and provenance fields.
-- `Translators/Helpers/StructuredDialogueTranslationRequestBuilder.cs` — project the new metadata into the structured contract.
-- `Translators/Helpers/DialogueContextPromptHelper.cs` — carry the same hints through plain-text providers and the dialogue cache key.
-- `Echoglossian.Tests/StructuredDialogueTranslationRequestBuilderTests.cs` — structured request projection coverage.
-- `Echoglossian.Tests/DialogueContextPromptHelperTests.cs` — prompt and cache-key regressions for the new hints.
-- `Echoglossian.Tests/AcceptedQuestPrefetchRuntimeContractTests.cs` — background scheduling contract checks.
-- `Echoglossian.Tests/NativeDialogueHandlerLifecycleTests.cs` — first-line handler integration and stale-result rejection tests.
+- `Echoglossian.cs`  -  add `IPlayerState` plugin service access for the live player snapshot path.
+- `EFCoreSqlite/EchoglossianDBContext.cs`  -  table, `DbSet`, and indexes for `QuestDialogueMetadata`.
+- `EFCoreSqlite/Migrations/`  -  generated `AddQuestDialogueMetadata` migration files.
+- `DBHelpers/DbOperations.cs`  -  async exact-match lookup and batch upsert for quest dialogue metadata.
+- `NativeUI/Helpers/QuestContentHash.cs`  -  add a deterministic single-line hash helper reused by derivation and runtime lookup.
+- `NativeUI/Helpers/AcceptedQuestPrefetchRuntime.cs`  -  schedule owned background metadata generation from the existing accepted-quest capture flow.
+- `NativeUI/Helpers/AddonHandlerWiring.cs`  -  inject the new async dialogue-hint resolver into `TalkHandler` and `BattleTalkHandler`.
+- `NativeUI/AddonHandlers/Talk/TalkHandler.cs`  -  resolve and apply interlocutor hints before first-line translation.
+- `NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs`  -  same as `TalkHandler`.
+- `Translators/DialogueTranslationContext.cs`  -  extend runtime dialogue context with optional speaker/addressee metadata.
+- `Translators/DialogueTranslationSessionStore.cs`  -  accept resolved hint metadata when building one request context.
+- `Translators/StructuredDialogueTranslationMetadata.cs`  -  add explicit speaker/addressee gender and provenance fields.
+- `Translators/Helpers/StructuredDialogueTranslationRequestBuilder.cs`  -  project the new metadata into the structured contract.
+- `Translators/Helpers/DialogueContextPromptHelper.cs`  -  carry the same hints through plain-text providers and the dialogue cache key.
+- `Echoglossian.Tests/StructuredDialogueTranslationRequestBuilderTests.cs`  -  structured request projection coverage.
+- `Echoglossian.Tests/DialogueContextPromptHelperTests.cs`  -  prompt and cache-key regressions for the new hints.
+- `Echoglossian.Tests/AcceptedQuestPrefetchRuntimeContractTests.cs`  -  background scheduling contract checks.
+- `Echoglossian.Tests/NativeDialogueHandlerLifecycleTests.cs`  -  first-line handler integration and stale-result rejection tests.
 
 ## Interfaces produced and consumed
 

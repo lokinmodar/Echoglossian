@@ -43,23 +43,23 @@
 
 ### New files
 
-- `Translators/Capabilities/LlmCapabilityParameterName.cs` — canonical supported parameter names for the first slice.
-- `Translators/Capabilities/LlmCapabilitySupportState.cs` — `Unknown`, `Supported`, `Unsupported`.
-- `Translators/Capabilities/LlmCapabilityRuleMatchType.cs` — `ExactModel` and `FamilyPrefix`.
-- `Translators/Capabilities/LlmCapabilityScope.cs` — stable lookup identity containing engine, provider scope, endpoint scope, and model id.
-- `Translators/Capabilities/LlmCapabilityRuleDefinition.cs` — static or cached rule shape consumed by the resolver.
-- `Translators/Capabilities/LlmCapabilityParameterDecision.cs` — one resolved parameter decision including range, source, and reason.
-- `Translators/Capabilities/LlmCapabilitySnapshot.cs` — immutable resolved policy snapshot with `GetDecision(LlmCapabilityParameterName parameterName)`.
-- `Translators/Capabilities/LlmCapabilityStaticCatalog.cs` — committed conservative defaults by engine family and prefix.
-- `Translators/Capabilities/LlmCapabilityResolver.cs` — merges static defaults and persisted overlays conservatively.
-- `Translators/Capabilities/LlmCapabilityPolicyService.cs` — shared runtime/UI entrypoint for scope creation, snapshot lookup, temperature sanitization, and failure learning.
-- `Translators/Capabilities/LlmCapabilityRefreshPromoter.cs` — promotes discovered model ids into exact-model overlay rows using family rules.
-- `Translators/Capabilities/LlmCapabilityErrorClassifier.cs` — maps sanitized provider `400` responses into promotable exact-model rules or observation-only outcomes.
-- `Cache/LlmCapabilityCacheManager.cs` — in-memory rule and observation cache hydrated from SQLite at startup.
-- `DBHelpers/LlmCapabilityPersistenceHelper.cs` — additive SQLite upsert helpers for rules and observations.
-- `EFCoreSqlite/Models/LlmModelCapabilityRule.cs` — persisted conservative rule entity.
-- `EFCoreSqlite/Models/LlmModelCapabilityObservation.cs` — persisted audit trail for classified provider feedback.
-- `PluginUI/EngineConfigUI/LlmCapabilityUiHelper.cs` — returns disabled/enabled state, tooltip text, and numeric ranges for temperature controls.
+- `Translators/Capabilities/LlmCapabilityParameterName.cs`  -  canonical supported parameter names for the first slice.
+- `Translators/Capabilities/LlmCapabilitySupportState.cs`  -  `Unknown`, `Supported`, `Unsupported`.
+- `Translators/Capabilities/LlmCapabilityRuleMatchType.cs`  -  `ExactModel` and `FamilyPrefix`.
+- `Translators/Capabilities/LlmCapabilityScope.cs`  -  stable lookup identity containing engine, provider scope, endpoint scope, and model id.
+- `Translators/Capabilities/LlmCapabilityRuleDefinition.cs`  -  static or cached rule shape consumed by the resolver.
+- `Translators/Capabilities/LlmCapabilityParameterDecision.cs`  -  one resolved parameter decision including range, source, and reason.
+- `Translators/Capabilities/LlmCapabilitySnapshot.cs`  -  immutable resolved policy snapshot with `GetDecision(LlmCapabilityParameterName parameterName)`.
+- `Translators/Capabilities/LlmCapabilityStaticCatalog.cs`  -  committed conservative defaults by engine family and prefix.
+- `Translators/Capabilities/LlmCapabilityResolver.cs`  -  merges static defaults and persisted overlays conservatively.
+- `Translators/Capabilities/LlmCapabilityPolicyService.cs`  -  shared runtime/UI entrypoint for scope creation, snapshot lookup, temperature sanitization, and failure learning.
+- `Translators/Capabilities/LlmCapabilityRefreshPromoter.cs`  -  promotes discovered model ids into exact-model overlay rows using family rules.
+- `Translators/Capabilities/LlmCapabilityErrorClassifier.cs`  -  maps sanitized provider `400` responses into promotable exact-model rules or observation-only outcomes.
+- `Cache/LlmCapabilityCacheManager.cs`  -  in-memory rule and observation cache hydrated from SQLite at startup.
+- `DBHelpers/LlmCapabilityPersistenceHelper.cs`  -  additive SQLite upsert helpers for rules and observations.
+- `EFCoreSqlite/Models/LlmModelCapabilityRule.cs`  -  persisted conservative rule entity.
+- `EFCoreSqlite/Models/LlmModelCapabilityObservation.cs`  -  persisted audit trail for classified provider feedback.
+- `PluginUI/EngineConfigUI/LlmCapabilityUiHelper.cs`  -  returns disabled/enabled state, tooltip text, and numeric ranges for temperature controls.
 - `Echoglossian.Tests/LlmCapabilityResolverTests.cs`.
 - `Echoglossian.Tests/LlmCapabilityPersistenceTests.cs`.
 - `Echoglossian.Tests/LlmCapabilityPolicyServiceTests.cs`.
@@ -68,18 +68,18 @@
 
 ### Modified files
 
-- `Echoglossian.cs` — initialize the new capability cache on plugin startup and clear it on shutdown.
-- `GeneralHelpers/RuntimeConfigurationRefresh.cs` — clear capability cache/runtime state on translation-signature changes when required.
-- `EFCoreSqlite/EchoglossianDbContext.cs` — add the new tables and indexes.
-- `EFCoreSqlite/Migrations/EchoglossianDbContextModelSnapshot.cs` and one new dated migration pair — additive schema update only.
-- `Translators/OpenAI/OpenAIModelManager.cs` — promote exact-model capability overlays after successful refresh.
-- `Translators/Claude/ClaudeModelManager.cs`, `Translators/Gemini/GeminiModelManager.cs`, `Translators/DeepSeek/DeepSeekModelManager.cs`, `Translators/Ollama/OllamaModelManager.cs`, `Translators/LmStudio/LmStudioModelManager.cs` — same promotion hook for discovered models.
-- `Translators/ChatGPTTranslator.cs`, `Translators/ClaudeTranslator.cs`, `Translators/GeminiTranslator.cs`, `Translators/DeepSeekTranslator.cs`, `Translators/OpenRouterTranslator.cs`, `Translators/OllamaTranslator.cs`, `Translators/LmStudioTranslator.cs` — omit unsupported parameters on plain and structured paths and record classified observations.
-- `PluginUI/EngineConfigUI/ChatGptEngineUI.cs`, `ClaudeEngineUI.cs`, `GeminiEngineUI.cs`, `DeepSeekEngineUI.cs`, `OpenRouterEngineUI.cs`, `OllamaEngineUI.cs`, `LmStudioEngineUI.cs` — disable incompatible temperature sliders with tooltips and policy ranges.
-- `Echoglossian.Tests/OpenAIModelManagerTests.cs`, `DeepSeekModelManagerTests.cs`, `LiveModelRefreshCoordinatorTests.cs`, `TranslationServiceTests.cs`, `RuntimeConfigurationRefreshContractTests.cs`, `ConfigDefaultsTests.cs`, and `OpenAiProviderConfigurationTests.cs` — extend existing seams rather than duplicating coverage.
-- `Echoglossian.Mock.Tests/PluginStartupSmokeTests.cs` — prove startup still hydrates the plugin runtime with the new capability cache.
-- `Properties/Resources.resx`, `Properties/Resources.en-US.resx`, `Properties/Resources.pt-BR.resx`, and `Properties/Resources.Designer.cs` — operator-facing tooltip and status copy.
-- `Echoglossian.xml` — include if XML docs change while touching documented public or internal members.
+- `Echoglossian.cs`  -  initialize the new capability cache on plugin startup and clear it on shutdown.
+- `GeneralHelpers/RuntimeConfigurationRefresh.cs`  -  clear capability cache/runtime state on translation-signature changes when required.
+- `EFCoreSqlite/EchoglossianDbContext.cs`  -  add the new tables and indexes.
+- `EFCoreSqlite/Migrations/EchoglossianDbContextModelSnapshot.cs` and one new dated migration pair  -  additive schema update only.
+- `Translators/OpenAI/OpenAIModelManager.cs`  -  promote exact-model capability overlays after successful refresh.
+- `Translators/Claude/ClaudeModelManager.cs`, `Translators/Gemini/GeminiModelManager.cs`, `Translators/DeepSeek/DeepSeekModelManager.cs`, `Translators/Ollama/OllamaModelManager.cs`, `Translators/LmStudio/LmStudioModelManager.cs`  -  same promotion hook for discovered models.
+- `Translators/ChatGPTTranslator.cs`, `Translators/ClaudeTranslator.cs`, `Translators/GeminiTranslator.cs`, `Translators/DeepSeekTranslator.cs`, `Translators/OpenRouterTranslator.cs`, `Translators/OllamaTranslator.cs`, `Translators/LmStudioTranslator.cs`  -  omit unsupported parameters on plain and structured paths and record classified observations.
+- `PluginUI/EngineConfigUI/ChatGptEngineUI.cs`, `ClaudeEngineUI.cs`, `GeminiEngineUI.cs`, `DeepSeekEngineUI.cs`, `OpenRouterEngineUI.cs`, `OllamaEngineUI.cs`, `LmStudioEngineUI.cs`  -  disable incompatible temperature sliders with tooltips and policy ranges.
+- `Echoglossian.Tests/OpenAIModelManagerTests.cs`, `DeepSeekModelManagerTests.cs`, `LiveModelRefreshCoordinatorTests.cs`, `TranslationServiceTests.cs`, `RuntimeConfigurationRefreshContractTests.cs`, `ConfigDefaultsTests.cs`, and `OpenAiProviderConfigurationTests.cs`  -  extend existing seams rather than duplicating coverage.
+- `Echoglossian.Mock.Tests/PluginStartupSmokeTests.cs`  -  prove startup still hydrates the plugin runtime with the new capability cache.
+- `Properties/Resources.resx`, `Properties/Resources.en-US.resx`, `Properties/Resources.pt-BR.resx`, and `Properties/Resources.Designer.cs`  -  operator-facing tooltip and status copy.
+- `Echoglossian.xml`  -  include if XML docs change while touching documented public or internal members.
 
 ## Interfaces produced and consumed
 

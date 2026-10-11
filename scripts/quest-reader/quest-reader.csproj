@@ -18,7 +18,7 @@
     <DalamudLibPath Condition="'$(DalamudLibPath)' == ''">$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
   </PropertyGroup>
 
-  <!-- Lumina assemblies are shipped by Dalamud — reference them as file refs. -->
+  <!-- Lumina assemblies are shipped by Dalamud  -  reference them as file refs. -->
   <!-- Private=true copies them to the output so the exe is self-runnable. -->
   <ItemGroup>
     <Reference Include="Lumina">

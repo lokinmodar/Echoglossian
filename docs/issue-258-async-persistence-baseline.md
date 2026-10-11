@@ -74,7 +74,7 @@ range, queue maximum depth and oldest-item age, batch and written-row counts,
 unchanged-row suppression count, SQLite busy/retry count, and comparable WAL
 write frequency. No performance claim is made from this functional session.
 
-## DB-2 final lifecycle validation — September 26, 2026 BRT
+## DB-2 final lifecycle validation - September 26, 2026 BRT
 
 This session validated the final PR head after the review corrections. It was
 not a controlled before/after performance capture.

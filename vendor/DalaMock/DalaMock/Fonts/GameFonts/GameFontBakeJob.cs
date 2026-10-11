@@ -93,7 +93,7 @@ internal sealed unsafe class GameFontBakeJob
     /// <summary>
     /// Copies game-font glyph bitmaps into the provided RGBA32 atlas buffer. Must be called on the exact
     /// buffer that gets uploaded to the GPU (i.e. right after the renderer's GetTexDataAsRGBA32 and
-    /// before UpdateTexture) — ImGui's lazy alpha-8↔RGBA32 conversions otherwise discard our writes.
+    /// before UpdateTexture)  -  ImGui's lazy alpha-8↔RGBA32 conversions otherwise discard our writes.
     /// </summary>
     /// <param name="pixels">Pointer to the RGBA32 atlas pixel buffer.</param>
     /// <param name="width">Atlas width in pixels.</param>

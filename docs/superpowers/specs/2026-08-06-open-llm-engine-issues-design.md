@@ -22,13 +22,13 @@ before provider-specific diagnostics and performance work.
 
 The implementation scope contains these issues that were open on 2026-08-06:
 
-1. [#214](https://github.com/lokinmodar/Echoglossian/issues/214) — first dialogue line lacks speaker context.
-2. [#252](https://github.com/lokinmodar/Echoglossian/issues/252) — custom prompt and glossary appear ineffective.
-3. [#209](https://github.com/lokinmodar/Echoglossian/issues/209) — disable or limit dialogue context for local LLMs.
-4. [#148](https://github.com/lokinmodar/Echoglossian/issues/148) — complete structured input/output, glossary, metadata, and compatible session support.
-5. [#176](https://github.com/lokinmodar/Echoglossian/issues/176) — local LLM translation latency and prompt overhead.
-6. [#171](https://github.com/lokinmodar/Echoglossian/issues/171) — DeepSeek reports translation unavailable despite configured credentials.
-7. [#203](https://github.com/lokinmodar/Echoglossian/issues/203) — mixed report of engines and surfaces not translating.
+1. [#214](https://github.com/lokinmodar/Echoglossian/issues/214)  -  first dialogue line lacks speaker context.
+2. [#252](https://github.com/lokinmodar/Echoglossian/issues/252)  -  custom prompt and glossary appear ineffective.
+3. [#209](https://github.com/lokinmodar/Echoglossian/issues/209)  -  disable or limit dialogue context for local LLMs.
+4. [#148](https://github.com/lokinmodar/Echoglossian/issues/148)  -  complete structured input/output, glossary, metadata, and compatible session support.
+5. [#176](https://github.com/lokinmodar/Echoglossian/issues/176)  -  local LLM translation latency and prompt overhead.
+6. [#171](https://github.com/lokinmodar/Echoglossian/issues/171)  -  DeepSeek reports translation unavailable despite configured credentials.
+7. [#203](https://github.com/lokinmodar/Echoglossian/issues/203)  -  mixed report of engines and surfaces not translating.
 
 Issue #12 is a tracker and is updated as the focused issues close. Issue #239 is
 shared transport hardening and is only a dependency watch item. Issue #212 is not

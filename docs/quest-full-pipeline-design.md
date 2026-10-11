@@ -11,7 +11,7 @@ gathered through the offline `scripts/quest-reader` tool (April 2026).
 
 ---
 
-## ScenarioTree Sheet — Quest Index
+## ScenarioTree Sheet - Quest Index
 
 The **ScenarioTree** Excel sheet (`ScenarioTree` typed in Lumina) is a curated index of
 main-scenario and important side-story quests. Its structure, confirmed by the offline
@@ -31,7 +31,7 @@ Total rows: **1,044** (as of the current game version in the test data).
 
 ### Key implication for the plugin
 
-`ScenarioTree.RowId == Quest.RowId` — this is a direct join. When the in-game
+`ScenarioTree.RowId == Quest.RowId` - this is a direct join. When the in-game
 `ScenarioTree` addon is open, we can identify the quest currently highlighted in it
 by matching its `RowId` directly against `Quest.RowId`, without any string matching.
 
@@ -74,18 +74,18 @@ Example: `AktKmb114_04393` → `quest/043/AktKmb114_04393`
 | `_TODO_NN`               | TODO     | 1–8+ (padded)   | `ToDoList`, `ScenarioTree` objectives                    |
 | `_SYSTEM_NNN_NNN`        | SYSTEM   | 0–10+           | Cinematic NPC captions                                   |
 | `NPC_NAME_NNN_NNN` etc.  | DIALOG   | 20–100+         | NPC/character dialog lines                               |
-| *(empty value)*          | EMPTY    | many            | Padding slots — safe to skip                             |
+| *(empty value)*          | EMPTY    | many            | Padding slots - safe to skip                             |
 
 Sheet sizes confirmed from live data:
 
-- "Strange Bedfellows" (`AktKmb114_04393`): 122 rows — 1 SEQ, 8 TODO, 1 SYSTEM, 73 DIALOG
-- "The Paths We Walk" (`HeaVnz025_01475`): 130 rows — 10 SEQ, 8 TODO (padded to 24), 4 SYSTEM, ~85 DIALOG
+- "Strange Bedfellows" (`AktKmb114_04393`): 122 rows - 1 SEQ, 8 TODO, 1 SYSTEM, 73 DIALOG
+- "The Paths We Walk" (`HeaVnz025_01475`): 130 rows - 10 SEQ, 8 TODO (padded to 24), 4 SYSTEM, ~85 DIALOG
 
 ---
 
 ## Pipeline Stages
 
-### Stage 1 — Quest identity resolution
+### Stage 1 - Quest identity resolution
 
 **Input:** quest name from UI or live `QuestManager` state  
 **Tools:** `QuestLuminaResolver`, `QuestProgressResolver`
@@ -99,7 +99,7 @@ No UI text is used as input to identity resolution. The Quest sheet is the canon
 
 ---
 
-### Stage 2 — Sheet acquisition and row classification
+### Stage 2 - Sheet acquisition and row classification
 
 **Input:** sheet path  
 **Tools:** `DataManager.GameData.GetExcelSheet<RawRow>(name: sheetPath)`
@@ -116,22 +116,22 @@ Read every row from the quest text sheet. For each row:
 3. Preserve both the raw `ReadOnlySeString` payload and the evaluated text per entry.
 
 At stage end, the resolver holds three classified lists:
-- `QuestSeqEntries` — journal summaries (one per phase)
-- `QuestStepEntries` — active objectives
-- `QuestSystemEntries` — cinematic text
+- `QuestSeqEntries` - journal summaries (one per phase)
+- `QuestStepEntries` - active objectives
+- `QuestSystemEntries` - cinematic text
 
 DIALOG rows are counted but not stored in the progress snapshot at this time.
 They may be added in a future iteration when NPC dialog overlay is implemented.
 
 ---
 
-### Stage 3 — Live progress merge
+### Stage 3 - Live progress merge
 
 **Input:** classified row lists + `QuestManager.GetQuestSequence(questId)`  
 **Cache key:** `$"{questId}:{questSequence}"`
 
 The current quest sequence (byte 0–255) tells us which phase the player is on. The SEQ
-rows are indexed implicitly by their ordinal — `_SEQ_00` is phase 0, `_SEQ_01` is phase 1,
+rows are indexed implicitly by their ordinal - `_SEQ_00` is phase 0, `_SEQ_01` is phase 1,
 and so on. The TODO rows visible at any given sequence should be filtered by the runtime
 todo bitfield from the live quest manager (future refinement; currently all non-empty TODOs
 are included).
@@ -141,17 +141,17 @@ when the plugin detects the sequence advanced.
 
 ---
 
-### Stage 4 — Translation
+### Stage 4 - Translation
 
 **Input:** `QuestProgressSnapshot` with classified row lists  
 **Tools:** `TranslationService` brokered queue
 
 Translate each type separately and in priority order:
 
-1. **TODO rows** (highest priority — visible in `ToDoList`/`ScenarioTree` immediately)
-2. **SEQ rows** (shown in `JournalDetail` body — translate one per phase advance)
-3. **SYSTEM rows** (cinematic — translate on demand when the cinematic fires)
-4. **DIALOG rows** — future / opt-in; not translated in this iteration
+1. **TODO rows** (highest priority - visible in `ToDoList`/`ScenarioTree` immediately)
+2. **SEQ rows** (shown in `JournalDetail` body - translate one per phase advance)
+3. **SYSTEM rows** (cinematic - translate on demand when the cinematic fires)
+4. **DIALOG rows** - future / opt-in; not translated in this iteration
 
 Rules:
 - Each row is a separate translation unit preserving its `ReadOnlySeString` payload.
@@ -161,7 +161,7 @@ Rules:
 
 ---
 
-### Stage 5 — DB persistence
+### Stage 5 - DB persistence
 
 **Model:** `QuestPlate` (see schema below)  
 **Key:** `(QuestId, TranslationLang, TranslationEngine, GameVersion)`
@@ -175,7 +175,7 @@ Update-or-insert logic:
 
 ---
 
-### Stage 6 — Display routing
+### Stage 6 - Display routing
 
 Each addon renders a specific subset of the classified data:
 
@@ -214,15 +214,15 @@ In swap mode, the overlay shows the original text while native shows the transla
 | `QuestName`           | Display name                                                         |
 | `OriginalQuestMessage`| Kept for backward compat; represents the single UI-visible body text |
 | `TranslatedQuestMessage` | Translation of the single body text                               |
-| `ObjectivesAsText`    | JSON dict of original TODO rows — **now populated from sheet**      |
-| `SummariesAsText`     | JSON dict of original SEQ rows — **now populated from sheet**       |
+| `ObjectivesAsText`    | JSON dict of original TODO rows - **now populated from sheet**      |
+| `SummariesAsText`     | JSON dict of original SEQ rows - **now populated from sheet**       |
 | `TranslationLang`     | Target language                                                      |
 | `TranslationEngine`   | Engine id                                                            |
 | `GameVersion`         | Snapshot version, guards against stale translations                  |
 
 ### Key dict layout (JSON)
 
-SEQ / Summaries dict — key is row key string, value is text:
+SEQ / Summaries dict - key is row key string, value is text:
 
 ```json
 {
@@ -231,7 +231,7 @@ SEQ / Summaries dict — key is row key string, value is text:
 }
 ```
 
-TODO / Objectives dict — key is row key string, value is text:
+TODO / Objectives dict - key is row key string, value is text:
 
 ```json
 {
@@ -288,6 +288,6 @@ flowchart TD
 - [Journal Quest Data Model and Flow](./journal-quest-data-model-and-flow.md)
 - [Quest Probe Command](./quest-probe-command.md)
 - [Quest Addon Handler Migration Guide](./quest-addon-handler-migration-guide.md)
-- [scripts/quest-reader](../scripts/quest-reader/) — offline Lumina-based verification tool
+- [scripts/quest-reader](../scripts/quest-reader/) - offline Lumina-based verification tool
 - Lumina docs: https://lumina.xiv.dev/docs/intro.html
 - EXDViewer: https://exd.camora.dev/sheet/Quest

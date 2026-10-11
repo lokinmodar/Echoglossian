@@ -1,4 +1,4 @@
-# Quest Addon Translation — Runtime Flow
+# Quest Addon Translation - Runtime Flow
 
 ## Purpose
 
@@ -69,8 +69,8 @@ Journal list.
 
 - **Key:** the applied/visible text string (translated text or original if no translation yet)
 - **Value:** `QuestUiTranslationSnapshot { OriginalText, AppliedText, LastUpdatedUtc }`
-- **Purpose:** skip addon nodes whose text is already on screen — avoids re-querying DB and re-translating for each refresh cycle
-- **Keyed by text**, not by node or quest identity — the same translated string from different quests produces only one entry
+- **Purpose:** skip addon nodes whose text is already on screen - avoids re-querying DB and re-translating for each refresh cycle
+- **Keyed by text**, not by node or quest identity - the same translated string from different quests produces only one entry
 - `Remember(original, applied)` writes to it; `TryGetAppliedSnapshot(appliedText, out snapshot)` reads from it
 - **Does not expire automatically** during a session; cleared on plugin dispose or explicit clear
 
@@ -110,7 +110,7 @@ Journal list.
 ### 3. In-memory translation queue (instance-scoped)
 
 - Managed by `TryGetQueuedTranslation(cacheKey, out text)` / `QueueTranslation(key, workFn, persistFn)`
-- Acts as the pending translation buffer — when a translation is queued but not yet complete, the handler returns early; on the next refresh cycle the handler calls `TryGetQueuedTranslation` again and finds the result
+- Acts as the pending translation buffer - when a translation is queued but not yet complete, the handler returns early; on the next refresh cycle the handler calls `TryGetQueuedTranslation` again and finds the result
 - `QueueTranslationBatch(key, sources, persistFn)` is used by `JournalDetail` for multi-field batches (name + message + objective + summary + summaries)
 - The DB `InsertQuestPlate` / `UpdateQuestPlate` call is **inside the persist callback**, fired after translation completes asynchronously
 - In the current Journal-family stabilization pass, this queue is still used by
@@ -171,11 +171,11 @@ Journal list.
 7. At the end of the scan, trim the Journal-local visible-list caches to only
    the quest names and node anchors that were visible in that pass.
 
-**DB table used:** `questplates` — by name only via `FindQuestPlateByName`.
+**DB table used:** `questplates` - by name only via `FindQuestPlateByName`.
 
 ---
 
-### `JournalDetail` (quest body panel — active quest)
+### `JournalDetail` (quest body panel - active quest)
 
 **Trigger events:**
 - `AddonEvent.PreUpdate` on `"JournalDetail"` → `JournalDetailHandler.OnJournalDetailEvent` → `TranslateJournalDetail()`
@@ -201,7 +201,7 @@ Journal list.
    available, with a `questName|questMessage` fallback.
 4. Preserve a JournalDetail-local original snapshot for that scope so mode
    switches can restore native text correctly.
-5. `FindQuestPlate(plate)` — by name + message.
+5. `FindQuestPlate(plate)` - by name + message.
 6. If found and `GameVersion` stale → `UpdateQuestPlateGameVersion`
    (non-blocking).
 7. Ensure metadata such as `QuestId`, `QuestTextSheetName`, and
@@ -228,7 +228,7 @@ Journal list.
 
 **`TranslateCompletedQuest` flow:** same as above but reads only name + message (no objective/summary), uses `JournalDetail-CompletedQuestName-*` and `JournalDetail-CompletedQuestMessage-*` + `JournalDetail-CompletedQuestBody-*` hover keys.
 
-**DB table used:** `questplates` — by `QuestName + QuestMessage` via
+**DB table used:** `questplates` - by `QuestName + QuestMessage` via
 `FindQuestPlate`.
 
 **Important current rule:** `JournalDetail` no longer generates or queues local
@@ -350,10 +350,10 @@ dedicated popup fallback.
 
 **`TranslateRecommendListHandler` flow (two-pass):**
 
-**Pass 1 — queue/translate:**
+**Pass 1 - queue/translate:**
 1. Iterate visible quest name nodes (NodeId 5 → list component → child items → NodeId 5 text node).
 2. Read `questNameText` and `questNameNodeKey = (nint)questNameNode`.
-3. If `UsesHoverTooltips`: pre-register `(original, original)` — ensures a tooltip entry exists even during first-time translation.
+3. If `UsesHoverTooltips`: pre-register `(original, original)` - ensures a tooltip entry exists even during first-time translation.
 4. `QuestUiTranslationCache.TryGetAppliedSnapshot`:
    - **Hit + `QuestHoverTranslationCache.TryGet(nodePtr)`:** register with cached pair (full params including `swapEnabled`/`forceEnabled`/`denseHitbox`); `continue`.
    - **Hit, no hover cache:** register from `QuestUiTranslationCache` snapshot; `continue`.
@@ -364,16 +364,16 @@ dedicated popup fallback.
      - Hit: write node if `WritesNative`; populate caches; register hover; `continue`.
      - Miss: `QueueTranslation`; `continue`.
 
-**Pass 2 — `UpdateRecommendList()`:**
+**Pass 2 - `UpdateRecommendList()`:**
 Identical traversal after pass 1. Re-reads all nodes and rewrites from `QuestUiTranslationCache` + `QuestHoverTranslationCache`. This ensures that translations that arrived from the async queue during pass 1 are visible immediately without waiting for the next event cycle.
 
-**Hover maintenance — `RefreshRecommendListHoverTooltips()`:**
+**Hover maintenance - `RefreshRecommendListHoverTooltips()`:**
 - Runs on `PreDraw`.
 - Re-scans only the visible quest name nodes.
 - Re-registers tooltip targets from `QuestHoverTranslationCache`, `QuestUiTranslationCache`, or the persisted `QuestPlate` row.
 - Does **not** queue new translations and does **not** mutate native text.
 
-**DB table used:** `questplates` — `FindQuestPlateByName` (name only).
+**DB table used:** `questplates` - `FindQuestPlateByName` (name only).
 
 ---
 
@@ -435,7 +435,7 @@ If all visible slots are ready:
 layout picks up the translated string without the handler touching node
 pointers directly. The content source, however, is now DB-only.
 
-**DB table used:** `questplates` — canonical lookup via `FindQuestPlate(...)`.
+**DB table used:** `questplates` - canonical lookup via `FindQuestPlate(...)`.
 
 ---
 
@@ -530,7 +530,7 @@ For each quest name entry:
 
 The stable key is `ToDoList-{progressKey}-{indexI}-{indexJ}-{nodeId}`. A lightweight `PreDraw` pass refreshes those row targets without queueing new translations.
 
-**DB tables used:** `questplates` — canonical lookup via `FindQuestPlate(...)`;
+**DB tables used:** `questplates` - canonical lookup via `FindQuestPlate(...)`;
 objectives are resolved from canonical TODO rows and persisted translated
 objective rows keyed by quest row identity.
 
@@ -810,7 +810,7 @@ original text just because the DB row is not warm enough yet.
 | `FindQuestPopupText(row)` | popup addon name + ordered popup text payload | JournalAccept and JournalResult fallback when no reliable quest id exists |
 | `FindToDoText(row)` | dedicated ordered `ToDo` node payload + scope hash | `ToDo` |
 
-`FindQuestPlateByName` is inherently looser — it cannot distinguish two quests that share a name but differ in body text. This is a known gap tracked in `quest-full-pipeline-design.md` under the migration to `QuestId`-keyed lookups.
+`FindQuestPlateByName` is inherently looser - it cannot distinguish two quests that share a name but differ in body text. This is a known gap tracked in `quest-full-pipeline-design.md` under the migration to `QuestId`-keyed lookups.
 
 ---
 
@@ -906,12 +906,12 @@ returns to a non-native mode.
 
 ## Related documents
 
-- [quest-full-pipeline-design.md](./quest-full-pipeline-design.md) — intended target architecture
-- [journal-quest-data-model-and-flow.md](./journal-quest-data-model-and-flow.md) — data model and flow analysis
-- [quest-sheet-acquisition-pipeline.md](./quest-sheet-acquisition-pipeline.md) — Lumina sheet access details
-- [quest-probe-command.md](./quest-probe-command.md) — in-game debugging tools
-- [structured-text-payload-pipeline.md](./structured-text-payload-pipeline.md) — payload-safe translation rules
-- [quest-tooltip-validation-notes.md](./quest-tooltip-validation-notes.md) — observed hover and tooltip coverage from the current validation pass
+- [quest-full-pipeline-design.md](./quest-full-pipeline-design.md) - intended target architecture
+- [journal-quest-data-model-and-flow.md](./journal-quest-data-model-and-flow.md) - data model and flow analysis
+- [quest-sheet-acquisition-pipeline.md](./quest-sheet-acquisition-pipeline.md) - Lumina sheet access details
+- [quest-probe-command.md](./quest-probe-command.md) - in-game debugging tools
+- [structured-text-payload-pipeline.md](./structured-text-payload-pipeline.md) - payload-safe translation rules
+- [quest-tooltip-validation-notes.md](./quest-tooltip-validation-notes.md) - observed hover and tooltip coverage from the current validation pass
 
 ---
 

@@ -34061,7 +34061,7 @@
             
                  Hash input: all SEQ, TODO, and SYSTEM rows concatenated as
                  "{key}={value}\n" pairs sorted by key. Result is the first 16 hex
-                 characters of the SHA-256 digest (64-bit fingerprint — sufficient for
+                 characters of the SHA-256 digest (64-bit fingerprint  -  sufficient for
                  change detection, not a security primitive).
              </summary>
         </member>
@@ -46153,7 +46153,7 @@
              so the inner service can still be resolved. The replacement descriptor preserves the original lifetime.
              Calling a decoration method multiple times stacks decorators, with the last call becoming the outermost layer.
              </para>
-             <para><b>Usage example — decorating with a factory:</b></para>
+             <para><b>Usage example  -  decorating with a factory:</b></para>
              <code>
              // Register the original service
              services.AddScoped&lt;INotificationService, EmailNotificationService&gt;();
@@ -46168,7 +46168,7 @@
             
              // Resolution chain: Retry → Logging → Email
              </code>
-             <para><b>Usage example — decorating open generics:</b></para>
+             <para><b>Usage example  -  decorating open generics:</b></para>
              <code>
              // Register closed-generic implementations
              services.AddScoped&lt;IRepository&lt;Order&gt;, OrderRepository&gt;();

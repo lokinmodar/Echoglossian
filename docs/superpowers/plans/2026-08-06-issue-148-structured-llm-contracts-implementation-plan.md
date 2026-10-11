@@ -27,29 +27,29 @@
 
 ### New files
 
-- `Translators/StructuredDialogueMode.cs` — `Auto`, `Structured`, `PlainText` enum.
-- `Translators/DialogueTranslationResult.cs` — typed accepted speaker/body result plus structured/fallback provenance.
-- `Translators/IStructuredDialogueTranslator.cs` — optional typed capability.
-- `Translators/StructuredDialogueCapabilityStateStore.cs` — bounded runtime Auto-mode breaker keyed by provider/model/endpoint signature.
-- `Translators/Helpers/PlainTextDialogueGlossaryPromptHelper.cs` — Sakura-compatible plain glossary and metadata block.
-- `Translators/OpenAI/OpenAiResponsesDialogueSessionStore.cs` — optional bounded runtime response-chain identities for official OpenAI only.
+- `Translators/StructuredDialogueMode.cs` - `Auto`, `Structured`, `PlainText` enum.
+- `Translators/DialogueTranslationResult.cs` - typed accepted speaker/body result plus structured/fallback provenance.
+- `Translators/IStructuredDialogueTranslator.cs` - optional typed capability.
+- `Translators/StructuredDialogueCapabilityStateStore.cs` - bounded runtime Auto-mode breaker keyed by provider/model/endpoint signature.
+- `Translators/Helpers/PlainTextDialogueGlossaryPromptHelper.cs` - Sakura-compatible plain glossary and metadata block.
+- `Translators/OpenAI/OpenAiResponsesDialogueSessionStore.cs` - optional bounded runtime response-chain identities for official OpenAI only.
 - `Echoglossian.Tests/StructuredDialogueCapabilityStateStoreTests.cs`.
 - `Echoglossian.Tests/PlainTextDialogueGlossaryPromptHelperTests.cs`.
 - `Echoglossian.Tests/OpenAiResponsesDialogueSessionStoreTests.cs`.
 
 ### Modified files
 
-- `Config.cs` — structured mode and official-OpenAI Responses-session opt-in.
-- `PluginUI/Tabs/TranslationEnginesTab.cs` — mode/session controls and capability status.
-- `GeneralHelpers/RuntimeConfigurationRefresh.cs` — signature and breaker/session reset.
-- `Translators/TranslationService.cs` — typed capability selection and accepted result.
+- `Config.cs` - structured mode and official-OpenAI Responses-session opt-in.
+- `PluginUI/Tabs/TranslationEnginesTab.cs` - mode/session controls and capability status.
+- `GeneralHelpers/RuntimeConfigurationRefresh.cs` - signature and breaker/session reset.
+- `Translators/TranslationService.cs` - typed capability selection and accepted result.
 - `Translators/StructuredDialogueTranslationRequest.cs`, `StructuredDialogueTranslationResponse.cs`, and `StructuredDialogueTranslationMetadata.cs`.
 - `Translators/Helpers/StructuredDialogueTranslationRequestBuilder.cs` and `StructuredDialogueTranslationResponseValidator.cs`.
-- `Translators/ChatGPTTranslator.cs`, `DeepSeekTranslator.cs`, `OpenRouterTranslator.cs`, `LmStudioTranslator.cs` — OpenAI-compatible adapters.
-- `Translators/GeminiTranslator.cs` — Gemini schema adapter.
-- `Translators/ClaudeTranslator.cs` — Anthropic tool adapter.
-- `Translators/OllamaTranslator.cs` — Ollama `format` schema adapter.
-- `NativeUI/AddonHandlers/Talk/TalkHandler.cs`, `BattleTalkHandler.cs` — consume typed speaker/body result.
+- `Translators/ChatGPTTranslator.cs`, `DeepSeekTranslator.cs`, `OpenRouterTranslator.cs`, `LmStudioTranslator.cs` - OpenAI-compatible adapters.
+- `Translators/GeminiTranslator.cs` - Gemini schema adapter.
+- `Translators/ClaudeTranslator.cs` - Anthropic tool adapter.
+- `Translators/OllamaTranslator.cs` - Ollama `format` schema adapter.
+- `NativeUI/AddonHandlers/Talk/TalkHandler.cs`, `BattleTalkHandler.cs` - consume typed speaker/body result.
 - Existing structured helper, service, metrics, handler, and runtime refresh tests.
 - `Properties/Resources.resx`, `Properties/Resources.en-US.resx`, `Properties/Resources.pt-BR.resx`, and `Properties/Resources.Designer.cs`.
 

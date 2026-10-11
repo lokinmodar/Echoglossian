@@ -28,32 +28,32 @@
 
 ### New files
 
-- `GeneralHelpers/ConfigurationSaveCoordinator.cs` — serialized latest-wins background persistence for immutable config snapshots.
-- `Translators/Helpers/DialogueGlossaryTermProtector.cs` — deterministic protect/validate/restore contract.
-- `Echoglossian.Tests/ConfigurationSaveCoordinatorTests.cs` — non-blocking, coalescing, snapshot, and exception tests.
-- `Echoglossian.Tests/DialogueGlossaryTermProtectorTests.cs` — overlap, unchanged-target, marker, and invalid-response tests.
+- `GeneralHelpers/ConfigurationSaveCoordinator.cs`  -  serialized latest-wins background persistence for immutable config snapshots.
+- `Translators/Helpers/DialogueGlossaryTermProtector.cs`  -  deterministic protect/validate/restore contract.
+- `Echoglossian.Tests/ConfigurationSaveCoordinatorTests.cs`  -  non-blocking, coalescing, snapshot, and exception tests.
+- `Echoglossian.Tests/DialogueGlossaryTermProtectorTests.cs`  -  overlap, unchanged-target, marker, and invalid-response tests.
 
 ### Modified files
 
-- `Config.cs` — safe persistence snapshot method and later issue config fields.
-- `GeneralHelpers/Utils.cs` — queue persistence for the active runtime and mark runtime dirty without waiting for disk.
-- `Echoglossian.cs` — own and shut down the configuration save coordinator.
-- `PluginUI/Components/PromptEditorUI.cs` — return true only after successful Save/Reset mutation.
-- LLM files under `PluginUI/EngineConfigUI/*EngineUI.cs` that call `PromptEditorUI.Draw` — aggregate the returned change and remove duplicate direct saves.
-- `PluginUI/EngineConfigUI/LiveModelRefreshCoordinator.cs` — own refresh tasks, cancellation, and exception observation.
-- `PluginUI/PluginConfigWindowRenderer.cs` — keep one aggregated save signal per draw.
-- `GeneralHelpers/RuntimeConfigurationRefresh.cs` — asynchronous glossary request and existing prompt-signature rebuild contract.
-- `Translators/Helpers/StructuredDialogueGlossaryLoader.cs` — cancellation-aware async file loading.
-- `Translators/StructuredDialogueGlossaryStore.cs` — immutable snapshot and async latest-request publication.
-- `PluginUI/Tabs/TranslationEnginesTab.cs` — async Reload/Clear controls and visible retranslation guidance.
-- `Translators/TranslationService.cs` — protect and restore glossary terms around LLM dialogue translation.
-- `Translators/TranslatorMetricsCollector.cs` — rejected-protected-marker outcome.
+- `Config.cs`  -  safe persistence snapshot method and later issue config fields.
+- `GeneralHelpers/Utils.cs`  -  queue persistence for the active runtime and mark runtime dirty without waiting for disk.
+- `Echoglossian.cs`  -  own and shut down the configuration save coordinator.
+- `PluginUI/Components/PromptEditorUI.cs`  -  return true only after successful Save/Reset mutation.
+- LLM files under `PluginUI/EngineConfigUI/*EngineUI.cs` that call `PromptEditorUI.Draw`  -  aggregate the returned change and remove duplicate direct saves.
+- `PluginUI/EngineConfigUI/LiveModelRefreshCoordinator.cs`  -  own refresh tasks, cancellation, and exception observation.
+- `PluginUI/PluginConfigWindowRenderer.cs`  -  keep one aggregated save signal per draw.
+- `GeneralHelpers/RuntimeConfigurationRefresh.cs`  -  asynchronous glossary request and existing prompt-signature rebuild contract.
+- `Translators/Helpers/StructuredDialogueGlossaryLoader.cs`  -  cancellation-aware async file loading.
+- `Translators/StructuredDialogueGlossaryStore.cs`  -  immutable snapshot and async latest-request publication.
+- `PluginUI/Tabs/TranslationEnginesTab.cs`  -  async Reload/Clear controls and visible retranslation guidance.
+- `Translators/TranslationService.cs`  -  protect and restore glossary terms around LLM dialogue translation.
+- `Translators/TranslatorMetricsCollector.cs`  -  rejected-protected-marker outcome.
 - `Echoglossian.Tests/RuntimeConfigurationRefreshContractTests.cs`.
 - `Echoglossian.Tests/LiveModelRefreshCoordinatorTests.cs`.
 - `Echoglossian.Tests/StructuredDialogueGlossaryLoaderTests.cs`.
 - `Echoglossian.Tests/StructuredDialogueGlossaryStoreTests.cs`.
 - `Echoglossian.Tests/TranslationServiceTests.cs`.
-- `Properties/Resources.resx`, `Properties/Resources.en-US.resx`, `Properties/Resources.pt-BR.resx`, and generated `Properties/Resources.Designer.cs` — status/guidance strings; update other localized resx files according to repository localization convention.
+- `Properties/Resources.resx`, `Properties/Resources.en-US.resx`, `Properties/Resources.pt-BR.resx`, and generated `Properties/Resources.Designer.cs`  -  status/guidance strings; update other localized resx files according to repository localization convention.
 
 ## Interfaces produced and consumed
 

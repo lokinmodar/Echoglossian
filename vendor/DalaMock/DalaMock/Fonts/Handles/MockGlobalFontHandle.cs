@@ -2,7 +2,7 @@ namespace DalaMock.Core.Fonts.Handles;
 
 /// <summary>
 /// Lightweight <see cref="IFontHandle"/> wrapping a font that already lives in the global
-/// ImGui atlas — used for the four pre-built handles on <see cref="MockUiBuilder"/>
+/// ImGui atlas  -  used for the four pre-built handles on <see cref="MockUiBuilder"/>
 /// (default, icon, mono, fixed-width icon). No rebuild, no refcount, no async waiting.
 /// </summary>
 internal sealed class MockGlobalFontHandle : IFontHandle
