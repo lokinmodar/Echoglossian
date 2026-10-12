@@ -4,6 +4,7 @@
 // </copyright>
 
 using System.IO;
+using System.Reflection;
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -14,6 +15,20 @@ namespace Echoglossian.Tests;
 /// </summary>
 public class ItemDetailInventorySourceContractTests
 {
+    /// <summary>Standard and HQ inventory identities normalize to the same canonical Item sheet id.</summary>
+    /// <param name="rawId">The hovered or inventory item identity.</param>
+    /// <param name="expected">The canonical standard Item identity.</param>
+    [Theory]
+    [InlineData(0U, 0U)]
+    [InlineData(4868U, 4868U)]
+    [InlineData(1004868U, 4868U)]
+    public void StandardAndHqItems_NormalizeToCanonicalIdentity(uint rawId, uint expected)
+    {
+        var normalize = typeof(Echoglossian).GetMethod("NormalizeStandardItemReferenceId",
+            BindingFlags.Static | BindingFlags.NonPublic)!;
+        Assert.Equal(expected, normalize.Invoke(null, [rawId]));
+    }
+
     /// <summary>
     ///     Ensures item prefetch enumerates all loaded <c>InventoryType</c>
     ///     containers through <c>InventoryManager</c> and keeps hotbars as a

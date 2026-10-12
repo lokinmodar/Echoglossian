@@ -433,6 +433,8 @@ public sealed class ActionItemTooltipPersistenceWriterTests
     [InlineData("Trait", false)]
     [InlineData("Action", true)]
     [InlineData("Trait", true)]
+    [InlineData("Item", false)]
+    [InlineData("Item", true)]
     public async Task WorkerPersistsCapturedIdentityAndOnlyMissingFields(string kind, bool seedName)
     {
         await using var harness = await Harness.CreateAsync();
@@ -472,6 +474,7 @@ public sealed class ActionItemTooltipPersistenceWriterTests
     [Theory]
     [InlineData("Action")]
     [InlineData("Trait")]
+    [InlineData("Item")]
     public async Task WorkerCompleteCacheHitSkipsBroker(string kind)
     {
         await using var harness = await Harness.CreateAsync();
@@ -493,6 +496,8 @@ public sealed class ActionItemTooltipPersistenceWriterTests
     [InlineData("Trait", "")]
     [InlineData("Action", "[Translation Error: unavailable]")]
     [InlineData("Trait", "[Translation Error: unavailable]")]
+    [InlineData("Item", "")]
+    [InlineData("Item", "[Translation Error: unavailable]")]
     public async Task WorkerUnusableResponseKeepsOriginalAndTerminatesOwnership(string kind, string rejected)
     {
         await using var harness = await Harness.CreateAsync();
@@ -521,6 +526,7 @@ public sealed class ActionItemTooltipPersistenceWriterTests
     [Theory]
     [InlineData("Action")]
     [InlineData("Trait")]
+    [InlineData("Item")]
     public async Task WorkerOwnershipIncludesTranslationAndFinalCommit(string kind)
     {
         var gate = new CommitGate();
@@ -560,6 +566,7 @@ public sealed class ActionItemTooltipPersistenceWriterTests
     [Theory]
     [InlineData("Action")]
     [InlineData("Trait")]
+    [InlineData("Item")]
     public async Task WorkerCancellationReachesTerminalOwnership(string kind)
     {
         await using var harness = await Harness.CreateAsync();
@@ -630,6 +637,8 @@ public sealed class ActionItemTooltipPersistenceWriterTests
             harness.Writer, broker, action.CanonicalPayloadAsText!, action, scope, PersistencePriority.Background, translate),
         Trait trait when kind == "Trait" => Echoglossian.CompleteTraitDetailOperationAsync(
             harness.Writer, broker, trait.CanonicalPayloadAsText!, trait, scope, PersistencePriority.Background, translate),
+        ItemTooltip item when kind == "Item" => Echoglossian.CompleteItemDetailOperationAsync(
+            harness.Writer, broker, item.CanonicalPayloadAsText!, item, scope, PersistencePriority.Background, translate),
         _ => throw new ArgumentException("Worker family has not migrated.", nameof(kind)),
     };
 

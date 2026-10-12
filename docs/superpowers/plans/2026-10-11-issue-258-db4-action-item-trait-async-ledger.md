@@ -35,8 +35,8 @@ Do not chase the raw count to zero by changing startup preload, `AsyncSerialActi
 |---|---|---|---|---|
 | Preparation | Task, skill, and ledger committed | Complete | `811000ac242c8d23f7be7ee7defad210c480b182` | Clean preparation HEAD verified after repository-local worktree migration |
 | 1. Canonical persistence | One coordinator-backed writer and async EF paths with semantic parity | Complete | `c4ded2d9360b15941434e7ff183ba3b7cc066b3c` | 43 real-SQLite writer cases plus 2 concurrent cache snapshot cases passed; existing canonical/cache regression filter 33 passed; independent canonical review fixed unlocked lookup snapshots and claimed-write coalescence; Debug solution/test builds pass |
-| 2. Action and Trait prefetch | Background persistence with existing cadence and terminal ownership | Complete | This `perf(#258): schedule action and trait prefetch asynchronously` commit; resolved hash in next ledger update | 14 real-SQLite managed-worker cases plus 4 bounded operation-owner cases passed; 59 persistence/broker/validation regression cases passed; independent slice review found no correctness issues |
-| 3. Item prefetch | Background persistence with existing source/HQ identity and cadence | Pending |  |  |
+| 2. Action and Trait prefetch | Background persistence with existing cadence and terminal ownership | Complete | `a7795be505564da1203c3a31907512a40cf29a3e` | 14 real-SQLite managed-worker cases plus 4 bounded operation-owner cases passed; 59 persistence/broker/validation regression cases passed; independent slice review found no correctness issues |
+| 3. Item prefetch | Background persistence with existing source/HQ identity and cadence | Complete | This `perf(#258): schedule item tooltip prefetch asynchronously` commit; resolved hash in next ledger update | 29 combined managed worker/owner/inventory cases passed (7 new Item worker cases); 11 Item and structured-tooltip regressions passed; standard/HQ ID normalization covered; existing EventItem/DeepDungeon dedicated-row reuse tests preserved |
 | 4. Visible structured tooltips | Cache-first hit, nonblocking interactive miss, safe Framework-thread apply | Pending |  |  |
 | Final validation | Full build/tests/audit/review, Debug DLL and SHA-256 | Pending |  |  |
 | Pull request | Pushed branch and focused PR to `v4-series` | Pending |  |  |
@@ -61,6 +61,8 @@ Keep at most four behavioral commits, plus narrow review fixes and the final led
 Push every validated stable commit. Do not accumulate the entire stage into one commit.
 
 ## Mandatory validation
+
+Slice 3 keeps inventory, armory, equipment and hotbar capture on Framework, preserving the existing normal/HQ normalization and item-source dispatch. EventItem and DeepDungeon remain on the existing reference-text pipeline. Captured Item workers have no native pointers, live sheets, mutable configuration or language lookups.
 
 - Focused real-SQLite persistence tests for each completed slice.
 - Runtime contract tests proving migrated callers do not invoke synchronous DB helpers.
