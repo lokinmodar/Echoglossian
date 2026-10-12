@@ -227,7 +227,9 @@ public partial class Echoglossian
 
         var original = ActionTooltipCanonicalPayload.Deserialize(snapshot)!;
         var translated = ActionTooltipCanonicalPayload.Deserialize(snapshot)!;
-        translated.TranslatedName = StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original.Name, result.Value?.TranslatedActionName);
+        translated.TranslatedName = string.IsNullOrWhiteSpace(original.Description)
+            ? StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original.Name, result.Value?.TranslatedActionName)
+            : result.Value?.TranslatedActionName;
         translated.TranslatedDescription = StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original.Description, result.Value?.TranslatedActionDescription);
         if (translated.HasCompleteTranslation)
         {
@@ -242,10 +244,13 @@ public partial class Echoglossian
             return;
         }
 
-        var name = ResolveStructuredTooltipFieldAsync(broker,
+        var name = ResolveStructuredTooltipFieldAsync(
+            broker,
             BuildTranslationReuseScopedKey($"ActionDetailPrefetch|{original.ActionId}|Name|{original.Name}", scope),
-            original.Name, translated.TranslatedName, $"ActionTooltip/{original.ActionId}/Name", translate, token);
-        var description = ResolveStructuredTooltipFieldAsync(broker,
+            original.Name, translated.TranslatedName, $"ActionTooltip/{original.ActionId}/Name", translate, token,
+            preserveSourceEquivalent: !string.IsNullOrWhiteSpace(original.Description));
+        var description = ResolveStructuredTooltipFieldAsync(
+            broker,
             BuildTranslationReuseScopedKey($"ActionDetailPrefetch|{original.ActionId}|Description|{original.Description}", scope),
             original.Description, translated.TranslatedDescription, $"ActionTooltip/{original.ActionId}/Description", translate, token);
         await Task.WhenAll(name, description).ConfigureAwait(false);
@@ -883,10 +888,11 @@ public partial class Echoglossian
     /// <param name="origin">The canonical diagnostic origin.</param>
     /// <param name="translate">The captured translator.</param>
     /// <param name="token">The plugin lifetime.</param>
+    /// <param name="preserveSourceEquivalent">Whether an unchanged name can accompany a translated description.</param>
     /// <returns>The usable translated field or null.</returns>
     private static async Task<string?> ResolveStructuredTooltipFieldAsync(
         QueuedTranslationBroker broker, string key, string? original, string? existing, string origin,
-        Func<string, string, CancellationToken, Task<string>> translate, CancellationToken token)
+        Func<string, string, CancellationToken, Task<string>> translate, CancellationToken token, bool preserveSourceEquivalent = false)
     {
         if (string.IsNullOrWhiteSpace(original) || !string.IsNullOrWhiteSpace(existing))
         {
@@ -895,15 +901,16 @@ public partial class Echoglossian
 
         if (broker.TryGetCached(key, out var cached))
         {
-            return StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original, cached);
+            return preserveSourceEquivalent ? cached : StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original, cached);
         }
 
         var completion = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
         var admission = broker.TryQueueOrJoin(key, async () =>
         {
             var value = await translate(original, origin, token).ConfigureAwait(false);
-            return StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original, value)
-                ?? throw new InvalidOperationException("Unusable structured tooltip translation.");
+            return preserveSourceEquivalent
+                ? value
+                : StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original, value) ?? string.Empty;
         }, value => completion.TrySetResult(value), origin,
             _ => completion.TrySetResult(null), retainExisting: true, tryRetainOnJoin: () => true);
         if (admission is not (QueuedTranslationAdmission.Accepted or QueuedTranslationAdmission.JoinedInFlight))

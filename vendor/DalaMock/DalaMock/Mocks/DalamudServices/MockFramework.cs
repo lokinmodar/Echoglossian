@@ -62,7 +62,7 @@ public class MockFramework : IDisposable, IFramework, IMockService
     /// <inheritdoc/>
     public event IFramework.OnUpdateDelegate Update;
 
-    public IDebouncer CreateDebouncer(TimeSpan delay, SysAction action)
+    public IDebouncer CreateDebouncer(TimeSpan delay, System.Action action)
     {
         return new Debouncer(this, delay, action);
     }

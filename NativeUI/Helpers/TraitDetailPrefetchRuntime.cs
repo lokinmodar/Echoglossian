@@ -160,7 +160,9 @@ public partial class Echoglossian
 
         var original = TraitCanonicalPayload.Deserialize(snapshot)!;
         var translated = TraitCanonicalPayload.Deserialize(snapshot)!;
-        translated.TranslatedName = StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original.Name, result.Value?.TranslatedTraitName);
+        translated.TranslatedName = string.IsNullOrWhiteSpace(original.Description)
+            ? StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original.Name, result.Value?.TranslatedTraitName)
+            : result.Value?.TranslatedTraitName;
         translated.TranslatedDescription = StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original.Description, result.Value?.TranslatedTraitDescription);
         if (translated.HasCompleteTranslation)
         {
@@ -175,10 +177,13 @@ public partial class Echoglossian
             return;
         }
 
-        var name = ResolveStructuredTooltipFieldAsync(broker,
+        var name = ResolveStructuredTooltipFieldAsync(
+            broker,
             BuildTranslationReuseScopedKey($"TraitDetailPrefetch|{original.TraitId}|Name|{original.Name}", scope),
-            original.Name, translated.TranslatedName, BuildTraitDetailOriginContext(original, "Name"), translate, token);
-        var description = ResolveStructuredTooltipFieldAsync(broker,
+            original.Name, translated.TranslatedName, BuildTraitDetailOriginContext(original, "Name"), translate, token,
+            preserveSourceEquivalent: !string.IsNullOrWhiteSpace(original.Description));
+        var description = ResolveStructuredTooltipFieldAsync(
+            broker,
             BuildTranslationReuseScopedKey($"TraitDetailPrefetch|{original.TraitId}|Description|{original.Description}", scope),
             original.Description, translated.TranslatedDescription, BuildTraitDetailOriginContext(original, "Description"), translate, token);
         await Task.WhenAll(name, description).ConfigureAwait(false);

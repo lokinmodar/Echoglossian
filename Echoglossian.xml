@@ -5145,7 +5145,7 @@
             <param name="currentClassJobId">The current class/job id.</param>
             <returns>True when the current class/job was resolved.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ResolveStructuredTooltipFieldAsync(Echoglossian.NativeUI.Helpers.QueuedTranslationBroker,System.String,System.String,System.String,System.String,System.Func{System.String,System.String,System.Threading.CancellationToken,System.Threading.Tasks.Task{System.String}},System.Threading.CancellationToken)">
+        <member name="M:Echoglossian.Echoglossian.ResolveStructuredTooltipFieldAsync(Echoglossian.NativeUI.Helpers.QueuedTranslationBroker,System.String,System.String,System.String,System.String,System.Func{System.String,System.String,System.Threading.CancellationToken,System.Threading.Tasks.Task{System.String}},System.Threading.CancellationToken,System.Boolean)">
             <summary>Resolves one source-scoped field through the existing broker, observing terminal failure.</summary>
             <param name="broker">The shared broker.</param>
             <param name="key">The source-scoped field identity.</param>
@@ -5154,6 +5154,7 @@
             <param name="origin">The canonical diagnostic origin.</param>
             <param name="translate">The captured translator.</param>
             <param name="token">The plugin lifetime.</param>
+            <param name="preserveSourceEquivalent">Whether an unchanged name can accompany a translated description.</param>
             <returns>The usable translated field or null.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.GetStructuredTooltipDisplayMode">

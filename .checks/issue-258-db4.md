@@ -6,7 +6,7 @@ Profile: light. Source: `.tasks/issue-258-db4-action-item-trait-async.md` (all 2
 
 - C1 cache hit returns a detached managed copy without admission. Proof: `ActionItemTooltipPersistenceWriterTests.CacheHitDoesNotAdmit`.
 - C2 miss returns before SQLite completion. Proof: `ActionItemTooltipPersistenceWriterTests.ReadCoalescesAndDoesNotPublishBeforeCompletion`.
-- C3 identity, reuse scope and historical selection remain compatible. Proof: existing `ActionItemTooltipPersistenceTests`, cache tests, and `ActionItemTooltipPersistenceWriterTests.HistoricalPromotionPreservesIdentity`.
+- C3 identity, reuse scope and historical selection remain compatible. Proof: existing `ActionItemTooltipPersistenceTests`, cache tests, and `ActionItemTooltipPersistenceWriterTests.HistoricalPromotionPreservesIdentity`. Proper nouns: `WorkerPreservesSourceEquivalentNameWithTranslatedDescription`, `WorkerCachedSourceEquivalentNameWithTranslatedDescriptionSkipsWork`, and `WorkerSourceEquivalentNameWithoutDescriptionRemainsRejected` cover all three domains.
 - C4 publish only successful non-null reads. Proof: `ActionItemTooltipPersistenceWriterTests.ReadMissDoesNotPublish`.
 - C5 unchanged writes emit no UPDATE; publish only committed changes. Proof: `ActionItemTooltipPersistenceWriterTests.UnchangedWritePreservesTimestamp`, `PublishesOnlyAfterCommit`.
 - C6 duplicate work joins existing ownership. Proof: `ReadCoalescesAndDoesNotPublishBeforeCompletion`, coordinator tests, runtime ownership review.
@@ -29,7 +29,7 @@ Profile: light. Source: `.tasks/issue-258-db4-action-item-trait-async.md` (all 2
 - C15 hits apply in same Framework pass with existing display modes. Proof: existing structured tooltip display tests, independent diff review; native application additionally needs in-game testing.
 - C16 misses retain original, Interactive lane, 30-second cooldown. Proof: runtime contract tests and cache-first lookup review.
 - C17 workers publish managed data; next Framework pass applies. Proof: runtime contract tests and callback review; native integration gap documented in ledger.
-- C18 provider error/empty/unusable output never displayed or persisted. Proof: existing `StructuredTooltipTranslationValidationTests`, runtime operation tests.
+- C18 provider error/empty/unusable output never displayed or persisted. Proof: existing `StructuredTooltipTranslationValidationTests` and `WorkerUnusableResponseKeepsOriginalAndTerminatesOwnership` (six domain/error cases, zero generic broker error logs).
 - C19 disabled config gates preserve UI ownership. Proof: runtime gate tests and existing display ownership tests.
 
 ## Compatibility and delivery

@@ -37,7 +37,7 @@ Do not chase the raw count to zero by changing startup preload, `AsyncSerialActi
 | 1. Canonical persistence | One coordinator-backed writer and async EF paths with semantic parity | Complete | `c4ded2d9360b15941434e7ff183ba3b7cc066b3c` | 43 real-SQLite writer cases plus 2 concurrent cache snapshot cases passed; existing canonical/cache regression filter 33 passed; independent canonical review fixed unlocked lookup snapshots and claimed-write coalescence; Debug solution/test builds pass |
 | 2. Action and Trait prefetch | Background persistence with existing cadence and terminal ownership | Complete | `a7795be505564da1203c3a31907512a40cf29a3e` | 14 real-SQLite managed-worker cases plus 4 bounded operation-owner cases passed; 59 persistence/broker/validation regression cases passed; independent slice review found no correctness issues |
 | 3. Item prefetch | Background persistence with existing source/HQ identity and cadence | Complete | `9249938fe60f4128616a2e972231a4f3a7263014` | 29 combined managed worker/owner/inventory cases passed (7 new Item worker cases); 11 Item and structured-tooltip regressions passed; standard/HQ ID normalization covered; existing EventItem/DeepDungeon dedicated-row reuse tests preserved |
-| 4. Visible structured tooltips | Cache-first hit, nonblocking interactive miss, safe Framework-thread apply | Complete | This `perf(#258): make structured tooltip lookup nonblocking` commit; resolved hash in final ledger update | 36 focused tooltip/runtime contract cases passed, including all 19 DB-4 source/cadence/config/cooldown contracts; hosted DalaMock writer creation/disposal/rejected-write test passed; Debug unit and Mock test builds pass |
+| 4. Visible structured tooltips | Cache-first hit, nonblocking interactive miss, safe Framework-thread apply | Complete | `1e9b7425b915b8692ae3f534874d8ba9bf9791f0` | 36 focused tooltip/runtime contract cases passed, including all 19 DB-4 source/cadence/config/cooldown contracts; hosted DalaMock writer creation/disposal/rejected-write test passed; Debug unit and Mock test builds pass |
 | Final validation | Full build/tests/audit/review, Debug DLL and SHA-256 | Pending |  |  |
 | Pull request | Pushed branch and focused PR to `v4-series` | Pending |  |  |
 
@@ -78,6 +78,16 @@ Mock coverage verifies plugin lifetime wiring and rejects writer admission after
 - Independent final diff review before opening the PR.
 
 If Mock/DalaMock cannot drive the native payload path, record the exact limitation and keep the remaining in-game verification explicit. Do not claim startup-only Mock coverage proves tooltip capture or application.
+
+## Delivery and authorization gate
+
+## Final review fixes
+
+- Fresh independent review initially ran 115 focused proofs at `1e9b742` and found two P2 issues. Empty/source-equivalent provider responses now use the broker's existing quiet terminal cooldown instead of a generic exception. Proper-noun names remain valid when accompanied by translated descriptions, using the existing final payload validation; name-only source-equivalent output remains rejected.
+- Six failure-response cases assert zero generic broker error logs. Nine new worker cases cover translated-description/proper-name persistence, cached proper-name reuse without work, and name-only rejection across Action/Trait/Item. The focused worker/validation batch passed 32 cases; review confirmed the assertions reach the production worker boundary.
+- Full unit validation first found an existing vendored debouncer spelling mismatch with its source contract. Its parameter is now explicitly `System.Action`, equivalent to the previous `SysAction` alias; the test was preserved. After that correction, all 1628 then-current unit tests passed. Final expanded suite rerun follows this review-fix commit.
+- Six newly introduced StyleCop parameter-layout warnings were removed; existing repository warnings remain.
+- Audit baseline refresh changes only six retained compatibility query spellings. Audit passes 224 total findings. DB-4 retains 42: 24 compatibility/setup API findings with no migrated runtime callers, eight DB-8 startup preloads, and ten unchanged non-DB/completed-task findings. The generated inventory retains the existing DB-2 narrative and adds the DB-4 behavioral classification.
 
 ## Delivery and authorization gate
 

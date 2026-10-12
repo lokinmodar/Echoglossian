@@ -1087,18 +1087,18 @@
       "evidence": "ToList( [occurrence 1]"
     },
     {
-      "id": "sync-ef-query|DBHelpers/ActionTooltipPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
+      "id": "sync-ef-query|DBHelpers/ActionTooltipPersistenceHelper.cs|ToList( [occurrence 1]",
       "category": "sync-ef-query",
       "stage": "DB-4",
       "path": "DBHelpers/ActionTooltipPersistenceHelper.cs",
-      "evidence": "FirstOrDefault( [occurrence 1]"
+      "evidence": "ToList( [occurrence 1]"
     },
     {
-      "id": "sync-ef-query|DBHelpers/ActionTooltipPersistenceHelper.cs|FirstOrDefault( [occurrence 2]",
+      "id": "sync-ef-query|DBHelpers/ActionTooltipPersistenceHelper.cs|ToList( [occurrence 2]",
       "category": "sync-ef-query",
       "stage": "DB-4",
       "path": "DBHelpers/ActionTooltipPersistenceHelper.cs",
-      "evidence": "FirstOrDefault( [occurrence 2]"
+      "evidence": "ToList( [occurrence 2]"
     },
     {
       "id": "sync-ef-query|DBHelpers/DbOperations.cs|FirstOrDefault( [occurrence 1]",
@@ -1276,18 +1276,18 @@
       "evidence": "FirstOrDefault( [occurrence 1]"
     },
     {
-      "id": "sync-ef-query|DBHelpers/ItemTooltipPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
+      "id": "sync-ef-query|DBHelpers/ItemTooltipPersistenceHelper.cs|ToList( [occurrence 1]",
       "category": "sync-ef-query",
       "stage": "DB-4",
       "path": "DBHelpers/ItemTooltipPersistenceHelper.cs",
-      "evidence": "FirstOrDefault( [occurrence 1]"
+      "evidence": "ToList( [occurrence 1]"
     },
     {
-      "id": "sync-ef-query|DBHelpers/ItemTooltipPersistenceHelper.cs|FirstOrDefault( [occurrence 2]",
+      "id": "sync-ef-query|DBHelpers/ItemTooltipPersistenceHelper.cs|ToList( [occurrence 2]",
       "category": "sync-ef-query",
       "stage": "DB-4",
       "path": "DBHelpers/ItemTooltipPersistenceHelper.cs",
-      "evidence": "FirstOrDefault( [occurrence 2]"
+      "evidence": "ToList( [occurrence 2]"
     },
     {
       "id": "sync-ef-query|DBHelpers/LlmCapabilityPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
@@ -1332,18 +1332,18 @@
       "evidence": "FirstOrDefault( [occurrence 3]"
     },
     {
-      "id": "sync-ef-query|DBHelpers/TraitPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
+      "id": "sync-ef-query|DBHelpers/TraitPersistenceHelper.cs|ToList( [occurrence 1]",
       "category": "sync-ef-query",
       "stage": "DB-4",
       "path": "DBHelpers/TraitPersistenceHelper.cs",
-      "evidence": "FirstOrDefault( [occurrence 1]"
+      "evidence": "ToList( [occurrence 1]"
     },
     {
-      "id": "sync-ef-query|DBHelpers/TraitPersistenceHelper.cs|FirstOrDefault( [occurrence 2]",
+      "id": "sync-ef-query|DBHelpers/TraitPersistenceHelper.cs|ToList( [occurrence 2]",
       "category": "sync-ef-query",
       "stage": "DB-4",
       "path": "DBHelpers/TraitPersistenceHelper.cs",
-      "evidence": "FirstOrDefault( [occurrence 2]"
+      "evidence": "ToList( [occurrence 2]"
     },
     {
       "id": "sync-ef-query|DBHelpers/TranslationFailurePersistenceHelper.cs|FirstOrDefault( [occurrence 1]",

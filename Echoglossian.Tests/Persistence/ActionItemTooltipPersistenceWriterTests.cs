@@ -501,7 +501,8 @@ public sealed class ActionItemTooltipPersistenceWriterTests
     public async Task WorkerUnusableResponseKeepsOriginalAndTerminatesOwnership(string kind, string rejected)
     {
         await using var harness = await Harness.CreateAsync();
-        using var broker = CreateBroker();
+        var errors = new System.Collections.Concurrent.ConcurrentBag<string>();
+        using var broker = CreateBroker(errors.Add);
         var owner = new StructuredTooltipOperationOwner();
         var probe = CreateRow(kind, translated: false);
         var calls = 0;
@@ -519,6 +520,7 @@ public sealed class ActionItemTooltipPersistenceWriterTests
         Assert.Null(Describe(FindCached(probe)!).Name);
         Assert.Same(completion, owner.TryStart("canonical", () => throw new InvalidOperationException("Cooldown must suppress retry."), harness.Writer.ShutdownToken));
         Assert.Equal(after, calls);
+        Assert.Empty(errors);
     }
 
     /// <summary>Ownership remains active until the translated transaction commits and retains terminal cooldown.</summary>
@@ -593,31 +595,125 @@ public sealed class ActionItemTooltipPersistenceWriterTests
     /// <summary>Gets the fixed canonical policy used by all overload families.</summary>
     private static TranslationReuseScope Scope => new("en", "pt", 0, true);
 
+    /// <summary>A proper-noun name may remain unchanged when its description is meaningfully translated.</summary>
+    /// <param name="kind">The migrated family.</param>
+    [Theory]
+    [InlineData("Action")]
+    [InlineData("Trait")]
+    [InlineData("Item")]
+    public async Task WorkerPreservesSourceEquivalentNameWithTranslatedDescription(string kind)
+    {
+        await using var harness = await Harness.CreateAsync();
+        using var broker = CreateBroker();
+        var calls = 0;
+        Task<string> Translate(string text, string origin, CancellationToken token)
+        {
+            Interlocked.Increment(ref calls);
+            return Task.FromResult(text == "Original" ? text : "Descricao");
+        }
+
+        var probe = CreateRow(kind, translated: false);
+        await RunWorker(kind, harness, broker, probe, Scope, Translate).WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(2, calls);
+        var stored = Assert.Single(await harness.StoredRowsAsync(kind));
+        Assert.Equal("Original", Describe(stored).Name);
+        Assert.True(HasCompletePayload(stored));
+        Assert.True(HasCompletePayload(FindCached(probe)!));
+    }
+
+    /// <summary>A complete cached proper noun and translated description need no database or provider work.</summary>
+    /// <param name="kind">The migrated family.</param>
+    [Theory]
+    [InlineData("Action")]
+    [InlineData("Trait")]
+    [InlineData("Item")]
+    public async Task WorkerCachedSourceEquivalentNameWithTranslatedDescriptionSkipsWork(string kind)
+    {
+        await using var harness = await Harness.CreateAsync();
+        using var broker = CreateBroker();
+        var row = CreateRow(kind, sourceEquivalentName: true);
+        await harness.SeedAsync(row);
+        UpdateCache(row);
+        var opens = harness.Factory.Opens;
+        var calls = 0;
+        Task<string> Translate(string text, string origin, CancellationToken token)
+        {
+            Interlocked.Increment(ref calls);
+            return Task.FromResult("unexpected translation");
+        }
+
+        await RunWorker(kind, harness, broker, CreateRow(kind, translated: false), Scope, Translate)
+            .WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(0, calls);
+        Assert.Equal(0, harness.Coordinator.GetMetrics().AcceptedOperations);
+        Assert.Equal(opens, harness.Factory.Opens);
+        Assert.True(HasCompletePayload(FindCached(row)!));
+    }
+
+    /// <summary>An unchanged name without a description is still rejected as untranslated content.</summary>
+    /// <param name="kind">The migrated family.</param>
+    [Theory]
+    [InlineData("Action")]
+    [InlineData("Trait")]
+    [InlineData("Item")]
+    public async Task WorkerSourceEquivalentNameWithoutDescriptionRemainsRejected(string kind)
+    {
+        await using var harness = await Harness.CreateAsync();
+        using var broker = CreateBroker();
+        var calls = 0;
+        Task<string> Translate(string text, string origin, CancellationToken token)
+        {
+            Interlocked.Increment(ref calls);
+            return Task.FromResult(text);
+        }
+
+        var probe = CreateRow(kind, translated: false, hasDescription: false);
+        await RunWorker(kind, harness, broker, probe, Scope, Translate).WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(1, calls);
+        var stored = Assert.Single(await harness.StoredRowsAsync(kind));
+        Assert.Null(Describe(stored).Name);
+        Assert.False(HasCompletePayload(stored));
+        Assert.Null(Describe(FindCached(probe)!).Name);
+    }
+
+    /// <summary>Checks persisted payload completeness using the unchanged domain validators.</summary>
+    private static bool HasCompletePayload(object row) => row switch
+    {
+        ActionTooltip action => ActionTooltipCanonicalPayload.Deserialize(action.CanonicalPayloadAsText)!.HasCompleteTranslation,
+        Trait trait => TraitCanonicalPayload.Deserialize(trait.CanonicalPayloadAsText)!.HasCompleteTranslation,
+        ItemTooltip item => ItemTooltipCanonicalPayload.Deserialize(item.CanonicalPayloadAsText)!.HasCompleteTranslation,
+        _ => throw new ArgumentException("Unexpected canonical family.", nameof(row)),
+    };
+
     /// <summary>Creates a domain row through its production canonical payload builder.</summary>
     private static object CreateRow(string kind, bool translated = true, string version = "7.3",
-        string source = "en", string target = "pt", uint id = 1, bool translateDescription = true)
+        string source = "en", string target = "pt", uint id = 1, bool translateDescription = true,
+        bool sourceEquivalentName = false, bool hasDescription = true)
     {
         switch (kind)
         {
             case "Action":
                 var action = new ActionTooltipCanonicalPayload
                 {
-                    ActionId = id, IconId = 42, ClassJobId = 7, Name = "Original", Description = "Original description",
-                    TranslatedName = translated ? "Traduzido" : null, TranslatedDescription = translated && translateDescription ? "Descricao" : null,
+                    ActionId = id, IconId = 42, ClassJobId = 7, Name = "Original", Description = hasDescription ? "Original description" : string.Empty,
+                    TranslatedName = translated ? sourceEquivalentName ? "Original" : "Traduzido" : null,
+                    TranslatedDescription = translated && translateDescription && hasDescription ? "Descricao" : null,
                 };
                 return ActionTooltipPersistenceHelper.CreateCanonicalRow(source, target, 0, version, action, translated ? action : null);
             case "Trait":
                 var trait = new TraitCanonicalPayload
                 {
-                    TraitId = id, IconId = 42, ClassJobId = 7, Name = "Original", Description = "Original description",
-                    TranslatedName = translated ? "Traduzido" : null, TranslatedDescription = translated && translateDescription ? "Descricao" : null,
+                    TraitId = id, IconId = 42, ClassJobId = 7, Name = "Original", Description = hasDescription ? "Original description" : string.Empty,
+                    TranslatedName = translated ? sourceEquivalentName ? "Original" : "Traduzido" : null,
+                    TranslatedDescription = translated && translateDescription && hasDescription ? "Descricao" : null,
                 };
                 return TraitPersistenceHelper.CreateCanonicalRow(source, target, 0, version, trait, translated ? trait : null);
             case "Item":
                 var item = new ItemTooltipCanonicalPayload
                 {
-                    ItemId = id, IconId = 42, ItemUiCategoryId = 7, Name = "Original", Description = "Original description",
-                    TranslatedName = translated ? "Traduzido" : null, TranslatedDescription = translated && translateDescription ? "Descricao" : null,
+                    ItemId = id, IconId = 42, ItemUiCategoryId = 7, Name = "Original", Description = hasDescription ? "Original description" : string.Empty,
+                    TranslatedName = translated ? sourceEquivalentName ? "Original" : "Traduzido" : null,
+                    TranslatedDescription = translated && translateDescription && hasDescription ? "Descricao" : null,
                 };
                 return ItemTooltipPersistenceHelper.CreateCanonicalRow(source, target, 0, version, item, translated ? item : null);
             default:
@@ -626,8 +722,8 @@ public sealed class ActionItemTooltipPersistenceWriterTests
     }
 
     /// <summary>Creates the production broker with deterministic test pacing and no provider retries.</summary>
-    private static QueuedTranslationBroker CreateBroker() => new(
-        TimeSpan.Zero, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(5), TimeSpan.Zero, 0);
+    private static QueuedTranslationBroker CreateBroker(Action<string>? errorLog = null) => new(
+        TimeSpan.Zero, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(5), TimeSpan.Zero, 0, errorLog: errorLog);
 
     /// <summary>Runs the production managed worker from a canonical serialized capture.</summary>
     private static Task RunWorker(string kind, Harness harness, QueuedTranslationBroker broker, object probe,
