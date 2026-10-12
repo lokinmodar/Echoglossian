@@ -92,25 +92,7 @@ public static class ActionTooltipPersistenceHelper
                 GameVersionLookupHelper.HasRequestedVersion(
                     actionTooltip.GameVersion);
 
-            var existing = context.ActionTooltip
-                .Where(row =>
-                    row.ActionId == actionTooltip.ActionId &&
-                    row.TranslationEngine == actionTooltip.TranslationEngine &&
-                    ((!hasRequestedGameVersion && row.GameVersion == null) ||
-                     (hasRequestedGameVersion &&
-                      (row.GameVersion == null ||
-                       row.GameVersion == actionTooltip.GameVersion))) &&
-                    row.SourceContentHash == actionTooltip.SourceContentHash)
-                .AsEnumerable()
-                .Where(row => RuntimeLanguageHelper.LanguagesMatch(
-                    row.OriginalLang,
-                    actionTooltip.OriginalLang) &&
-                    RuntimeLanguageHelper.LanguagesMatch(
-                        row.TranslationLang,
-                        actionTooltip.TranslationLang))
-                .OrderByDescending(GetTranslationCompletenessScore)
-                .ThenByDescending(row => row.UpdatedDate)
-                .FirstOrDefault();
+            var existing = SelectMatch(GetCandidates(context, actionTooltip).Where(row => row.TranslationEngine == actionTooltip.TranslationEngine).ToList(), new TranslationReuseScope(actionTooltip.OriginalLang!, actionTooltip.TranslationLang!, actionTooltip.TranslationEngine, true));
             if (existing != null)
             {
                 MergeValues(existing, actionTooltip);
@@ -188,23 +170,7 @@ public static class ActionTooltipPersistenceHelper
             var hasRequestedGameVersion =
                 GameVersionLookupHelper.HasRequestedVersion(probe.GameVersion);
 
-            return context.ActionTooltip
-                .AsNoTracking()
-                .Where(row =>
-                    row.ActionId == probe.ActionId &&
-                    ((!hasRequestedGameVersion && row.GameVersion == null) ||
-                     (hasRequestedGameVersion &&
-                      (row.GameVersion == null ||
-                       row.GameVersion == probe.GameVersion))) &&
-                    row.SourceContentHash == probe.SourceContentHash)
-                .AsEnumerable()
-                .Where(row => scope.Matches(
-                    row.OriginalLang,
-                    row.TranslationLang,
-                    row.TranslationEngine))
-                .OrderByDescending(GetTranslationCompletenessScore)
-                .ThenByDescending(row => row.UpdatedDate)
-                .FirstOrDefault();
+            return SelectMatch(GetCandidates(context, probe).AsNoTracking().ToList(), scope);
         }
         catch
         {
@@ -328,5 +294,131 @@ public static class ActionTooltipPersistenceHelper
             TranslatedName = payload.TranslatedName,
             TranslatedDescription = payload.TranslatedDescription,
         };
+    }
+
+    /// <summary>Builds the shared canonical SQL predicate.</summary>
+    /// <param name="context">The operation context.</param>
+    /// <param name="probe">The canonical identity.</param>
+    /// <returns>The bounded candidates query.</returns>
+    private static IQueryable<ActionTooltip> GetCandidates(EchoglossianDbContext context, ActionTooltip probe)
+    {
+        var hasRequestedGameVersion = GameVersionLookupHelper.HasRequestedVersion(probe.GameVersion);
+        return context.ActionTooltip
+                .Where(row =>
+                    row.ActionId == probe.ActionId &&
+                    ((!hasRequestedGameVersion && row.GameVersion == null) ||
+                     (hasRequestedGameVersion &&
+                      (row.GameVersion == null ||
+                       row.GameVersion == probe.GameVersion))) &&
+                    row.SourceContentHash == probe.SourceContentHash);
+    }
+
+    /// <summary>Selects candidates using the existing language and completeness policy.</summary>
+    /// <param name="candidates">The materialized candidates.</param>
+    /// <param name="scope">The reuse policy.</param>
+    /// <returns>The preferred row.</returns>
+    private static ActionTooltip? SelectMatch(IEnumerable<ActionTooltip> candidates, TranslationReuseScope scope)
+    {
+        return candidates
+                .Where(row => scope.Matches(
+                    row.OriginalLang,
+                    row.TranslationLang,
+                    row.TranslationEngine))
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
+    }
+
+    /// <summary>Reads a canonical row without synchronous database I/O.</summary>
+    /// <param name="context">The coordinator context.</param>
+    /// <param name="probe">The captured identity.</param>
+    /// <param name="scope">The reuse policy.</param>
+    /// <param name="cancellationToken">The lifetime token.</param>
+    /// <returns>The matching detached row.</returns>
+    internal static async Task<ActionTooltip?> FindAsync(EchoglossianDbContext context, ActionTooltip probe, TranslationReuseScope scope, CancellationToken cancellationToken)
+    {
+        if (!IsValidForPersistence(probe))
+        {
+            return null;
+        }
+
+        var candidates = await GetCandidates(context, probe).AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
+        return SelectMatch(candidates, scope);
+    }
+
+    /// <summary>Applies a retry-safe canonical merge; the coordinator owns commit.</summary>
+    /// <param name="context">The transaction context.</param>
+    /// <param name="source">The immutable captured input.</param>
+    /// <param name="cancellationToken">The lifetime token.</param>
+    /// <returns>The tracked row and whether persisted fields changed.</returns>
+    internal static async Task<(ActionTooltip Row, bool Changed)> UpsertAsync(EchoglossianDbContext context, ActionTooltip source, CancellationToken cancellationToken)
+    {
+        if (!IsValidForPersistence(source))
+        {
+            throw new ArgumentException("Invalid canonical tooltip identity.", nameof(source));
+        }
+
+        var candidates = await GetCandidates(context, source)
+            .Where(row => row.TranslationEngine == source.TranslationEngine)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+        var existing = SelectMatch(candidates, new TranslationReuseScope(source.OriginalLang!, source.TranslationLang!, source.TranslationEngine, true));
+        if (existing == null)
+        {
+            var inserted = Clone(source);
+            inserted.Id = 0;
+            inserted.CreatedDate = DateTime.UtcNow;
+            inserted.UpdatedDate = inserted.CreatedDate;
+            context.ActionTooltip.Add(inserted);
+            return (inserted, true);
+        }
+
+        MergeValues(existing, source);
+        context.ChangeTracker.DetectChanges();
+        var changed = context.Entry(existing).State == EntityState.Modified;
+        if (changed)
+        {
+            existing.UpdatedDate = DateTime.UtcNow;
+        }
+
+        return (existing, changed);
+    }
+
+    /// <summary>Copies a row so admitted work never shares mutable caller state.</summary>
+    /// <param name="source">The row to copy.</param>
+    /// <returns>The detached managed snapshot.</returns>
+    internal static ActionTooltip Clone(ActionTooltip source)
+    {
+        return new ActionTooltip
+        {
+            Id = source.Id,
+            ActionId = source.ActionId,
+            IconId = source.IconId,
+            ActionCategoryId = source.ActionCategoryId,
+            ClassJobId = source.ClassJobId,
+            ClassJobCategoryId = source.ClassJobCategoryId,
+            ActionName = source.ActionName,
+            ActionDescription = source.ActionDescription,
+            OriginalTooltipText = source.OriginalTooltipText,
+            OriginalLang = source.OriginalLang,
+            TranslatedActionName = source.TranslatedActionName,
+            TranslatedActionDescription = source.TranslatedActionDescription,
+            TranslatedTooltipText = source.TranslatedTooltipText,
+            TranslationLang = source.TranslationLang,
+            TranslationEngine = source.TranslationEngine,
+            GameVersion = source.GameVersion,
+            SourceContentHash = source.SourceContentHash,
+            CanonicalPayloadAsText = source.CanonicalPayloadAsText,
+            CreatedDate = source.CreatedDate,
+            UpdatedDate = source.UpdatedDate,
+            RowVersion = source.RowVersion?.ToArray(),
+        };
+    }
+
+    /// <summary>Checks whether a row contains canonical translated content.</summary>
+    /// <param name="row">The candidate row.</param>
+    /// <returns>Whether any translated field is present.</returns>
+    internal static bool HasTranslation(ActionTooltip row)
+    {
+        return GetTranslationCompletenessScore(row) > 0;
     }
 }

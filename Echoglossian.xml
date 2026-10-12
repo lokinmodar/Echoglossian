@@ -8459,215 +8459,126 @@
             </summary>
             <param name="addon">The live "_TextGimmickHint" addon.</param>
         </member>
-        <member name="T:Echoglossian.ActionTooltipPersistenceHelper">
-            <summary>
-                Persists canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip" /> rows.
-            </summary>
+        <member name="T:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter">
+            <summary>Adapts canonical tooltip persistence to the shared bounded coordinator.</summary>
         </member>
-        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.CreateCanonicalRow(System.String,System.String,System.Nullable{System.Int32},System.String,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload)">
-            <summary>
-                Creates one canonical action-tooltip row from source payloads.
-            </summary>
-            <param name="originalLang">The language of the original payload.</param>
-            <param name="translationLang">The target translation language.</param>
-            <param name="translationEngine">The translation-engine identifier.</param>
-            <param name="gameVersion">The game version.</param>
-            <param name="originalPayload">The canonical original payload.</param>
-            <param name="translatedPayload">The translated canonical payload, if any.</param>
-            <returns>The canonical DB row.</returns>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.#ctor(Echoglossian.Persistence.IPersistenceCoordinator)">
+            <summary>Initializes the process-lifetime persistence adapter.</summary>
+            <param name="coordinator">The shared coordinator.</param>
         </member>
-        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.InsertActionTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ActionTooltip,System.Action{Echoglossian.EFCoreSqlite.Models.ActionTooltip})">
-            <summary>
-                Inserts or updates one canonical action-tooltip row.
-            </summary>
-            <param name="configDirectory">The plugin config directory containing SQLite.</param>
-            <param name="actionTooltip">The row to persist.</param>
-            <param name="onPersisted">Optional callback invoked after the DB write succeeds.</param>
-            <returns>A status message describing the result.</returns>
+        <member name="P:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.ShutdownToken">
+            <summary>Gets cancellation for this plugin lifetime.</summary>
         </member>
-        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.FindActionTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
-            <summary>
-                Finds one canonical action-tooltip row using the same lookup scope as persistence.
-            </summary>
-            <param name="configDirectory">The plugin config directory containing SQLite.</param>
-            <param name="probe">The probe row that defines the lookup scope.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.DisablePublication">
+            <summary>Prevents stale publication and cancels accepted work on unload.</summary>
         </member>
-        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.FindActionTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.TranslationReuseScope)">
-            <summary>
-                Finds one canonical action-tooltip row using an explicit translation
-                reuse scope.
-            </summary>
-            <param name="configDirectory">The plugin config directory containing SQLite.</param>
-            <param name="probe">The probe row that defines the content and version identity.</param>
-            <param name="scope">The source, target, and engine reuse policy.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.BuildIdentity(System.String,System.UInt32,Echoglossian.TranslationReuseScope,System.String,System.String)">
+            <summary>Builds a collision-safe canonical operation identity.</summary>
+            <param name="kind">The canonical family.</param>
+            <param name="id">The content id.</param>
+            <param name="scope">The captured reuse scope.</param>
+            <param name="version">The captured version.</param>
+            <param name="hash">The captured source hash.</param>
+            <returns>The normalized identity.</returns>
         </member>
-        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.IsValidForPersistence(Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
-            <summary>
-                Determines whether a row contains enough identity to be persisted safely.
-            </summary>
-            <param name="row">The row to validate.</param>
-            <returns>True when the row has a safe persistence identity.</returns>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.Publish(System.Action)">
+            <summary>Publishes successful managed state atomically with the unload gate.</summary>
+            <param name="publish">The cache update.</param>
         </member>
-        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.MergeValues(Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
-            <summary>
-                Merges a newer payload into an existing row without discarding already-translated fields.
-            </summary>
-            <param name="target">The existing stored row.</param>
-            <param name="source">The incoming row.</param>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.FindCached(Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.TranslationReuseScope)">
+            <summary>Returns a detached current-version cache hit without database admission.</summary>
+            <param name="probe">The captured identity.</param>
+            <param name="scope">The reuse policy.</param>
+            <returns>The matching cached row.</returns>
         </member>
-        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.FirstNonEmpty(System.String,System.String)">
-            <summary>
-                Returns the first non-empty string, preferring the incoming value.
-            </summary>
-            <param name="preferred">The candidate incoming value.</param>
-            <param name="fallback">The existing value.</param>
-            <returns>The chosen string.</returns>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.TryFind(Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.TranslationReuseScope,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceReadResult{Echoglossian.EFCoreSqlite.Models.ActionTooltip}}@,Echoglossian.Persistence.PersistencePriority)">
+            <summary>Admits a nonblocking canonical read, with historical promotion after commit.</summary>
+            <param name="probe">The captured identity.</param>
+            <param name="scope">The reuse policy.</param>
+            <param name="completion">The terminal read result.</param>
+            <param name="priority">The caller's admission lane.</param>
+            <returns>The admission result.</returns>
         </member>
-        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.GetTranslationCompletenessScore(Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
-            <summary>
-                Computes how many translated action fields are populated so alias
-                reuse prefers an existing completed row over an incomplete row.
-            </summary>
-            <param name="row">The action row to score.</param>
-            <returns>The number of populated translated fields.</returns>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.CompletePromotionAsync(Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.TranslationReuseScope,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult})">
+            <summary>Releases a historical projection only after its canonical promotion commits.</summary>
+            <param name="promoted">The promotion identity.</param>
+            <param name="scope">The reuse policy.</param>
+            <param name="write">The coordinator completion.</param>
+            <returns>The committed cached row or a terminal failure.</returns>
         </member>
-        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.NormalizePayload(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload)">
-            <summary>
-                Normalizes canonical action payload identity before persistence so
-                unresolved sheet sentinels do not leak into the DB or source hash.
-            </summary>
-            <param name="payload">The payload to normalize.</param>
-            <returns>The normalized payload copy.</returns>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.TryPersist(Echoglossian.EFCoreSqlite.Models.ActionTooltip,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult}@,Echoglossian.Persistence.PersistencePriority)">
+            <summary>Schedules a captured canonical merge and publishes only after commit.</summary>
+            <param name="row">The caller-owned canonical row.</param>
+            <param name="completion">The terminal write result.</param>
+            <param name="priority">The originating admission lane.</param>
+            <returns>The admission result.</returns>
         </member>
-        <member name="T:Echoglossian.QuestDialogueMetadataLookup">
-            <summary>
-                Identifies one exact versioned quest dialogue metadata row.
-            </summary>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.FindCached(Echoglossian.EFCoreSqlite.Models.Trait,Echoglossian.TranslationReuseScope)">
+            <summary>Returns a detached current-version cache hit without database admission.</summary>
+            <param name="probe">The captured identity.</param>
+            <param name="scope">The reuse policy.</param>
+            <returns>The matching cached row.</returns>
         </member>
-        <member name="M:Echoglossian.QuestDialogueMetadataLookup.#ctor(System.UInt32,System.UInt16,System.String,System.String,System.String,System.String,System.String)">
-            <summary>
-                Identifies one exact versioned quest dialogue metadata row.
-            </summary>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.TryFind(Echoglossian.EFCoreSqlite.Models.Trait,Echoglossian.TranslationReuseScope,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceReadResult{Echoglossian.EFCoreSqlite.Models.Trait}}@,Echoglossian.Persistence.PersistencePriority)">
+            <summary>Admits a nonblocking canonical read, with historical promotion after commit.</summary>
+            <param name="probe">The captured identity.</param>
+            <param name="scope">The reuse policy.</param>
+            <param name="completion">The terminal read result.</param>
+            <param name="priority">The caller's admission lane.</param>
+            <returns>The admission result.</returns>
         </member>
-        <member name="T:Echoglossian.GameWindowPersistenceHelper">
-            <summary>
-                Persists <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> rows without requiring the full plugin runtime.
-            </summary>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.CompletePromotionAsync(Echoglossian.EFCoreSqlite.Models.Trait,Echoglossian.TranslationReuseScope,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult})">
+            <summary>Releases a historical projection only after its canonical promotion commits.</summary>
+            <param name="promoted">The promotion identity.</param>
+            <param name="scope">The reuse policy.</param>
+            <param name="write">The coordinator completion.</param>
+            <returns>The committed cached row or a terminal failure.</returns>
         </member>
-        <member name="M:Echoglossian.GameWindowPersistenceHelper.InsertGameWindow(System.String,Echoglossian.EFCoreSqlite.Models.GameWindow,System.Action{Echoglossian.EFCoreSqlite.Models.GameWindow})">
-            <summary>
-                Inserts or updates a <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> row using the DB-first
-                lookup semantics for addon, optional class/job scope, language,
-                engine, version, and original payload.
-            </summary>
-            <param name="configDirectory">The plugin config directory containing the SQLite database.</param>
-            <param name="gameWindow">The game window payload to persist.</param>
-            <param name="onPersisted">
-                Optional callback invoked with the updated entity after the DB write succeeds.
-            </param>
-            <returns>A status message describing the result.</returns>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.TryPersist(Echoglossian.EFCoreSqlite.Models.Trait,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult}@,Echoglossian.Persistence.PersistencePriority)">
+            <summary>Schedules a captured canonical merge and publishes only after commit.</summary>
+            <param name="row">The caller-owned canonical row.</param>
+            <param name="completion">The terminal write result.</param>
+            <param name="priority">The originating admission lane.</param>
+            <returns>The admission result.</returns>
         </member>
-        <member name="M:Echoglossian.GameWindowPersistenceHelper.TryFindExistingRow(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.GameWindow)">
-            <summary>
-                Tries to find one existing row that should be updated instead of
-                inserting a new row.
-            </summary>
-            <param name="context">The database context.</param>
-            <param name="gameWindow">The candidate row.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.FindCached(Echoglossian.EFCoreSqlite.Models.ItemTooltip,Echoglossian.TranslationReuseScope)">
+            <summary>Returns a detached current-version cache hit without database admission.</summary>
+            <param name="probe">The captured identity.</param>
+            <param name="scope">The reuse policy.</param>
+            <returns>The matching cached row.</returns>
         </member>
-        <member name="M:Echoglossian.GameWindowPersistenceHelper.TryFindExistingExactPayloadRow(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.GameWindow)">
-            <summary>
-                Tries to find one exact persisted payload row using the default
-                addon semantics.
-            </summary>
-            <param name="context">The database context.</param>
-            <param name="gameWindow">The candidate row.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.TryFind(Echoglossian.EFCoreSqlite.Models.ItemTooltip,Echoglossian.TranslationReuseScope,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceReadResult{Echoglossian.EFCoreSqlite.Models.ItemTooltip}}@,Echoglossian.Persistence.PersistencePriority)">
+            <summary>Admits a nonblocking canonical read, with historical promotion after commit.</summary>
+            <param name="probe">The captured identity.</param>
+            <param name="scope">The reuse policy.</param>
+            <param name="completion">The terminal read result.</param>
+            <param name="priority">The caller's admission lane.</param>
+            <returns>The admission result.</returns>
         </member>
-        <member name="T:Echoglossian.ItemTooltipPersistenceHelper">
-            <summary>
-                Persists canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.ItemTooltip" /> rows.
-            </summary>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.CompletePromotionAsync(Echoglossian.EFCoreSqlite.Models.ItemTooltip,Echoglossian.TranslationReuseScope,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult})">
+            <summary>Releases a historical projection only after its canonical promotion commits.</summary>
+            <param name="promoted">The promotion identity.</param>
+            <param name="scope">The reuse policy.</param>
+            <param name="write">The coordinator completion.</param>
+            <returns>The committed cached row or a terminal failure.</returns>
         </member>
-        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.CreateCanonicalRow(System.String,System.String,System.Nullable{System.Int32},System.String,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
-            <summary>
-                Creates one canonical item-tooltip row from source payloads.
-            </summary>
-            <param name="originalLang">The language of the original payload.</param>
-            <param name="translationLang">The target translation language.</param>
-            <param name="translationEngine">The translation-engine identifier.</param>
-            <param name="gameVersion">The game version.</param>
-            <param name="originalPayload">The canonical original payload.</param>
-            <param name="translatedPayload">The translated canonical payload, if any.</param>
-            <returns>The canonical DB row.</returns>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.TryPersist(Echoglossian.EFCoreSqlite.Models.ItemTooltip,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult}@,Echoglossian.Persistence.PersistencePriority)">
+            <summary>Schedules a captured canonical merge and publishes only after commit.</summary>
+            <param name="row">The caller-owned canonical row.</param>
+            <param name="completion">The terminal write result.</param>
+            <param name="priority">The originating admission lane.</param>
+            <returns>The admission result.</returns>
         </member>
-        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.InsertItemTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ItemTooltip,System.Action{Echoglossian.EFCoreSqlite.Models.ItemTooltip})">
-            <summary>
-                Inserts or updates one canonical item-tooltip row.
-            </summary>
-            <param name="configDirectory">The plugin config directory containing SQLite.</param>
-            <param name="itemTooltip">The row to persist.</param>
-            <param name="onPersisted">Optional callback invoked after the DB write succeeds.</param>
-            <returns>A status message describing the result.</returns>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.TryScheduleWrite(Echoglossian.Persistence.PersistenceWriteRequest,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult}@)">
+            <summary>Shares write ownership while the coordinator has claimed a transaction.</summary>
+            <param name="request">The canonical write request.</param>
+            <param name="completion">The shared terminal write.</param>
+            <returns>The bounded coordinator admission outcome.</returns>
         </member>
-        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.FindItemTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
-            <summary>
-                Finds one canonical item-tooltip row using the same lookup scope as persistence.
-            </summary>
-            <param name="configDirectory">The plugin config directory containing SQLite.</param>
-            <param name="probe">The probe row that defines the lookup scope.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.FindItemTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ItemTooltip,Echoglossian.TranslationReuseScope)">
-            <summary>
-                Finds one canonical item-tooltip row using an explicit translation
-                reuse scope.
-            </summary>
-            <param name="configDirectory">The plugin config directory containing SQLite.</param>
-            <param name="probe">The probe row that defines the content and version identity.</param>
-            <param name="scope">The source, target, and engine reuse policy.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
-        </member>
-        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.IsValidForPersistence(Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
-            <summary>
-                Determines whether a row contains enough identity to be persisted safely.
-            </summary>
-            <param name="row">The row to validate.</param>
-            <returns>True when the row has a safe persistence identity.</returns>
-        </member>
-        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.MergeValues(Echoglossian.EFCoreSqlite.Models.ItemTooltip,Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
-            <summary>
-                Merges a newer payload into an existing row without discarding already-translated fields.
-            </summary>
-            <param name="target">The existing stored row.</param>
-            <param name="source">The incoming row.</param>
-        </member>
-        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.FirstNonEmpty(System.String,System.String)">
-            <summary>
-                Returns the first non-empty string, preferring the incoming value.
-            </summary>
-            <param name="preferred">The candidate incoming value.</param>
-            <param name="fallback">The existing value.</param>
-            <returns>The chosen string.</returns>
-        </member>
-        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.GetTranslationCompletenessScore(Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
-            <summary>
-                Computes how many translated item fields are populated so alias
-                reuse prefers an existing completed row over an incomplete row.
-            </summary>
-            <param name="row">The item row to score.</param>
-            <returns>The number of populated translated fields.</returns>
-        </member>
-        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.NormalizePayload(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
-            <summary>
-                Normalizes canonical item payload identity before persistence so
-                unresolved sheet sentinels do not leak into the DB or source hash.
-            </summary>
-            <param name="payload">The payload to normalize.</param>
-            <returns>The normalized payload copy.</returns>
+        <member name="M:Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter.ReleaseWriteOwnershipAsync(Echoglossian.Persistence.PersistenceWorkKey,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult})">
+            <summary>Retains canonical ownership until persistence is terminal, including claimed work.</summary>
+            <param name="key">The claimed canonical identity.</param>
+            <param name="completion">The terminal coordinator completion.</param>
         </member>
         <member name="T:Echoglossian.DBHelpers.LlmCapabilityObservationWriter">
             <summary>Schedules capability observations through the exclusive runtime writer.</summary>
@@ -8930,6 +8841,290 @@
         </member>
         <member name="M:Echoglossian.DBHelpers.TranslationFailurePersistenceWriter.TryPersist(System.String,System.String,System.String,System.Int32,System.String,System.String,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult}@)">
             <summary>Schedules a coalesced background upsert without blocking a caller.</summary>
+        </member>
+        <member name="T:Echoglossian.ActionTooltipPersistenceHelper">
+            <summary>
+                Persists canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.ActionTooltip" /> rows.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.CreateCanonicalRow(System.String,System.String,System.Nullable{System.Int32},System.String,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload)">
+            <summary>
+                Creates one canonical action-tooltip row from source payloads.
+            </summary>
+            <param name="originalLang">The language of the original payload.</param>
+            <param name="translationLang">The target translation language.</param>
+            <param name="translationEngine">The translation-engine identifier.</param>
+            <param name="gameVersion">The game version.</param>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="translatedPayload">The translated canonical payload, if any.</param>
+            <returns>The canonical DB row.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.InsertActionTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ActionTooltip,System.Action{Echoglossian.EFCoreSqlite.Models.ActionTooltip})">
+            <summary>
+                Inserts or updates one canonical action-tooltip row.
+            </summary>
+            <param name="configDirectory">The plugin config directory containing SQLite.</param>
+            <param name="actionTooltip">The row to persist.</param>
+            <param name="onPersisted">Optional callback invoked after the DB write succeeds.</param>
+            <returns>A status message describing the result.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.FindActionTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Finds one canonical action-tooltip row using the same lookup scope as persistence.
+            </summary>
+            <param name="configDirectory">The plugin config directory containing SQLite.</param>
+            <param name="probe">The probe row that defines the lookup scope.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.FindActionTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.TranslationReuseScope)">
+            <summary>
+                Finds one canonical action-tooltip row using an explicit translation
+                reuse scope.
+            </summary>
+            <param name="configDirectory">The plugin config directory containing SQLite.</param>
+            <param name="probe">The probe row that defines the content and version identity.</param>
+            <param name="scope">The source, target, and engine reuse policy.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.IsValidForPersistence(Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Determines whether a row contains enough identity to be persisted safely.
+            </summary>
+            <param name="row">The row to validate.</param>
+            <returns>True when the row has a safe persistence identity.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.MergeValues(Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Merges a newer payload into an existing row without discarding already-translated fields.
+            </summary>
+            <param name="target">The existing stored row.</param>
+            <param name="source">The incoming row.</param>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.FirstNonEmpty(System.String,System.String)">
+            <summary>
+                Returns the first non-empty string, preferring the incoming value.
+            </summary>
+            <param name="preferred">The candidate incoming value.</param>
+            <param name="fallback">The existing value.</param>
+            <returns>The chosen string.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.GetTranslationCompletenessScore(Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>
+                Computes how many translated action fields are populated so alias
+                reuse prefers an existing completed row over an incomplete row.
+            </summary>
+            <param name="row">The action row to score.</param>
+            <returns>The number of populated translated fields.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.NormalizePayload(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload)">
+            <summary>
+                Normalizes canonical action payload identity before persistence so
+                unresolved sheet sentinels do not leak into the DB or source hash.
+            </summary>
+            <param name="payload">The payload to normalize.</param>
+            <returns>The normalized payload copy.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.GetCandidates(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>Builds the shared canonical SQL predicate.</summary>
+            <param name="context">The operation context.</param>
+            <param name="probe">The canonical identity.</param>
+            <returns>The bounded candidates query.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.SelectMatch(System.Collections.Generic.IEnumerable{Echoglossian.EFCoreSqlite.Models.ActionTooltip},Echoglossian.TranslationReuseScope)">
+            <summary>Selects candidates using the existing language and completeness policy.</summary>
+            <param name="candidates">The materialized candidates.</param>
+            <param name="scope">The reuse policy.</param>
+            <returns>The preferred row.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.FindAsync(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.TranslationReuseScope,System.Threading.CancellationToken)">
+            <summary>Reads a canonical row without synchronous database I/O.</summary>
+            <param name="context">The coordinator context.</param>
+            <param name="probe">The captured identity.</param>
+            <param name="scope">The reuse policy.</param>
+            <param name="cancellationToken">The lifetime token.</param>
+            <returns>The matching detached row.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.UpsertAsync(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.ActionTooltip,System.Threading.CancellationToken)">
+            <summary>Applies a retry-safe canonical merge; the coordinator owns commit.</summary>
+            <param name="context">The transaction context.</param>
+            <param name="source">The immutable captured input.</param>
+            <param name="cancellationToken">The lifetime token.</param>
+            <returns>The tracked row and whether persisted fields changed.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.Clone(Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>Copies a row so admitted work never shares mutable caller state.</summary>
+            <param name="source">The row to copy.</param>
+            <returns>The detached managed snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.ActionTooltipPersistenceHelper.HasTranslation(Echoglossian.EFCoreSqlite.Models.ActionTooltip)">
+            <summary>Checks whether a row contains canonical translated content.</summary>
+            <param name="row">The candidate row.</param>
+            <returns>Whether any translated field is present.</returns>
+        </member>
+        <member name="T:Echoglossian.QuestDialogueMetadataLookup">
+            <summary>
+                Identifies one exact versioned quest dialogue metadata row.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.QuestDialogueMetadataLookup.#ctor(System.UInt32,System.UInt16,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+                Identifies one exact versioned quest dialogue metadata row.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.GameWindowPersistenceHelper">
+            <summary>
+                Persists <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> rows without requiring the full plugin runtime.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.GameWindowPersistenceHelper.InsertGameWindow(System.String,Echoglossian.EFCoreSqlite.Models.GameWindow,System.Action{Echoglossian.EFCoreSqlite.Models.GameWindow})">
+            <summary>
+                Inserts or updates a <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> row using the DB-first
+                lookup semantics for addon, optional class/job scope, language,
+                engine, version, and original payload.
+            </summary>
+            <param name="configDirectory">The plugin config directory containing the SQLite database.</param>
+            <param name="gameWindow">The game window payload to persist.</param>
+            <param name="onPersisted">
+                Optional callback invoked with the updated entity after the DB write succeeds.
+            </param>
+            <returns>A status message describing the result.</returns>
+        </member>
+        <member name="M:Echoglossian.GameWindowPersistenceHelper.TryFindExistingRow(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.GameWindow)">
+            <summary>
+                Tries to find one existing row that should be updated instead of
+                inserting a new row.
+            </summary>
+            <param name="context">The database context.</param>
+            <param name="gameWindow">The candidate row.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.GameWindowPersistenceHelper.TryFindExistingExactPayloadRow(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.GameWindow)">
+            <summary>
+                Tries to find one exact persisted payload row using the default
+                addon semantics.
+            </summary>
+            <param name="context">The database context.</param>
+            <param name="gameWindow">The candidate row.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="T:Echoglossian.ItemTooltipPersistenceHelper">
+            <summary>
+                Persists canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.ItemTooltip" /> rows.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.CreateCanonicalRow(System.String,System.String,System.Nullable{System.Int32},System.String,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
+            <summary>
+                Creates one canonical item-tooltip row from source payloads.
+            </summary>
+            <param name="originalLang">The language of the original payload.</param>
+            <param name="translationLang">The target translation language.</param>
+            <param name="translationEngine">The translation-engine identifier.</param>
+            <param name="gameVersion">The game version.</param>
+            <param name="originalPayload">The canonical original payload.</param>
+            <param name="translatedPayload">The translated canonical payload, if any.</param>
+            <returns>The canonical DB row.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.InsertItemTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ItemTooltip,System.Action{Echoglossian.EFCoreSqlite.Models.ItemTooltip})">
+            <summary>
+                Inserts or updates one canonical item-tooltip row.
+            </summary>
+            <param name="configDirectory">The plugin config directory containing SQLite.</param>
+            <param name="itemTooltip">The row to persist.</param>
+            <param name="onPersisted">Optional callback invoked after the DB write succeeds.</param>
+            <returns>A status message describing the result.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.FindItemTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Finds one canonical item-tooltip row using the same lookup scope as persistence.
+            </summary>
+            <param name="configDirectory">The plugin config directory containing SQLite.</param>
+            <param name="probe">The probe row that defines the lookup scope.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.FindItemTooltip(System.String,Echoglossian.EFCoreSqlite.Models.ItemTooltip,Echoglossian.TranslationReuseScope)">
+            <summary>
+                Finds one canonical item-tooltip row using an explicit translation
+                reuse scope.
+            </summary>
+            <param name="configDirectory">The plugin config directory containing SQLite.</param>
+            <param name="probe">The probe row that defines the content and version identity.</param>
+            <param name="scope">The source, target, and engine reuse policy.</param>
+            <returns>The matching row, or <see langword="null" />.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.IsValidForPersistence(Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Determines whether a row contains enough identity to be persisted safely.
+            </summary>
+            <param name="row">The row to validate.</param>
+            <returns>True when the row has a safe persistence identity.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.MergeValues(Echoglossian.EFCoreSqlite.Models.ItemTooltip,Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Merges a newer payload into an existing row without discarding already-translated fields.
+            </summary>
+            <param name="target">The existing stored row.</param>
+            <param name="source">The incoming row.</param>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.FirstNonEmpty(System.String,System.String)">
+            <summary>
+                Returns the first non-empty string, preferring the incoming value.
+            </summary>
+            <param name="preferred">The candidate incoming value.</param>
+            <param name="fallback">The existing value.</param>
+            <returns>The chosen string.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.GetTranslationCompletenessScore(Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>
+                Computes how many translated item fields are populated so alias
+                reuse prefers an existing completed row over an incomplete row.
+            </summary>
+            <param name="row">The item row to score.</param>
+            <returns>The number of populated translated fields.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.NormalizePayload(Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
+            <summary>
+                Normalizes canonical item payload identity before persistence so
+                unresolved sheet sentinels do not leak into the DB or source hash.
+            </summary>
+            <param name="payload">The payload to normalize.</param>
+            <returns>The normalized payload copy.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.GetCandidates(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>Builds the shared canonical SQL predicate.</summary>
+            <param name="context">The operation context.</param>
+            <param name="probe">The canonical identity.</param>
+            <returns>The bounded candidates query.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.SelectMatch(System.Collections.Generic.IEnumerable{Echoglossian.EFCoreSqlite.Models.ItemTooltip},Echoglossian.TranslationReuseScope)">
+            <summary>Selects candidates using the existing language and completeness policy.</summary>
+            <param name="candidates">The materialized candidates.</param>
+            <param name="scope">The reuse policy.</param>
+            <returns>The preferred row.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.FindAsync(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.ItemTooltip,Echoglossian.TranslationReuseScope,System.Threading.CancellationToken)">
+            <summary>Reads a canonical row without synchronous database I/O.</summary>
+            <param name="context">The coordinator context.</param>
+            <param name="probe">The captured identity.</param>
+            <param name="scope">The reuse policy.</param>
+            <param name="cancellationToken">The lifetime token.</param>
+            <returns>The matching detached row.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.UpsertAsync(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.ItemTooltip,System.Threading.CancellationToken)">
+            <summary>Applies a retry-safe canonical merge; the coordinator owns commit.</summary>
+            <param name="context">The transaction context.</param>
+            <param name="source">The immutable captured input.</param>
+            <param name="cancellationToken">The lifetime token.</param>
+            <returns>The tracked row and whether persisted fields changed.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.Clone(Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>Copies a row so admitted work never shares mutable caller state.</summary>
+            <param name="source">The row to copy.</param>
+            <returns>The detached managed snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.ItemTooltipPersistenceHelper.HasTranslation(Echoglossian.EFCoreSqlite.Models.ItemTooltip)">
+            <summary>Checks whether a row contains canonical translated content.</summary>
+            <param name="row">The candidate row.</param>
+            <returns>Whether any translated field is present.</returns>
         </member>
         <member name="T:Echoglossian.ReferenceTextPersistenceHelper">
             <summary>
@@ -9251,6 +9446,43 @@
             </summary>
             <param name="payload">The payload to normalize.</param>
             <returns>The normalized payload copy.</returns>
+        </member>
+        <member name="M:Echoglossian.TraitPersistenceHelper.GetCandidates(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.Trait)">
+            <summary>Builds the shared canonical SQL predicate.</summary>
+            <param name="context">The operation context.</param>
+            <param name="probe">The canonical identity.</param>
+            <returns>The bounded candidates query.</returns>
+        </member>
+        <member name="M:Echoglossian.TraitPersistenceHelper.SelectMatch(System.Collections.Generic.IEnumerable{Echoglossian.EFCoreSqlite.Models.Trait},Echoglossian.TranslationReuseScope)">
+            <summary>Selects candidates using the existing language and completeness policy.</summary>
+            <param name="candidates">The materialized candidates.</param>
+            <param name="scope">The reuse policy.</param>
+            <returns>The preferred row.</returns>
+        </member>
+        <member name="M:Echoglossian.TraitPersistenceHelper.FindAsync(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.Trait,Echoglossian.TranslationReuseScope,System.Threading.CancellationToken)">
+            <summary>Reads a canonical row without synchronous database I/O.</summary>
+            <param name="context">The coordinator context.</param>
+            <param name="probe">The captured identity.</param>
+            <param name="scope">The reuse policy.</param>
+            <param name="cancellationToken">The lifetime token.</param>
+            <returns>The matching detached row.</returns>
+        </member>
+        <member name="M:Echoglossian.TraitPersistenceHelper.UpsertAsync(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.Trait,System.Threading.CancellationToken)">
+            <summary>Applies a retry-safe canonical merge; the coordinator owns commit.</summary>
+            <param name="context">The transaction context.</param>
+            <param name="source">The immutable captured input.</param>
+            <param name="cancellationToken">The lifetime token.</param>
+            <returns>The tracked row and whether persisted fields changed.</returns>
+        </member>
+        <member name="M:Echoglossian.TraitPersistenceHelper.Clone(Echoglossian.EFCoreSqlite.Models.Trait)">
+            <summary>Copies a row so admitted work never shares mutable caller state.</summary>
+            <param name="source">The row to copy.</param>
+            <returns>The detached managed snapshot.</returns>
+        </member>
+        <member name="M:Echoglossian.TraitPersistenceHelper.HasTranslation(Echoglossian.EFCoreSqlite.Models.Trait)">
+            <summary>Checks whether a row contains canonical translated content.</summary>
+            <param name="row">The candidate row.</param>
+            <returns>Whether any translated field is present.</returns>
         </member>
         <member name="T:Echoglossian.DBManagerUI.Components.DbTableView">
             <summary>
@@ -46177,7 +46409,7 @@
              so the inner service can still be resolved. The replacement descriptor preserves the original lifetime.
              Calling a decoration method multiple times stacks decorators, with the last call becoming the outermost layer.
              </para>
-             <para><b>Usage example  -  decorating with a factory:</b></para>
+             <para><b>Usage example — decorating with a factory:</b></para>
              <code>
              // Register the original service
              services.AddScoped&lt;INotificationService, EmailNotificationService&gt;();
@@ -46192,7 +46424,7 @@
             
              // Resolution chain: Retry → Logging → Email
              </code>
-             <para><b>Usage example  -  decorating open generics:</b></para>
+             <para><b>Usage example — decorating open generics:</b></para>
              <code>
              // Register closed-generic implementations
              services.AddScoped&lt;IRepository&lt;Order&gt;, OrderRepository&gt;();
