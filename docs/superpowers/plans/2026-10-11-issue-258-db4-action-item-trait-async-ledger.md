@@ -38,8 +38,8 @@ Do not chase the raw count to zero by changing startup preload, `AsyncSerialActi
 | 2. Action and Trait prefetch | Background persistence with existing cadence and terminal ownership | Complete | `a7795be505564da1203c3a31907512a40cf29a3e` | 14 real-SQLite managed-worker cases plus 4 bounded operation-owner cases passed; 59 persistence/broker/validation regression cases passed; independent slice review found no correctness issues |
 | 3. Item prefetch | Background persistence with existing source/HQ identity and cadence | Complete | `9249938fe60f4128616a2e972231a4f3a7263014` | 29 combined managed worker/owner/inventory cases passed (7 new Item worker cases); 11 Item and structured-tooltip regressions passed; standard/HQ ID normalization covered; existing EventItem/DeepDungeon dedicated-row reuse tests preserved |
 | 4. Visible structured tooltips | Cache-first hit, nonblocking interactive miss, safe Framework-thread apply | Complete | `1e9b7425b915b8692ae3f534874d8ba9bf9791f0` | 36 focused tooltip/runtime contract cases passed, including all 19 DB-4 source/cadence/config/cooldown contracts; hosted DalaMock writer creation/disposal/rejected-write test passed; Debug unit and Mock test builds pass |
-| Final validation | Full build/tests/audit/review, Debug DLL and SHA-256 | Pending |  |  |
-| Pull request | Pushed branch and focused PR to `v4-series` | Pending |  |  |
+| Final validation | Full build/tests/audit/review, Debug DLL and SHA-256 | Complete | Behavioral HEAD `4cda5c9623c90233e2f0ab14b72ee3c5551cb3fe`; final documentation commit follows | Debug solution/unit/Mock builds: zero errors; 1637 unit tests, 26 Mock tests, 165 independent focused proofs passed; audit 224 findings passed; exact post-ledger HEAD DLL/commit/SHA-256 recorded in ignored `artifacts/issue-258/db4-handoff.md` and PR handoff |
+| Pull request | Pushed branch and focused PR to `v4-series` | Complete | Four implementation commits plus `4cda5c9` review fixes and this documentation commit | https://github.com/lokinmodar/Echoglossian/pull/285; execution branch `issue-258-db4-action-item-trait-execution`; attached to this chat |
 
 Update this table in the same short commit that makes each slice stable. Do not mark a slice complete without recording its commit and concrete validation evidence.
 
@@ -79,8 +79,6 @@ Mock coverage verifies plugin lifetime wiring and rejects writer admission after
 
 If Mock/DalaMock cannot drive the native payload path, record the exact limitation and keep the remaining in-game verification explicit. Do not claim startup-only Mock coverage proves tooltip capture or application.
 
-## Delivery and authorization gate
-
 ## Final review fixes
 
 - Fresh independent review initially ran 115 focused proofs at `1e9b742` and found two P2 issues. Empty/source-equivalent provider responses now use the broker's existing quiet terminal cooldown instead of a generic exception. Proper-noun names remain valid when accompanied by translated descriptions, using the existing final payload validation; name-only source-equivalent output remains rejected.
@@ -88,6 +86,33 @@ If Mock/DalaMock cannot drive the native payload path, record the exact limitati
 - Full unit validation first found an existing vendored debouncer spelling mismatch with its source contract. Its parameter is now explicitly `System.Action`, equivalent to the previous `SysAction` alias; the test was preserved. After that correction, all 1628 then-current unit tests passed. Final expanded suite rerun follows this review-fix commit.
 - Six newly introduced StyleCop parameter-layout warnings were removed; existing repository warnings remain.
 - Audit baseline refresh changes only six retained compatibility query spellings. Audit passes 224 total findings. DB-4 retains 42: 24 compatibility/setup API findings with no migrated runtime callers, eight DB-8 startup preloads, and ten unchanged non-DB/completed-task findings. The generated inventory retains the existing DB-2 narrative and adds the DB-4 behavioral classification.
+
+## Final verification evidence
+
+The independent verifier reviewed the entire preparation-to-HEAD diff under TLC light, reproduced 165 passing focused tests at `4cda5c9`, and reported no remaining actionable correctness finding. Both P2 review fixes are verified at the production worker boundary. No faults were injected under the light profile.
+
+| Criteria | Located evidence | Level or remaining gap |
+|---|---|---|
+| 1-7 | `ActionItemTooltipPersistenceWriterTests`: cache hit, blocked/coalesced read, historical promotion, scope/language aliases, committed/unchanged writes, failed commit, active write joining, immutable admission snapshots, capacity/shutdown rejection and unload cancellation | Real temporary SQLite; cache publication and transaction gates |
+| 8-10, 12-13 | `ActionItemTooltipRuntimeContractTests`, `ItemDetailInventorySourceContractTests`, existing canonical identity tests; captured worker identity assertions | Constants and source contracts preserve existing 6/6/10 and two-second loops; worker behavior tested; live sheet/native capture not emulated |
+| 11, 14 | Worker terminal failure/cancellation/commit ownership tests and `StructuredTooltipOperationOwnerTests` | Existing broker plus SQLite; exact shared completion retained through final commit, bounded capacity and terminal cooldown |
+| 15-17, 19 | Runtime contract cooldown/priority/config tests, unchanged native/overlay apply diff, existing structured-tooltip text/mode tests; hosted writer lifetime test | Managed cache/publication and config gates proved; native capture/application requires in-game verification; existing Tooltip-only gate unchanged |
+| 18 | Six worker empty/error cases assert no translated stored/cache value and zero generic broker errors; nine proper-noun cases plus existing translation-validation tests | All three domains, fresh/cached proper nouns and name-only rejection |
+| 20-21 | No schema/model/migration/release paths changed; four runtime source guards; audit and compatibility caller search | 42 DB-4 syntax findings behaviorally classified; startup preloads and ten false positives unchanged |
+| 22 | Standard solution build, full 1637-unit run, standard Mock build/full 26-Mock run, audit pass and fresh independent 165-proof run | All local commands passed; existing analyzer/toolkit/vendor warnings remain |
+| 23 | PR 285 to `v4-series`, pushed execution branch, exact final HEAD Debug handoff artifact | No merge/approval/release; UI-A and later user testing/release request remain required |
+
+Full command results at behavioral HEAD:
+
+- `dotnet build Echoglossian.sln -c Debug --no-restore`: passed, zero errors (66 existing warnings).
+- `dotnet build Echoglossian.Tests/Echoglossian.Tests.csproj -c Debug --no-restore`: passed; required to materialize the updated test DLL because the solution contains the plugin project.
+- `dotnet test Echoglossian.Tests/Echoglossian.Tests.csproj -c Debug --no-build`: 1637 passed, zero failed/skipped.
+- `dotnet build Echoglossian.Mock.Tests/Echoglossian.Mock.Tests.csproj -c Debug --no-restore`: passed, zero errors (existing vendor/analyzer warnings).
+- `dotnet test Echoglossian.Mock.Tests/Echoglossian.Mock.Tests.csproj -c Debug --no-build -p:VSTestMaxCpuCount=1`: 26 passed, zero failed/skipped.
+- `scripts/audit-sync-db-hotpaths.ps1`: passed, 224 total findings; DB-4 42 as classified above.
+- Independent focused `dotnet test --no-build` invocation: 165 passed, zero failed, including all review regressions.
+
+The exact DLL is built again after this documentation-only commit so its source identity matches the delivered HEAD. Its path, resolved source commit and SHA-256 are written to the handoff artifact and PR after the build; this avoids changing HEAD merely to record the DLL's own commit identity. No frame-time improvement measurement or successful in-game test is claimed.
 
 ## Delivery and authorization gate
 
