@@ -4924,30 +4924,27 @@
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.PrefetchActionDetail(System.UInt32,System.Byte)">
-            <summary>
-                Prefetches one canonical action-tooltip payload and any missing translations.
-            </summary>
-            <param name="actionId">The action row identifier.</param>
-            <param name="currentClassJobId">The current class-job identifier.</param>
+            <summary>Captures a canonical sheet payload on the Framework before asynchronous work.</summary>
+            <param name="actionId">The source row id.</param>
+            <param name="currentClassJobId">The captured player class/job.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchActionDetailDescription(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope)">
-            <summary>
-                Prefetches the translated action description when it is not yet persisted.
-            </summary>
-            <param name="originalPayload">The canonical original payload.</param>
-            <param name="existingRow">The currently persisted row, if any.</param>
-            <param name="sourceLanguage">The resolved source language.</param>
-            <param name="scope">The immutable operation reuse scope.</param>
+        <member name="M:Echoglossian.Echoglossian.StartActionDetailOperation(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.String,Echoglossian.Persistence.PersistencePriority)">
+            <summary>Admits one managed snapshot while preserving terminal canonical ownership.</summary>
+            <param name="payload">The Framework-captured source payload.</param>
+            <param name="source">The captured provider source.</param>
+            <param name="scope">The immutable translation policy.</param>
+            <param name="gameVersion">The captured source version.</param>
+            <param name="priority">The originating persistence lane.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyActionDetailTranslation(System.UInt32,System.UInt32,Echoglossian.TranslationReuseScope,System.String,System.String)">
-            <summary>
-                Applies one resolved action-tooltip translation into canonical storage.
-            </summary>
-            <param name="actionId">The action row identifier.</param>
-            <param name="currentClassJobId">The current class-job identifier.</param>
-            <param name="scope">The immutable operation reuse scope.</param>
-            <param name="translatedName">The translated name, if any.</param>
-            <param name="translatedDescription">The translated description, if any.</param>
+        <member name="M:Echoglossian.Echoglossian.CompleteActionDetailOperationAsync(Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter,Echoglossian.NativeUI.Helpers.QueuedTranslationBroker,System.String,Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.TranslationReuseScope,Echoglossian.Persistence.PersistencePriority,System.Func{System.String,System.String,System.Threading.CancellationToken,System.Threading.Tasks.Task{System.String}})">
+            <summary>Completes captured managed work without consulting game state or mutating native UI.</summary>
+            <param name="writer">The process-lifetime persistence adapter.</param>
+            <param name="broker">The existing shared translation broker.</param>
+            <param name="snapshot">The immutable serialized source payload.</param>
+            <param name="probe">The operation-owned canonical identity.</param>
+            <param name="scope">The captured translation policy.</param>
+            <param name="priority">The originating persistence lane.</param>
+            <param name="translate">The captured translator operation.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateActionDetailTranslationRow(Echoglossian.NativeUI.Helpers.ActionTooltipCanonicalPayload,System.String,Echoglossian.TranslationReuseScope,System.Func{Echoglossian.EFCoreSqlite.Models.ActionTooltip,Echoglossian.EFCoreSqlite.Models.ActionTooltip},Echoglossian.TryGetPrefetchTranslationDelegate,System.String,System.String)">
             <summary>
@@ -5142,6 +5139,17 @@
             </summary>
             <param name="currentClassJobId">The current class/job id.</param>
             <returns>True when the current class/job was resolved.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ResolveStructuredTooltipFieldAsync(Echoglossian.NativeUI.Helpers.QueuedTranslationBroker,System.String,System.String,System.String,System.String,System.Func{System.String,System.String,System.Threading.CancellationToken,System.Threading.Tasks.Task{System.String}},System.Threading.CancellationToken)">
+            <summary>Resolves one source-scoped field through the existing broker, observing terminal failure.</summary>
+            <param name="broker">The shared broker.</param>
+            <param name="key">The source-scoped field identity.</param>
+            <param name="original">The captured source text.</param>
+            <param name="existing">The persisted usable translation.</param>
+            <param name="origin">The canonical diagnostic origin.</param>
+            <param name="translate">The captured translator.</param>
+            <param name="token">The plugin lifetime.</param>
+            <returns>The usable translated field or null.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.GetStructuredTooltipDisplayMode">
             <summary>
@@ -7979,45 +7987,27 @@
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.PrefetchTraitDetail(System.UInt32,System.Byte)">
-            <summary>
-                Prefetches one canonical trait payload and any missing translations.
-            </summary>
-            <param name="traitId">The trait row identifier.</param>
-            <param name="currentClassJobId">The current class-job identifier.</param>
+            <summary>Captures a canonical sheet payload on the Framework before asynchronous work.</summary>
+            <param name="traitId">The source row id.</param>
+            <param name="currentClassJobId">The captured player class/job.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchTraitDetailName(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload,Echoglossian.EFCoreSqlite.Models.Trait,Echoglossian.SourceClientLanguage)">
-            <summary>
-                Prefetches the translated trait name when it is not yet persisted.
-            </summary>
-            <param name="originalPayload">The canonical original payload.</param>
-            <param name="existingRow">The currently persisted row, if any.</param>
-            <param name="sourceLanguage">The resolved source language.</param>
+        <member name="M:Echoglossian.Echoglossian.StartTraitDetailOperation(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload,Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,System.String,Echoglossian.Persistence.PersistencePriority)">
+            <summary>Admits one managed snapshot while preserving terminal canonical ownership.</summary>
+            <param name="payload">The Framework-captured source payload.</param>
+            <param name="source">The captured provider source.</param>
+            <param name="scope">The immutable translation policy.</param>
+            <param name="gameVersion">The captured source version.</param>
+            <param name="priority">The originating persistence lane.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.PrefetchTraitDetailDescription(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload,Echoglossian.EFCoreSqlite.Models.Trait,Echoglossian.SourceClientLanguage)">
-            <summary>
-                Prefetches the translated trait description when it is not yet persisted.
-            </summary>
-            <param name="originalPayload">The canonical original payload.</param>
-            <param name="existingRow">The currently persisted row, if any.</param>
-            <param name="sourceLanguage">The resolved source language.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ApplyTraitDetailTranslation(System.UInt32,System.UInt32,Echoglossian.SourceClientLanguage,System.String,System.String)">
-            <summary>
-                Applies one resolved trait translation into canonical storage.
-            </summary>
-            <param name="traitId">The trait row identifier.</param>
-            <param name="currentClassJobId">The current class-job identifier.</param>
-            <param name="sourceLanguage">The resolved source language.</param>
-            <param name="translatedName">The translated name, if any.</param>
-            <param name="translatedDescription">The translated description, if any.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryPopulatePendingTraitDetailTranslations(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload,Echoglossian.NativeUI.Helpers.TraitCanonicalPayload)">
-            <summary>
-                Tries to enrich one trait-detail payload with any queued counterpart
-                translation so canonical persistence only happens when the payload is complete.
-            </summary>
-            <param name="originalPayload">The canonical original payload.</param>
-            <param name="translatedPayload">The partially translated payload.</param>
+        <member name="M:Echoglossian.Echoglossian.CompleteTraitDetailOperationAsync(Echoglossian.DBHelpers.ActionItemTooltipPersistenceWriter,Echoglossian.NativeUI.Helpers.QueuedTranslationBroker,System.String,Echoglossian.EFCoreSqlite.Models.Trait,Echoglossian.TranslationReuseScope,Echoglossian.Persistence.PersistencePriority,System.Func{System.String,System.String,System.Threading.CancellationToken,System.Threading.Tasks.Task{System.String}})">
+            <summary>Completes captured managed work without consulting game state or mutating native UI.</summary>
+            <param name="writer">The process-lifetime persistence adapter.</param>
+            <param name="broker">The existing shared translation broker.</param>
+            <param name="snapshot">The immutable serialized source payload.</param>
+            <param name="probe">The operation-owned canonical identity.</param>
+            <param name="scope">The captured translation policy.</param>
+            <param name="priority">The originating persistence lane.</param>
+            <param name="translate">The captured translator operation.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.BuildTraitDetailNameTranslationKey(Echoglossian.NativeUI.Helpers.TraitCanonicalPayload)">
             <summary>
@@ -32706,6 +32696,25 @@
             </summary>
             <param name="slot">The slot to clone.</param>
             <returns>The cloned slot.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationOwner">
+            <summary>Retains bounded canonical ownership through translation and persistence completion.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationOwner.TryStart(System.String,System.Func{System.Threading.Tasks.Task},System.Threading.CancellationToken)">
+            <summary>Shares active work or retains a terminal cooldown without creating another queue.</summary>
+            <param name="key">The complete captured canonical identity.</param>
+            <param name="operation">The managed orchestration to run on a worker.</param>
+            <param name="cancellationToken">The plugin lifetime.</param>
+            <returns>The shared completion, or null when capacity or shutdown rejects admission.</returns>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationOwner.Entry">
+            <summary>Holds only lifetime ownership, never translated data.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationOwner.Entry.Completion">
+            <summary>Gets or sets the operation's shared terminal completion.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationOwner.Entry.CompletedAt">
+            <summary>Gets or sets terminal time for bounded failure cooldown.</summary>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.StructuredTooltipTranslationValidation">
             <summary>

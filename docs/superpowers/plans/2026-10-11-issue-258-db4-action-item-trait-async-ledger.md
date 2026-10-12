@@ -34,8 +34,8 @@ Do not chase the raw count to zero by changing startup preload, `AsyncSerialActi
 | Slice | Required result | Status | Commit | Evidence |
 |---|---|---|---|---|
 | Preparation | Task, skill, and ledger committed | Complete | `811000ac242c8d23f7be7ee7defad210c480b182` | Clean preparation HEAD verified after repository-local worktree migration |
-| 1. Canonical persistence | One coordinator-backed writer and async EF paths with semantic parity | Complete | This `perf(#258): add async action item trait persistence` commit; resolved hash in next ledger update | 43 real-SQLite writer cases passed; existing canonical/cache regression filter 33 passed; independent canonical review fixed unlocked lookup snapshots and claimed-write coalescence; Debug solution/test builds pass |
-| 2. Action and Trait prefetch | Background persistence with existing cadence and terminal ownership | Pending |  |  |
+| 1. Canonical persistence | One coordinator-backed writer and async EF paths with semantic parity | Complete | `c4ded2d9360b15941434e7ff183ba3b7cc066b3c` | 43 real-SQLite writer cases plus 2 concurrent cache snapshot cases passed; existing canonical/cache regression filter 33 passed; independent canonical review fixed unlocked lookup snapshots and claimed-write coalescence; Debug solution/test builds pass |
+| 2. Action and Trait prefetch | Background persistence with existing cadence and terminal ownership | Complete | This `perf(#258): schedule action and trait prefetch asynchronously` commit; resolved hash in next ledger update | 14 real-SQLite managed-worker cases plus 4 bounded operation-owner cases passed; 59 persistence/broker/validation regression cases passed; independent slice review found no correctness issues |
 | 3. Item prefetch | Background persistence with existing source/HQ identity and cadence | Pending |  |  |
 | 4. Visible structured tooltips | Cache-first hit, nonblocking interactive miss, safe Framework-thread apply | Pending |  |  |
 | Final validation | Full build/tests/audit/review, Debug DLL and SHA-256 | Pending |  |  |
@@ -48,6 +48,8 @@ Update this table in the same short commit that makes each slice stable. Do not 
 Execution checkout: `C:\Dante\_dalamud\Echoglossian\.worktrees\issue-258-db4-action-item-trait-execution`, branch `issue-258-db4-action-item-trait-execution`. Migration preserved the preparation HEAD and all pending changes. The old app-managed path is a compatibility junction only.
 
 Slice 1 uses the same SQL candidates, language matching, completeness/time ordering, and merge policy for compatibility and async paths. Existing startup preload methods remain unchanged. Cache locks also guard ActionMenu snapshot projections; the writer keeps active write completions until terminal completion, including coordinator-claimed transactions. This ownership stores no translations and creates no additional queue.
+
+Slice 2 serializes managed payload snapshots and captures source, target, engine, game version and translator resolution on Framework entry. Its managed workers join the existing broker and await registration plus final persistence. A bounded owner stores only operation Tasks and terminal times, preserving coalescence through translation and commit and cooling down failure for 30 seconds. Original Action/Trait tick budgets and sheet capture are unchanged. Existing static test/tool compatibility entrypoints remain but production no longer calls them. Mock `GetUIModule()` returns zero; managed worker tests do not prove native tooltip capture/application.
 
 Keep at most four behavioral commits, plus narrow review fixes and the final ledger update:
 

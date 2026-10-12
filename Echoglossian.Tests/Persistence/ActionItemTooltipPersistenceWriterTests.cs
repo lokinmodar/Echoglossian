@@ -425,12 +425,170 @@ public sealed class ActionItemTooltipPersistenceWriterTests
         }
     }
 
+    /// <summary>Workers translate each missing field once while persisting the captured canonical identity.</summary>
+    /// <param name="kind">The migrated family.</param>
+    /// <param name="seedName">Whether a committed name already exists.</param>
+    [Theory]
+    [InlineData("Action", false)]
+    [InlineData("Trait", false)]
+    [InlineData("Action", true)]
+    [InlineData("Trait", true)]
+    public async Task WorkerPersistsCapturedIdentityAndOnlyMissingFields(string kind, bool seedName)
+    {
+        await using var harness = await Harness.CreateAsync();
+        using var broker = CreateBroker();
+        var scope = new TranslationReuseScope("de", "fr", 0, true);
+        var probe = CreateRow(kind, translated: false, source: "de", target: "fr", id: 77);
+        if (seedName)
+        {
+            await harness.SeedAsync(CreateRow(kind, source: "de", target: "fr", id: 77, translateDescription: false));
+        }
+
+        var calls = new System.Collections.Concurrent.ConcurrentDictionary<string, int>();
+        Task<string> Translate(string text, string origin, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            Assert.Contains("/77/", origin, StringComparison.Ordinal);
+            calls.AddOrUpdate(text, 1, (_, count) => count + 1);
+            return Task.FromResult(text == "Original" ? "Traduzido" : "Descricao");
+        }
+
+        await RunWorker(kind, harness, broker, probe, scope, Translate).WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(seedName ? 1 : 2, calls.Count);
+        Assert.All(calls.Values, count => Assert.Equal(1, count));
+        var stored = Describe(Assert.Single(await harness.StoredRowsAsync(kind)));
+        var captured = Describe(probe);
+        Assert.Equal(captured.ContentId, stored.ContentId);
+        Assert.Equal(captured.Hash, stored.Hash);
+        Assert.Equal(captured.Source, stored.Source);
+        Assert.Equal(captured.Target, stored.Target);
+        Assert.Equal(captured.Engine, stored.Engine);
+        Assert.Equal(captured.Version, stored.Version);
+        Assert.Equal("Traduzido", stored.Name);
+    }
+
+    /// <summary>A complete committed cache projection skips translator invocation entirely.</summary>
+    /// <param name="kind">The migrated family.</param>
+    [Theory]
+    [InlineData("Action")]
+    [InlineData("Trait")]
+    public async Task WorkerCompleteCacheHitSkipsBroker(string kind)
+    {
+        await using var harness = await Harness.CreateAsync();
+        using var broker = CreateBroker();
+        var complete = CreateRow(kind);
+        await harness.SeedAsync(complete);
+        UpdateCache(complete);
+        await RunWorker(kind, harness, broker, CreateRow(kind, translated: false), Scope,
+            (_, _, _) => throw new InvalidOperationException("A complete cache hit must not translate."));
+        Assert.Equal(0, harness.Coordinator.GetMetrics().AcceptedOperations);
+        Assert.Equal("Traduzido", Describe(Assert.Single(await harness.StoredRowsAsync(kind))).Name);
+    }
+
+    /// <summary>Provider failures retain only the registered original and suppress repeated owned work.</summary>
+    /// <param name="kind">The migrated family.</param>
+    /// <param name="rejected">The rejected external response.</param>
+    [Theory]
+    [InlineData("Action", "")]
+    [InlineData("Trait", "")]
+    [InlineData("Action", "[Translation Error: unavailable]")]
+    [InlineData("Trait", "[Translation Error: unavailable]")]
+    public async Task WorkerUnusableResponseKeepsOriginalAndTerminatesOwnership(string kind, string rejected)
+    {
+        await using var harness = await Harness.CreateAsync();
+        using var broker = CreateBroker();
+        var owner = new StructuredTooltipOperationOwner();
+        var probe = CreateRow(kind, translated: false);
+        var calls = 0;
+        Task<string> Translate(string text, string origin, CancellationToken token)
+        {
+            Interlocked.Increment(ref calls);
+            return Task.FromResult(rejected);
+        }
+
+        var completion = owner.TryStart("canonical", () => RunWorker(kind, harness, broker, probe, Scope, Translate), harness.Writer.ShutdownToken)!;
+        await completion.WaitAsync(TimeSpan.FromSeconds(5));
+        var after = calls;
+        Assert.Equal(2, after);
+        Assert.Null(Describe(Assert.Single(await harness.StoredRowsAsync(kind))).Name);
+        Assert.Null(Describe(FindCached(probe)!).Name);
+        Assert.Same(completion, owner.TryStart("canonical", () => throw new InvalidOperationException("Cooldown must suppress retry."), harness.Writer.ShutdownToken));
+        Assert.Equal(after, calls);
+    }
+
+    /// <summary>Ownership remains active until the translated transaction commits and retains terminal cooldown.</summary>
+    /// <param name="kind">The migrated family.</param>
+    [Theory]
+    [InlineData("Action")]
+    [InlineData("Trait")]
+    public async Task WorkerOwnershipIncludesTranslationAndFinalCommit(string kind)
+    {
+        var gate = new CommitGate();
+        await using var harness = await Harness.CreateAsync(gate);
+        using var broker = CreateBroker();
+        var owner = new StructuredTooltipOperationOwner();
+        var probe = CreateRow(kind, translated: false);
+        var calls = 0;
+        Task<string> Translate(string text, string origin, CancellationToken token)
+        {
+            gate.Enabled = true;
+            Interlocked.Increment(ref calls);
+            return Task.FromResult(text == "Original" ? "Traduzido" : "Descricao");
+        }
+
+        var completion = owner.TryStart("canonical", () => RunWorker(kind, harness, broker, probe, Scope, Translate), harness.Writer.ShutdownToken)!;
+        try
+        {
+            await gate.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.False(completion.IsCompleted);
+            Assert.Equal(2, calls);
+            Assert.Null(Describe(FindCached(probe)!).Name);
+            Assert.Same(completion, owner.TryStart("canonical", () => throw new InvalidOperationException("Commit is still active."), harness.Writer.ShutdownToken));
+            gate.Release.TrySetResult(true);
+            await completion.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.Equal("Traduzido", Describe(FindCached(probe)!).Name);
+            Assert.Same(completion, owner.TryStart("canonical", () => throw new InvalidOperationException("Terminal cooldown must remain owned."), harness.Writer.ShutdownToken));
+        }
+        finally
+        {
+            gate.Release.TrySetResult(true);
+        }
+    }
+
+    /// <summary>Lifetime cancellation ends broker orchestration without publishing translated content.</summary>
+    /// <param name="kind">The migrated family.</param>
+    [Theory]
+    [InlineData("Action")]
+    [InlineData("Trait")]
+    public async Task WorkerCancellationReachesTerminalOwnership(string kind)
+    {
+        await using var harness = await Harness.CreateAsync();
+        using var broker = CreateBroker();
+        var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var owner = new StructuredTooltipOperationOwner();
+        var probe = CreateRow(kind, translated: false);
+        async Task<string> Translate(string text, string origin, CancellationToken token)
+        {
+            entered.TrySetResult(true);
+            await Task.Delay(Timeout.InfiniteTimeSpan, token);
+            return "unreachable";
+        }
+
+        var completion = owner.TryStart("canonical", () => RunWorker(kind, harness, broker, probe, Scope, Translate), harness.Writer.ShutdownToken)!;
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        harness.Writer.DisablePublication();
+        await completion.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.True(completion.IsCompletedSuccessfully);
+        Assert.Null(Describe(Assert.Single(await harness.StoredRowsAsync(kind))).Name);
+        Assert.Null(owner.TryStart("canonical", () => Task.CompletedTask, harness.Writer.ShutdownToken));
+    }
+
     /// <summary>Gets the fixed canonical policy used by all overload families.</summary>
     private static TranslationReuseScope Scope => new("en", "pt", 0, true);
 
     /// <summary>Creates a domain row through its production canonical payload builder.</summary>
     private static object CreateRow(string kind, bool translated = true, string version = "7.3",
-        string source = "en", string target = "pt", uint id = 1)
+        string source = "en", string target = "pt", uint id = 1, bool translateDescription = true)
     {
         switch (kind)
         {
@@ -438,27 +596,42 @@ public sealed class ActionItemTooltipPersistenceWriterTests
                 var action = new ActionTooltipCanonicalPayload
                 {
                     ActionId = id, IconId = 42, ClassJobId = 7, Name = "Original", Description = "Original description",
-                    TranslatedName = translated ? "Traduzido" : null, TranslatedDescription = translated ? "Descricao" : null,
+                    TranslatedName = translated ? "Traduzido" : null, TranslatedDescription = translated && translateDescription ? "Descricao" : null,
                 };
                 return ActionTooltipPersistenceHelper.CreateCanonicalRow(source, target, 0, version, action, translated ? action : null);
             case "Trait":
                 var trait = new TraitCanonicalPayload
                 {
                     TraitId = id, IconId = 42, ClassJobId = 7, Name = "Original", Description = "Original description",
-                    TranslatedName = translated ? "Traduzido" : null, TranslatedDescription = translated ? "Descricao" : null,
+                    TranslatedName = translated ? "Traduzido" : null, TranslatedDescription = translated && translateDescription ? "Descricao" : null,
                 };
                 return TraitPersistenceHelper.CreateCanonicalRow(source, target, 0, version, trait, translated ? trait : null);
             case "Item":
                 var item = new ItemTooltipCanonicalPayload
                 {
                     ItemId = id, IconId = 42, ItemUiCategoryId = 7, Name = "Original", Description = "Original description",
-                    TranslatedName = translated ? "Traduzido" : null, TranslatedDescription = translated ? "Descricao" : null,
+                    TranslatedName = translated ? "Traduzido" : null, TranslatedDescription = translated && translateDescription ? "Descricao" : null,
                 };
                 return ItemTooltipPersistenceHelper.CreateCanonicalRow(source, target, 0, version, item, translated ? item : null);
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind));
         }
     }
+
+    /// <summary>Creates the production broker with deterministic test pacing and no provider retries.</summary>
+    private static QueuedTranslationBroker CreateBroker() => new(
+        TimeSpan.Zero, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(5), TimeSpan.Zero, 0);
+
+    /// <summary>Runs the production managed worker from a canonical serialized capture.</summary>
+    private static Task RunWorker(string kind, Harness harness, QueuedTranslationBroker broker, object probe,
+        TranslationReuseScope scope, Func<string, string, CancellationToken, Task<string>> translate) => probe switch
+    {
+        ActionTooltip action when kind == "Action" => Echoglossian.CompleteActionDetailOperationAsync(
+            harness.Writer, broker, action.CanonicalPayloadAsText!, action, scope, PersistencePriority.Background, translate),
+        Trait trait when kind == "Trait" => Echoglossian.CompleteTraitDetailOperationAsync(
+            harness.Writer, broker, trait.CanonicalPayloadAsText!, trait, scope, PersistencePriority.Background, translate),
+        _ => throw new ArgumentException("Worker family has not migrated.", nameof(kind)),
+    };
 
     /// <summary>Invokes the production typed read overload while retaining its actual shared completion.</summary>
     private static PersistenceAdmissionStatus Find(ActionItemTooltipPersistenceWriter writer, object row,

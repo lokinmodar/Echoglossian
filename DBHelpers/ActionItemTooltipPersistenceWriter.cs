@@ -23,7 +23,7 @@ internal sealed class ActionItemTooltipPersistenceWriter
     /// <param name="coordinator">The shared coordinator.</param>
     internal ActionItemTooltipPersistenceWriter(IPersistenceCoordinator coordinator)
     {
-        this.coordinator = coordinator;
+        this.coordinator = coordinator ?? throw new ArgumentNullException(nameof(coordinator));
     }
 
     /// <summary>Gets cancellation for this plugin lifetime.</summary>
