@@ -4,6 +4,7 @@
 // </copyright>
 
 using Echoglossian.Cache;
+using Echoglossian.Persistence;
 using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.AddonHandlers.Toasts;
 using Echoglossian.NativeUI.Helpers;
@@ -246,6 +247,7 @@ public unsafe partial class Echoglossian
                     originalTraitPayload,
                     out var translatedTraitPayload))
             {
+                this.TryRequestTraitDetailOnDemandPrefetch(sourceLanguage, originalTraitPayload);
                 this.RestoreStructuredTooltipOriginals(ref this.currentActionDetailState, addon);
                 this.LogStructuredTooltipState(
                     ActionDetailSurfaceName,
@@ -793,7 +795,28 @@ public unsafe partial class Echoglossian
             return;
         }
 
-        this.PrefetchActionDetail(originalPayload.ActionId, currentClassJobId);
+        this.StartActionDetailOperation(originalPayload, sourceLanguage, scope, GetGameVersion(), PersistencePriority.Interactive);
+    }
+
+    /// <summary>Schedules a visible trait miss through the existing cooldown and shared owner.</summary>
+    /// <param name="sourceLanguage">The Framework-captured source identity.</param>
+    /// <param name="originalPayload">The captured trait payload.</param>
+    private void TryRequestTraitDetailOnDemandPrefetch(SourceClientLanguage sourceLanguage, TraitCanonicalPayload originalPayload)
+    {
+        if (!this.ShouldPrefetchStructuredTooltips() ||
+            !this.TryCreateCapturedTranslationScope(sourceLanguage, out var scope))
+        {
+            return;
+        }
+
+        var key = BuildStructuredTooltipOnDemandPrefetchKey(ActionDetailSurfaceName, sourceLanguage, scope,
+            originalPayload.TraitId, StructuredTooltipContentKindTrait, originalPayload.ComputeSourceContentHash());
+        if (!this.TryAcquireStructuredTooltipOnDemandPrefetchSlot(key))
+        {
+            return;
+        }
+
+        this.StartTraitDetailOperation(originalPayload, sourceLanguage, scope, GetGameVersion(), PersistencePriority.Interactive);
     }
 
     /// <summary>
@@ -828,7 +851,7 @@ public unsafe partial class Echoglossian
 
         if (sourceKind == StructuredTooltipItemSourceKind.Item)
         {
-            this.PrefetchItemDetail(originalPayload.ItemId);
+            this.StartItemDetailOperation(originalPayload, sourceLanguage, scope, GetGameVersion(), PersistencePriority.Interactive);
             return;
         }
 
@@ -1352,25 +1375,6 @@ public unsafe partial class Echoglossian
             return true;
         }
 
-        var probe = ActionTooltipPersistenceHelper.CreateCanonicalRow(
-            sourceLanguage.PersistenceCode,
-            targetLanguage,
-            engine,
-            gameVersion,
-            originalPayload);
-
-        row = this.FindActionTooltip(probe);
-        if (DbFirstGameWindowAddonHandler.MatchesPersistedSourceIdentity(
-                row?.OriginalLang,
-                sourceLanguage) &&
-            TryBuildTranslatedActionTooltipPayloadFromRow(
-                row,
-                originalPayload,
-                out translatedPayload))
-        {
-            return true;
-        }
-
         return false;
     }
 
@@ -1413,21 +1417,7 @@ public unsafe partial class Echoglossian
             return true;
         }
 
-        var probe = TraitPersistenceHelper.CreateCanonicalRow(
-            sourceLanguage.PersistenceCode,
-            targetLanguage,
-            engine,
-            gameVersion,
-            originalPayload);
-
-        row = this.FindTrait(probe);
-        return DbFirstGameWindowAddonHandler.MatchesPersistedSourceIdentity(
-                   row?.OriginalLang,
-                   sourceLanguage) &&
-               TryBuildTranslatedTraitTooltipPayloadFromRow(
-                   row,
-                   originalPayload,
-                   out translatedPayload);
+        return false;
     }
 
     /// <summary>
@@ -1473,21 +1463,7 @@ public unsafe partial class Echoglossian
                 return true;
             }
 
-            var probe = ItemTooltipPersistenceHelper.CreateCanonicalRow(
-                sourceLanguage.PersistenceCode,
-                targetLanguage,
-                engine,
-                gameVersion,
-                originalPayload);
-
-            row = this.FindItemTooltip(probe);
-            return DbFirstGameWindowAddonHandler.MatchesPersistedSourceIdentity(
-                       row?.OriginalLang,
-                       sourceLanguage) &&
-                   TryBuildTranslatedItemTooltipPayloadFromRow(
-                       row,
-                       originalPayload,
-                       out translatedPayload);
+            return false;
         }
 
         return (sourceKind is StructuredTooltipItemSourceKind.EventItem or

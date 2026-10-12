@@ -2991,6 +2991,11 @@
             <summary>
                 Provides DB and cache operations for canonical action/item/trait tooltip rows.
             </summary>
+            <remarks>
+                These synchronous entrypoints are retained for setup and compatibility.
+                Runtime tooltip lookup uses the shared caches and the coordinator-backed
+                ActionItemTooltipPersistenceWriter instead.
+            </remarks>
             <summary>
              Defines operations for managing and retrieving translation data
             </summary>
@@ -5236,6 +5241,11 @@
             <param name="usedStructuredActionPayload">
                 Whether the payload came from a structured reference-text sheet.
             </param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TryRequestTraitDetailOnDemandPrefetch(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.Helpers.TraitCanonicalPayload)">
+            <summary>Schedules a visible trait miss through the existing cooldown and shared owner.</summary>
+            <param name="sourceLanguage">The Framework-captured source identity.</param>
+            <param name="originalPayload">The captured trait payload.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.TryRequestItemDetailOnDemandPrefetch(Echoglossian.SourceClientLanguage,Echoglossian.Echoglossian.StructuredTooltipItemSourceKind,Echoglossian.NativeUI.Helpers.ItemTooltipCanonicalPayload)">
             <summary>

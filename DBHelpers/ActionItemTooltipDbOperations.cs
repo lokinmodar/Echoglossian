@@ -11,6 +11,11 @@ namespace Echoglossian;
 /// <summary>
 ///     Provides DB and cache operations for canonical action/item/trait tooltip rows.
 /// </summary>
+/// <remarks>
+///     These synchronous entrypoints are retained for setup and compatibility.
+///     Runtime tooltip lookup uses the shared caches and the coordinator-backed
+///     ActionItemTooltipPersistenceWriter instead.
+/// </remarks>
 public partial class Echoglossian
 {
     /// <summary>
