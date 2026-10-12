@@ -95,6 +95,18 @@ internal static class TranslationFailureTextClassifier
       string? text,
       out TranslationFailureClassification? classification)
   {
+    if (text?.Contains(
+            GoogleTranslator.V2NoTranslationMarker,
+            StringComparison.Ordinal) == true)
+    {
+      classification = new TranslationFailureClassification(
+          TranslationFailureKind.ProviderFailure,
+          "google-v2-no-translation",
+          string.Empty,
+          false);
+      return true;
+    }
+
     if (string.IsNullOrWhiteSpace(text))
     {
       classification = new TranslationFailureClassification(

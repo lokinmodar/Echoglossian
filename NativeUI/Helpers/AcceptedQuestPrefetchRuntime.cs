@@ -5,6 +5,9 @@
 
 using FFXIVClientStructs.FFXIV.Application.Network.WorkDefinitions;
 
+using Echoglossian.DBHelpers;
+using Echoglossian.Persistence;
+
 using QuestManager = FFXIVClientStructs.FFXIV.Client.Game.QuestManager;
 
 namespace Echoglossian;
@@ -329,11 +332,41 @@ public partial class Echoglossian
             requestSources,
             out var workItem))
     {
+      if (!string.IsNullOrWhiteSpace(requestSources))
+      {
+        _ = this.acceptedQuestPrefetchRequestedQuestQueue.Complete(questId);
+      }
+
       return;
     }
 
     this.acceptedQuestPrefetchActionPump.Enqueue(
-        () => this.ProcessAcceptedQuestPrefetchWorkItem(workItem));
+        () =>
+        {
+          Task completion;
+          try
+          {
+            completion = this.ProcessAcceptedQuestPrefetchWorkItem(workItem);
+          }
+          catch
+          {
+            if (!string.IsNullOrWhiteSpace(requestSources))
+            {
+              _ = this.acceptedQuestPrefetchRequestedQuestQueue.Complete(questId);
+            }
+
+            return;
+          }
+
+          if (!string.IsNullOrWhiteSpace(requestSources))
+          {
+            _ = completion.ContinueWith(
+                _ => this.acceptedQuestPrefetchRequestedQuestQueue.Complete(questId),
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+          }
+        });
   }
 
   /// <summary>
@@ -475,13 +508,13 @@ public partial class Echoglossian
   ///     schedules any missing translations through the shared paced broker.
   /// </summary>
   /// <param name="workItem">The captured accepted-quest prefetch work item.</param>
-  private void ProcessAcceptedQuestPrefetchWorkItem(
+  private Task ProcessAcceptedQuestPrefetchWorkItem(
       AcceptedQuestPrefetchWorkItem workItem)
   {
     if (workItem.Generation !=
         Volatile.Read(ref this.acceptedQuestPrefetchGeneration))
     {
-      return;
+      return Task.CompletedTask;
     }
 
     if (!QuestProgressResolver.TryResolveQuestProgress(
@@ -493,13 +526,13 @@ public partial class Echoglossian
           "resolve-failed",
           workItem.QuestProgressCapture.QuestId,
           detail: "QuestProgressResolver could not resolve live progress for this accepted quest.");
-      return;
+      return Task.CompletedTask;
     }
 
     if (workItem.Generation !=
         Volatile.Read(ref this.acceptedQuestPrefetchGeneration))
     {
-      return;
+      return Task.CompletedTask;
     }
 
     workItem.GenerationCancellationToken.ThrowIfCancellationRequested();
@@ -518,47 +551,143 @@ public partial class Echoglossian
 
     if (!workItem.RunCanonicalPrefetch)
     {
-      return;
+      return Task.CompletedTask;
     }
 
     var questCanonicalData = QuestCanonicalData.Create(
         questProgressSnapshot,
         workItem.GameVersion);
     var currentQuestSequenceText = questCanonicalData.CurrentSequenceText;
-    var translationService = TranslationService;
-    var nameDispatchResult = RunAcceptedQuestPrefetchOperationEntry(
+    return this.ScheduleAcceptedQuestPrefetchQuestPlate(
         questCanonicalData,
-        workItem.SourceLanguage,
+        questProgressSnapshot,
+        currentQuestSequenceText,
+        workItem);
+  }
+
+  /// <summary>
+  ///     Schedules the cache-first QuestPlate lookup and all later persistence
+  ///     work without blocking the accepted-quest worker.
+  /// </summary>
+  /// <param name="questCanonicalData">The immutable canonical quest data.</param>
+  /// <param name="questProgressSnapshot">The managed quest snapshot.</param>
+  /// <param name="currentQuestSequenceText">The captured current sequence text.</param>
+  /// <param name="workItem">The captured operation scope and generation.</param>
+  private Task ScheduleAcceptedQuestPrefetchQuestPlate(
+      QuestCanonicalData questCanonicalData,
+      QuestProgressSnapshot questProgressSnapshot,
+      string currentQuestSequenceText,
+      AcceptedQuestPrefetchWorkItem workItem)
+  {
+    var writer = this.questPlatePersistenceWriter;
+    if (writer is null || workItem.GenerationCancellationToken.IsCancellationRequested)
+    {
+      return Task.CompletedTask;
+    }
+
+    var canonicalQuestPlate = this.CreateAcceptedQuestPrefetchPlate(
+        questCanonicalData,
+        workItem.Scope);
+    var priority = PersistencePriority.Background;
+    var admission = writer.TryFind(
+        canonicalQuestPlate,
         workItem.Scope,
-        this.TryGetQueuedTranslation,
-        this.QueueTranslation,
-        (sourceText, capturedSource, targetLanguage, originContext) =>
-            translationService.Translate(
-                sourceText,
-                capturedSource,
-                targetLanguage,
-                originContext: originContext),
-        this.FindQuestPlate,
-        this.FindQuestPlateByName,
-        questPlate =>
-        {
-          this.InsertQuestPlate(questPlate);
-        },
-        (questPlate, fromCache) =>
-        {
-          this.LogAcceptedQuestPrefetchTranslationEvent(
-              questProgressSnapshot,
-              "Name",
-              fromCache ? "cache-hit" : "resolved",
-              sourceText: questProgressSnapshot.QuestName,
-              translatedText: questPlate.TranslatedQuestName);
-          this.UpdateQuestPlate(questPlate);
-        },
-        out var existingQuestPlate);
-    if (existingQuestPlate == null)
+        priority,
+        out var read);
+    if (admission is PersistenceAdmissionStatus.RejectedCapacity or
+        PersistenceAdmissionStatus.RejectedShutdown)
+    {
+      return Task.CompletedTask;
+    }
+
+    return read.ContinueWith(
+        task => this.CompleteAcceptedQuestPrefetchQuestPlateAsync(
+            writer,
+            canonicalQuestPlate,
+            questProgressSnapshot,
+            currentQuestSequenceText,
+            workItem,
+            task),
+        CancellationToken.None,
+        TaskContinuationOptions.None,
+        TaskScheduler.Default).Unwrap();
+  }
+
+  /// <summary>
+  ///     Continues a completed cache-first lookup and only starts translation
+  ///     after the canonical row is committed or read from the projection.
+  /// </summary>
+  private async Task CompleteAcceptedQuestPrefetchQuestPlateAsync(
+      QuestPlatePersistenceWriter writer,
+      QuestPlate canonicalQuestPlate,
+      QuestProgressSnapshot questProgressSnapshot,
+      string currentQuestSequenceText,
+      AcceptedQuestPrefetchWorkItem workItem,
+      Task<PersistenceReadResult<QuestPlate?>> read)
+  {
+    if (workItem.Generation != Volatile.Read(ref this.acceptedQuestPrefetchGeneration) ||
+        workItem.GenerationCancellationToken.IsCancellationRequested)
     {
       return;
     }
+
+    var readResult = await read.ConfigureAwait(false);
+    if (readResult.Status is not PersistenceCompletionStatus.Succeeded or
+        PersistenceCompletionStatus.Unchanged)
+    {
+      return;
+    }
+
+    var existingQuestPlate = readResult.Value;
+    if (existingQuestPlate is null)
+    {
+      var admission = writer.TryPersist(
+          canonicalQuestPlate,
+          workItem.Scope,
+          PersistencePriority.Background,
+          out var write);
+      if (admission is PersistenceAdmissionStatus.RejectedCapacity or
+          PersistenceAdmissionStatus.RejectedShutdown)
+      {
+        return;
+      }
+
+      var writeResult = await write.ConfigureAwait(false);
+      if (writeResult.Status is not PersistenceCompletionStatus.Succeeded or
+          PersistenceCompletionStatus.Unchanged)
+      {
+        return;
+      }
+
+      existingQuestPlate = canonicalQuestPlate;
+    }
+
+    if (workItem.Generation != Volatile.Read(ref this.acceptedQuestPrefetchGeneration) ||
+        workItem.GenerationCancellationToken.IsCancellationRequested)
+    {
+      return;
+    }
+
+    await this.StartAcceptedQuestPrefetchTranslations(
+        questProgressSnapshot,
+        currentQuestSequenceText,
+        existingQuestPlate,
+        workItem.SourceLanguage,
+        workItem.Scope);
+  }
+
+  /// <summary>
+  ///     Starts broker-owned translation requests from a committed QuestPlate
+  ///     projection, with visible TODO objectives admitted before enrichment.
+  /// </summary>
+  private Task StartAcceptedQuestPrefetchTranslations(
+      QuestProgressSnapshot questProgressSnapshot,
+      string currentQuestSequenceText,
+      QuestPlate existingQuestPlate,
+      SourceClientLanguage sourceLanguage,
+      TranslationReuseScope scope)
+  {
+    List<Task> completions = [];
 
     this.LogAcceptedQuestPrefetchEvent(
         "resolved",
@@ -571,8 +700,35 @@ public partial class Echoglossian
         questProgressSnapshot.QuestName,
         $"translatedName={(!string.IsNullOrWhiteSpace(existingQuestPlate.TranslatedQuestName)).ToString()}, translatedMessage={(!string.IsNullOrWhiteSpace(existingQuestPlate.TranslatedQuestMessage)).ToString()}, translatedObjectives={existingQuestPlate.TranslatedObjectives.Count}, translatedSummaries={existingQuestPlate.TranslatedSummaries.Count}, translatedSystem={existingQuestPlate.TranslatedSystemRows.Count}");
     this.EmitAcceptedQuestPrefetchDiagnostic(
-        questCanonicalData,
+        QuestCanonicalData.Create(questProgressSnapshot, GetGameVersion()),
         existingQuestPlate);
+
+    if (string.IsNullOrWhiteSpace(existingQuestPlate.TranslatedQuestName) &&
+        !string.IsNullOrWhiteSpace(questProgressSnapshot.QuestName))
+    {
+      var translationService = TranslationService;
+      var nameDispatch = this.DispatchAcceptedQuestPrefetchTranslationAsync(
+          $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|Name|{questProgressSnapshot.QuestName}",
+          sourceLanguage,
+          scope,
+          () => translationService.Translate(
+              questProgressSnapshot.QuestName,
+              sourceLanguage,
+              scope.TargetLanguageCode,
+              originContext: BuildAcceptedQuestOriginContext(questProgressSnapshot, "Name")),
+          (translatedName, capturedScope, _) =>
+          {
+            if (string.IsNullOrWhiteSpace(translatedName))
+            {
+              return Task.CompletedTask;
+            }
+
+            var translatedPlate = existingQuestPlate.Clone();
+            translatedPlate.TranslatedQuestName = translatedName;
+            return this.ScheduleAcceptedQuestPrefetchPersistence(translatedPlate, capturedScope);
+          });
+      completions.Add(nameDispatch.Completion);
+    }
 
     if (!string.IsNullOrWhiteSpace(existingQuestPlate.TranslatedQuestName))
     {
@@ -582,42 +738,35 @@ public partial class Echoglossian
           "skip-existing",
           sourceText: questProgressSnapshot.QuestName);
     }
-    else if (nameDispatchResult is PrefetchTranslationDispatchResult.Queued or
-             PrefetchTranslationDispatchResult.AlreadyPending)
-    {
-      this.LogAcceptedQuestPrefetchTranslationEvent(
-          questProgressSnapshot,
-          "Name",
-          nameDispatchResult == PrefetchTranslationDispatchResult.Queued
-              ? "queued"
-              : "already-in-flight",
-          sourceText: questProgressSnapshot.QuestName);
-    }
-
-    this.PrefetchAcceptedQuestCurrentMessage(
-        questProgressSnapshot,
-        currentQuestSequenceText,
-        existingQuestPlate,
-        workItem.SourceLanguage,
-        workItem.Scope);
-    this.PrefetchAcceptedQuestSummaries(
-        questProgressSnapshot,
-        currentQuestSequenceText,
-        existingQuestPlate,
-        workItem.SourceLanguage,
-        workItem.Scope);
     this.PrefetchAcceptedQuestObjectives(
         questProgressSnapshot,
         currentQuestSequenceText,
         existingQuestPlate,
-        workItem.SourceLanguage,
-        workItem.Scope);
+        sourceLanguage,
+        scope,
+        completions);
+    this.PrefetchAcceptedQuestCurrentMessage(
+        questProgressSnapshot,
+        currentQuestSequenceText,
+        existingQuestPlate,
+        sourceLanguage,
+        scope,
+        completions);
+    this.PrefetchAcceptedQuestSummaries(
+        questProgressSnapshot,
+        currentQuestSequenceText,
+        existingQuestPlate,
+        sourceLanguage,
+        scope,
+        completions);
     this.PrefetchAcceptedQuestSystemRows(
         questProgressSnapshot,
         currentQuestSequenceText,
         existingQuestPlate,
-        workItem.SourceLanguage,
-        workItem.Scope);
+        sourceLanguage,
+        scope,
+        completions);
+    return Task.WhenAll(completions);
   }
 
   /// <summary>
@@ -634,7 +783,8 @@ public partial class Echoglossian
       string currentQuestSequenceText,
       QuestPlate existingQuestPlate,
       SourceClientLanguage sourceLanguage,
-      TranslationReuseScope scope)
+      TranslationReuseScope scope,
+      ICollection<Task> completions)
   {
     if (string.IsNullOrWhiteSpace(currentQuestSequenceText) ||
         !string.IsNullOrWhiteSpace(existingQuestPlate.TranslatedQuestMessage))
@@ -650,12 +800,10 @@ public partial class Echoglossian
     }
 
     var translationService = TranslationService;
-    var dispatchResult = DispatchAcceptedQuestPrefetchTranslation(
+    var dispatchResult = this.DispatchAcceptedQuestPrefetchTranslationAsync(
         $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|Message|{currentQuestSequenceText}",
         sourceLanguage,
         scope,
-        this.TryGetQueuedTranslation,
-        this.QueueTranslation,
         () => translationService.Translate(
             currentQuestSequenceText,
             sourceLanguage,
@@ -671,19 +819,21 @@ public partial class Echoglossian
               fromCache ? "cache-hit" : "resolved",
               sourceText: currentQuestSequenceText,
               translatedText: translatedQuestMessage);
-          this.ApplyAcceptedQuestMessageTranslation(
+          return this.ApplyAcceptedQuestMessageTranslation(
               questProgressSnapshot,
               currentQuestSequenceText,
               translatedQuestMessage,
               capturedScope);
         });
-    if (dispatchResult is PrefetchTranslationDispatchResult.Queued or
+    completions.Add(dispatchResult.Completion);
+    var dispatchResultValue = dispatchResult.Admission;
+    if (dispatchResultValue is PrefetchTranslationDispatchResult.Queued or
         PrefetchTranslationDispatchResult.AlreadyPending)
     {
       this.LogAcceptedQuestPrefetchTranslationEvent(
           questProgressSnapshot,
           "Message",
-          dispatchResult == PrefetchTranslationDispatchResult.Queued
+          dispatchResultValue == PrefetchTranslationDispatchResult.Queued
               ? "queued"
               : "already-in-flight",
           sourceText: currentQuestSequenceText);
@@ -703,7 +853,8 @@ public partial class Echoglossian
       string currentQuestSequenceText,
       QuestPlate existingQuestPlate,
       SourceClientLanguage sourceLanguage,
-      TranslationReuseScope scope)
+      TranslationReuseScope scope,
+      ICollection<Task> completions)
   {
     foreach (var questSequenceEntry in questProgressSnapshot.QuestSeqTexts)
     {
@@ -728,12 +879,10 @@ public partial class Echoglossian
       }
 
       var translationService = TranslationService;
-      var dispatchResult = DispatchAcceptedQuestPrefetchTranslation(
+      var dispatchResult = this.DispatchAcceptedQuestPrefetchTranslationAsync(
           $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|Summary|{questSequenceEntry.KeyText}|{questSequenceEntry.Text}",
           sourceLanguage,
           scope,
-          this.TryGetQueuedTranslation,
-          this.QueueTranslation,
           () => translationService.Translate(
               questSequenceEntry.Text,
               sourceLanguage,
@@ -750,7 +899,7 @@ public partial class Echoglossian
                   questSequenceEntry.KeyText,
                   questSequenceEntry.Text,
                   translatedSummaryTextValue);
-              this.ApplyAcceptedQuestSummaryTranslation(
+              return this.ApplyAcceptedQuestSummaryTranslation(
                   questProgressSnapshot,
                   currentQuestSequenceText,
                   questSequenceEntry.KeyText,
@@ -758,13 +907,15 @@ public partial class Echoglossian
                   translatedSummaryTextValue,
                   capturedScope);
           });
-      if (dispatchResult is PrefetchTranslationDispatchResult.Queued or
+      completions.Add(dispatchResult.Completion);
+      var dispatchResultValue = dispatchResult.Admission;
+      if (dispatchResultValue is PrefetchTranslationDispatchResult.Queued or
           PrefetchTranslationDispatchResult.AlreadyPending)
       {
         this.LogAcceptedQuestPrefetchTranslationEvent(
             questProgressSnapshot,
             "Summary",
-            dispatchResult == PrefetchTranslationDispatchResult.Queued
+            dispatchResultValue == PrefetchTranslationDispatchResult.Queued
                 ? "queued"
                 : "already-in-flight",
             questSequenceEntry.KeyText,
@@ -786,7 +937,8 @@ public partial class Echoglossian
       string currentQuestSequenceText,
       QuestPlate existingQuestPlate,
       SourceClientLanguage sourceLanguage,
-      TranslationReuseScope scope)
+      TranslationReuseScope scope,
+      ICollection<Task> completions)
   {
     foreach (var questStep in questProgressSnapshot.QuestSteps)
     {
@@ -811,12 +963,10 @@ public partial class Echoglossian
       }
 
       var translationService = TranslationService;
-      var dispatchResult = DispatchAcceptedQuestPrefetchTranslation(
+      var dispatchResult = this.DispatchAcceptedQuestPrefetchTranslationAsync(
           $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|Objective|{questStep.KeyText}|{questStep.Text}",
           sourceLanguage,
           scope,
-          this.TryGetQueuedTranslation,
-          this.QueueTranslation,
           () => translationService.Translate(
               questStep.Text,
               sourceLanguage,
@@ -833,7 +983,7 @@ public partial class Echoglossian
                   questStep.KeyText,
                   questStep.Text,
                   translatedObjectiveTextValue);
-              this.ApplyAcceptedQuestObjectiveTranslation(
+              return this.ApplyAcceptedQuestObjectiveTranslation(
                   questProgressSnapshot,
                   currentQuestSequenceText,
                   questStep.KeyText,
@@ -841,13 +991,15 @@ public partial class Echoglossian
                   translatedObjectiveTextValue,
                   capturedScope);
           });
-      if (dispatchResult is PrefetchTranslationDispatchResult.Queued or
+      completions.Add(dispatchResult.Completion);
+      var dispatchResultValue = dispatchResult.Admission;
+      if (dispatchResultValue is PrefetchTranslationDispatchResult.Queued or
           PrefetchTranslationDispatchResult.AlreadyPending)
       {
         this.LogAcceptedQuestPrefetchTranslationEvent(
             questProgressSnapshot,
             "Objective",
-            dispatchResult == PrefetchTranslationDispatchResult.Queued
+            dispatchResultValue == PrefetchTranslationDispatchResult.Queued
                 ? "queued"
                 : "already-in-flight",
             questStep.KeyText,
@@ -869,7 +1021,8 @@ public partial class Echoglossian
       string currentQuestSequenceText,
       QuestPlate existingQuestPlate,
       SourceClientLanguage sourceLanguage,
-      TranslationReuseScope scope)
+      TranslationReuseScope scope,
+      ICollection<Task> completions)
   {
     foreach (var questSystemText in questProgressSnapshot.QuestSystemTexts)
     {
@@ -894,12 +1047,10 @@ public partial class Echoglossian
       }
 
       var translationService = TranslationService;
-      var dispatchResult = DispatchAcceptedQuestPrefetchTranslation(
+      var dispatchResult = this.DispatchAcceptedQuestPrefetchTranslationAsync(
           $"AcceptedQuestPrefetch|{questProgressSnapshot.CacheKey}|System|{questSystemText.KeyText}|{questSystemText.Text}",
           sourceLanguage,
           scope,
-          this.TryGetQueuedTranslation,
-          this.QueueTranslation,
           () => translationService.Translate(
               questSystemText.Text,
               sourceLanguage,
@@ -916,7 +1067,7 @@ public partial class Echoglossian
                   questSystemText.KeyText,
                   questSystemText.Text,
                   translatedSystemTextValue);
-              this.ApplyAcceptedQuestSystemTranslation(
+              return this.ApplyAcceptedQuestSystemTranslation(
                   questProgressSnapshot,
                   currentQuestSequenceText,
                   questSystemText.KeyText,
@@ -924,13 +1075,15 @@ public partial class Echoglossian
                   translatedSystemTextValue,
                   capturedScope);
           });
-      if (dispatchResult is PrefetchTranslationDispatchResult.Queued or
+      completions.Add(dispatchResult.Completion);
+      var dispatchResultValue = dispatchResult.Admission;
+      if (dispatchResultValue is PrefetchTranslationDispatchResult.Queued or
           PrefetchTranslationDispatchResult.AlreadyPending)
       {
         this.LogAcceptedQuestPrefetchTranslationEvent(
             questProgressSnapshot,
             "System",
-            dispatchResult == PrefetchTranslationDispatchResult.Queued
+            dispatchResultValue == PrefetchTranslationDispatchResult.Queued
                 ? "queued"
                 : "already-in-flight",
             questSystemText.KeyText,
@@ -947,7 +1100,7 @@ public partial class Echoglossian
   /// <param name="currentQuestSequenceText">The current SEQ row text.</param>
   /// <param name="translatedQuestMessage">The translated quest message.</param>
   /// <param name="scope">The immutable operation reuse scope.</param>
-  private void ApplyAcceptedQuestMessageTranslation(
+  private Task ApplyAcceptedQuestMessageTranslation(
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
       string translatedQuestMessage,
@@ -956,7 +1109,7 @@ public partial class Echoglossian
     if (string.IsNullOrWhiteSpace(currentQuestSequenceText) ||
         string.IsNullOrWhiteSpace(translatedQuestMessage))
     {
-      return;
+      return Task.CompletedTask;
     }
 
     var questCanonicalData = QuestCanonicalData.Create(
@@ -982,7 +1135,7 @@ public partial class Echoglossian
           translatedQuestMessage);
     }
 
-    this.UpdateQuestPlate(questPlate);
+    return this.ScheduleAcceptedQuestPrefetchPersistence(questPlate, scope);
   }
 
   /// <summary>
@@ -995,7 +1148,7 @@ public partial class Echoglossian
   /// <param name="originalSummaryText">The original summary text.</param>
   /// <param name="translatedSummaryText">The translated summary text.</param>
   /// <param name="scope">The immutable operation reuse scope.</param>
-  private void ApplyAcceptedQuestSummaryTranslation(
+  private Task ApplyAcceptedQuestSummaryTranslation(
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
       string summaryRowKey,
@@ -1006,7 +1159,7 @@ public partial class Echoglossian
     if (string.IsNullOrWhiteSpace(originalSummaryText) ||
         string.IsNullOrWhiteSpace(translatedSummaryText))
     {
-      return;
+      return Task.CompletedTask;
     }
 
     var questCanonicalData = QuestCanonicalData.Create(
@@ -1028,7 +1181,7 @@ public partial class Echoglossian
       questPlate.TranslatedQuestMessage = translatedSummaryText;
     }
 
-    this.UpdateQuestPlate(questPlate);
+    return this.ScheduleAcceptedQuestPrefetchPersistence(questPlate, scope);
   }
 
   /// <summary>
@@ -1041,7 +1194,7 @@ public partial class Echoglossian
   /// <param name="originalObjectiveText">The original objective text.</param>
   /// <param name="translatedObjectiveText">The translated objective text.</param>
   /// <param name="scope">The immutable operation reuse scope.</param>
-  private void ApplyAcceptedQuestObjectiveTranslation(
+  private Task ApplyAcceptedQuestObjectiveTranslation(
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
       string objectiveRowKey,
@@ -1052,7 +1205,7 @@ public partial class Echoglossian
     if (string.IsNullOrWhiteSpace(originalObjectiveText) ||
         string.IsNullOrWhiteSpace(translatedObjectiveText))
     {
-      return;
+      return Task.CompletedTask;
     }
 
     var questCanonicalData = QuestCanonicalData.Create(
@@ -1065,7 +1218,7 @@ public partial class Echoglossian
         objectiveRowKey,
         originalObjectiveText,
         translatedObjectiveText);
-    this.UpdateQuestPlate(questPlate);
+    return this.ScheduleAcceptedQuestPrefetchPersistence(questPlate, scope);
   }
 
   /// <summary>
@@ -1078,7 +1231,7 @@ public partial class Echoglossian
   /// <param name="originalSystemText">The original SYSTEM-row text.</param>
   /// <param name="translatedSystemText">The translated SYSTEM-row text.</param>
   /// <param name="scope">The immutable operation reuse scope.</param>
-  private void ApplyAcceptedQuestSystemTranslation(
+  private Task ApplyAcceptedQuestSystemTranslation(
       QuestProgressSnapshot questProgressSnapshot,
       string currentQuestSequenceText,
       string systemRowKey,
@@ -1089,7 +1242,7 @@ public partial class Echoglossian
     if (string.IsNullOrWhiteSpace(originalSystemText) ||
         string.IsNullOrWhiteSpace(translatedSystemText))
     {
-      return;
+      return Task.CompletedTask;
     }
 
     var questCanonicalData = QuestCanonicalData.Create(
@@ -1102,7 +1255,7 @@ public partial class Echoglossian
         systemRowKey,
         originalSystemText,
         translatedSystemText);
-    this.UpdateQuestPlate(questPlate);
+    return this.ScheduleAcceptedQuestPrefetchPersistence(questPlate, scope);
   }
 
   /// <summary>
@@ -1121,6 +1274,30 @@ public partial class Echoglossian
         scope.TargetLanguageCode,
         scope.TranslationEngine!.Value,
         DateTime.Now);
+  }
+
+  /// <summary>
+  ///     Admits a completed accepted-quest projection for coordinator-backed
+  ///     persistence without synchronously touching the QuestPlate database.
+  /// </summary>
+  /// <param name="questPlate">The detached translated QuestPlate projection.</param>
+  /// <param name="scope">The captured translation reuse scope.</param>
+  private Task ScheduleAcceptedQuestPrefetchPersistence(
+      QuestPlate questPlate,
+      TranslationReuseScope scope)
+  {
+    var writer = this.questPlatePersistenceWriter;
+    if (writer is null)
+    {
+      return Task.CompletedTask;
+    }
+
+    _ = writer.TryPersist(
+        questPlate,
+        scope,
+        PersistencePriority.Background,
+        out var completion);
+    return completion;
   }
 
   /// <summary>
@@ -1147,6 +1324,93 @@ public partial class Echoglossian
       string fieldName)
   {
     return $"AcceptedQuest/{questProgressSnapshot.QuestId}/{fieldName}";
+  }
+
+  /// <summary>
+  ///     Dispatches one accepted-quest translation and retains its completion
+  ///     through the broker callback and the resulting persistence terminal.
+  /// </summary>
+  /// <param name="payloadIdentity">The accepted-quest payload identity.</param>
+  /// <param name="sourceLanguage">The operation-captured source contract.</param>
+  /// <param name="scope">The operation-captured reuse scope.</param>
+  /// <param name="resolver">The translation resolver.</param>
+  /// <param name="onCompleted">The async persistence callback.</param>
+  /// <returns>The broker admission and terminal completion.</returns>
+  private (PrefetchTranslationDispatchResult Admission, Task Completion)
+      DispatchAcceptedQuestPrefetchTranslationAsync(
+          string payloadIdentity,
+          SourceClientLanguage sourceLanguage,
+          TranslationReuseScope scope,
+          Func<string> resolver,
+          Func<string, TranslationReuseScope, bool, Task> onCompleted)
+  {
+    var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+    if (!TranslationService.IsKnownCapturedSourceLanguage(sourceLanguage) ||
+        !RuntimeLanguageHelper.LanguagesMatch(
+            sourceLanguage.PersistenceCode,
+            scope.SourceLanguageCode) ||
+        string.IsNullOrWhiteSpace(scope.TargetLanguageCode) ||
+        !scope.TranslationEngine.HasValue)
+    {
+      _ = completion.TrySetResult();
+      return (PrefetchTranslationDispatchResult.Rejected, completion.Task);
+    }
+
+    var translationKey = BuildAcceptedQuestScopedTranslationKey(payloadIdentity, scope);
+    if (this.TryGetQueuedTranslation(translationKey, out var cachedTranslation))
+    {
+      _ = this.CompleteAcceptedQuestPrefetchTranslationAsync(
+          cachedTranslation,
+          scope,
+          fromCache: true,
+          onCompleted,
+          completion);
+      return (PrefetchTranslationDispatchResult.Cached, completion.Task);
+    }
+
+    var admission = this.queuedTranslationBroker.TryQueueOrJoin(
+        translationKey,
+        () => Task.Run(resolver),
+        translatedText => _ = this.CompleteAcceptedQuestPrefetchTranslationAsync(
+            translatedText,
+            scope,
+            fromCache: false,
+            onCompleted,
+            completion),
+        surfaceIdentity: "AcceptedQuestPrefetch",
+        _ => _ = completion.TrySetResult(),
+        retainExisting: false,
+        tryRetainOnJoin: static () => true);
+    return admission switch
+    {
+      QueuedTranslationAdmission.Accepted =>
+          (PrefetchTranslationDispatchResult.Queued, completion.Task),
+      QueuedTranslationAdmission.JoinedInFlight =>
+          (PrefetchTranslationDispatchResult.AlreadyPending, completion.Task),
+      _ => (PrefetchTranslationDispatchResult.Rejected, Task.CompletedTask),
+    };
+  }
+
+  /// <summary>
+  ///     Completes a broker subscriber only after its persistence callback has
+  ///     reached a terminal state.
+  /// </summary>
+  private async Task CompleteAcceptedQuestPrefetchTranslationAsync(
+      string translatedText,
+      TranslationReuseScope scope,
+      bool fromCache,
+      Func<string, TranslationReuseScope, bool, Task> onCompleted,
+      TaskCompletionSource completion)
+  {
+    try
+    {
+      await onCompleted(translatedText, scope, fromCache).ConfigureAwait(false);
+      _ = completion.TrySetResult();
+    }
+    catch (Exception exception)
+    {
+      _ = completion.TrySetException(exception);
+    }
   }
 
   /// <summary>

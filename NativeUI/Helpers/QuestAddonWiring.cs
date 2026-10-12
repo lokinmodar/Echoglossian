@@ -3,6 +3,8 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.Persistence;
+
 namespace Echoglossian;
 
 public partial class Echoglossian
@@ -19,6 +21,7 @@ public partial class Echoglossian
       TranslationService = TranslationService,
       FindQuestPlate = this.FindQuestPlate,
       FindQuestPlateByName = this.FindQuestPlateByName,
+      FindQuestPlateCacheFirst = this.FindQuestPlateCacheFirst,
       FindQuestPopupText = this.FindQuestPopupText,
       InsertQuestPlate = this.InsertQuestPlate,
       InsertQuestPopupTextAsync = this.InsertQuestPopupTextData,
@@ -102,5 +105,51 @@ public partial class Echoglossian
                   explicitBottomRight,
                   finalAnchorKind),
     };
+  }
+
+  /// <summary>
+  ///     Resolves a committed QuestPlate cache projection and admits exactly
+  ///     one shared interactive read for a cache miss without blocking an
+  ///     addon callback.
+  /// </summary>
+  /// <param name="questPlate">The managed QuestPlate lookup payload.</param>
+  /// <returns>A committed cloned projection when present; otherwise null.</returns>
+  private QuestPlate? FindQuestPlateCacheFirst(
+      QuestPlate questPlate,
+      SourceClientLanguage sourceLanguage)
+  {
+    ArgumentNullException.ThrowIfNull(questPlate);
+    var targetLanguage = RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(
+        this.configuration.Lang);
+    if (string.IsNullOrWhiteSpace(targetLanguage))
+    {
+      return null;
+    }
+
+    var scope = new TranslationReuseScope(
+        sourceLanguage.PersistenceCode,
+        targetLanguage,
+        questPlate.TranslationEngine ?? this.configuration.ChosenTransEngine,
+        this.configuration.TranslateAlreadyTranslatedTexts);
+
+    if (this.questPlateRuntimeCache.TryGet(questPlate, scope, out var cached))
+    {
+      return cached;
+    }
+
+    var writer = this.questPlatePersistenceWriter;
+    if (writer is null)
+    {
+      return null;
+    }
+
+    _ = writer.TryFind(
+        questPlate,
+        scope,
+        PersistencePriority.Interactive,
+        out _);
+    return this.questPlateRuntimeCache.TryGet(questPlate, scope, out cached)
+        ? cached
+        : null;
   }
 }

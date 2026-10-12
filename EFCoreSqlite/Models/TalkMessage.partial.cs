@@ -1,4 +1,4 @@
-﻿// <copyright file="TalkMessage.partial.cs" company="lokinmodar">
+// <copyright file="TalkMessage.partial.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -122,7 +122,7 @@ public partial class TalkMessage : IMultiTextEntity
   /// <inheritdoc />
   public void SetGameVersion(string version)
   {
-    /* Ignored — TalkMessage does not use game version */
+    /* Ignored  -  TalkMessage does not use game version */
   }
 
   public byte[]? GetRTLLangTranslationImageData()

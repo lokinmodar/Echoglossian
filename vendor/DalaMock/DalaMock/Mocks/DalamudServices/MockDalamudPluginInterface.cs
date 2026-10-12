@@ -69,6 +69,9 @@ public class MockDalamudPluginInterface : IDalamudPluginInterface, IDisposable
     public string InternalName => this.pluginManifest.InternalName;
 
     /// <inheritdoc/>
+    public Guid WorkingPluginId => this.pluginGuid;
+
+    /// <inheritdoc/>
     public IPluginManifest Manifest => this.pluginManifest;
 
     /// <inheritdoc/>

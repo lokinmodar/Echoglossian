@@ -30,12 +30,12 @@
 
 ### Modified files
 
-- `Translators/DeepSeekTranslator.cs` — remove key slicing, inject/test transport, propagate classified failures.
-- `Translators/DeepSeek/DeepSeekModelManager.cs` — sanitized async model-list outcomes.
-- `PluginUI/EngineConfigUI/DeepSeekEngineUI.cs` — validation and non-blocking status.
-- `PluginUI/Helpers/TranslationEngineConfigurationHelper.cs` — shared configured predicate.
-- `GeneralHelpers/TranslationFailureTextClassifier.cs` — DeepSeek status mapping.
-- `Translators/TranslationService.cs` — apply the transient/persistent classification contract.
+- `Translators/DeepSeekTranslator.cs`  -  remove key slicing, inject/test transport, propagate classified failures.
+- `Translators/DeepSeek/DeepSeekModelManager.cs`  -  sanitized async model-list outcomes.
+- `PluginUI/EngineConfigUI/DeepSeekEngineUI.cs`  -  validation and non-blocking status.
+- `PluginUI/Helpers/TranslationEngineConfigurationHelper.cs`  -  shared configured predicate.
+- `GeneralHelpers/TranslationFailureTextClassifier.cs`  -  DeepSeek status mapping.
+- `Translators/TranslationService.cs`  -  apply the transient/persistent classification contract.
 - Existing DeepSeek model manager, translation failure, service, and runtime refresh tests.
 - `Properties/Resources.resx`, `Properties/Resources.en-US.resx`, `Properties/Resources.pt-BR.resx`, and `Properties/Resources.Designer.cs`.
 

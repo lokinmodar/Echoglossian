@@ -79,7 +79,7 @@ public sealed class MockSystemFontProvider
                                 : (int)DWRITE_FONT_STYLE.DWRITE_FONT_STYLE_NORMAL;
                 var stretch = (int)DWRITE_FONT_STRETCH.DWRITE_FONT_STRETCH_NORMAL;
                 
-                // Skip a face whose weight/stretch/style is already represented in the family —
+                // Skip a face whose weight/stretch/style is already represented in the family.
                 // mirrors DirectWrite, which exposes one face per distinct combination.
                 if (family.Fonts.Any(f => f.Weight == weight && f.Stretch == stretch && f.Style == style))
                 {

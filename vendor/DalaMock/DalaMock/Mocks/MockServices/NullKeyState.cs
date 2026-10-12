@@ -30,7 +30,33 @@ public class NullKeyState : IKeyState, IMockService
         return true;
     }
 
+    public bool IsExtendedVirtualKeyValid(int vkCode)
+    {
+        return false;
+    }
+
+    public bool IsExtendedVirtualKeyValid(VirtualKey vkCode)
+    {
+        return false;
+    }
+
+    public bool TryGetSeVirtualKey(int vkCode, out int seVkCode)
+    {
+        seVkCode = vkCode;
+        return true;
+    }
+
+    public bool TryGetSeVirtualKey(VirtualKey vkCode, out int seVkCode)
+    {
+        return this.TryGetSeVirtualKey((int)vkCode, out seVkCode);
+    }
+
     public IEnumerable<VirtualKey> GetValidVirtualKeys()
+    {
+        return new List<VirtualKey>();
+    }
+
+    public IEnumerable<VirtualKey> GetExtendedVirtualKeys()
     {
         return new List<VirtualKey>();
     }

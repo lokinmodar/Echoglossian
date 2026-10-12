@@ -39,7 +39,17 @@ public class MockGameGui : IGameGui, IMockService
         return this.GetAddonByName(name, index);
     }
 
+    AtkUnitBasePtr IGameGui.GetAddonByName(ReadOnlySpan<byte> name, int index)
+    {
+        return 0;
+    }
+
     public unsafe T* GetAddonByName<T>(string name, int index = 1) where T : unmanaged
+    {
+        return null;
+    }
+
+    public unsafe T* GetAddonByName<T>(ReadOnlySpan<byte> name, int index = 1) where T : unmanaged
     {
         return null;
     }
@@ -52,6 +62,11 @@ public class MockGameGui : IGameGui, IMockService
     AgentInterfacePtr IGameGui.FindAgentInterface(string addonName)
     {
         return this.FindAgentInterface(addonName);
+    }
+
+    AgentInterfacePtr IGameGui.FindAgentInterface(ReadOnlySpan<byte> addonName)
+    {
+        return 0;
     }
 
     public AgentInterfacePtr FindAgentInterface(AtkUnitBasePtr addon)

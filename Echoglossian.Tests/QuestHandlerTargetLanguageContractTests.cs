@@ -63,9 +63,17 @@ public sealed class QuestHandlerTargetLanguageContractTests
         Assert.True(toQuestPlateCall >= 0);
 
         var findQuestPlateCall = source.IndexOf(
-            "this.FindQuestPlate(questPlate);",
+            "this.FindQuestPlateCacheFirst(",
             toQuestPlateCall,
             StringComparison.Ordinal);
+        if (findQuestPlateCall < 0)
+        {
+            findQuestPlateCall = source.IndexOf(
+                "this.FindQuestPlate(questPlate);",
+                toQuestPlateCall,
+                StringComparison.Ordinal);
+        }
+
         Assert.True(findQuestPlateCall > toQuestPlateCall);
 
         var snippet = source.Substring(

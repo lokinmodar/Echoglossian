@@ -101,5 +101,7 @@ public class MockPlayerState : IPlayerState, IMockService
 
     public bool IsReturner { get; set; }
 
+    public bool IsAwayFromKeyboard { get; set; }
+
     public string ServiceName => "Player State";
 }

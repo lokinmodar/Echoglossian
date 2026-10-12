@@ -3,7 +3,7 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-// quest-reader — reads FFXIV quest text sheets using Lumina, matching
+// quest-reader  -  reads FFXIV quest text sheets using Lumina, matching
 // exactly what Dalamud/the plugin sees at runtime.
 //
 // Usage:
@@ -418,7 +418,7 @@ static IEnumerable<string> WrapText(string text, int width)
 static void PrintUsage()
 {
     Console.WriteLine("""
-        quest-reader — offline FFXIV quest sheet reader (uses Lumina, matches plugin output exactly)
+        quest-reader  -  offline FFXIV quest sheet reader (uses Lumina, matches plugin output exactly)
 
         USAGE:
           dotnet run -- [options]
@@ -456,8 +456,8 @@ static int RunScenarioTreeProbe(GameData gameData, Language language, uint? filt
     // Quest field links back to the Quest sheet.
     //
     // Structure confirmed from Lumina.Excel.Sheets.ScenarioTree:
-    //   RowId     — same integer as Quest.RowId for that quest
-    //   Quest     — RowRef<Quest> back to the Quest sheet row
+    //   RowId      -  same integer as Quest.RowId for that quest
+    //   Quest      -  RowRef<Quest> back to the Quest sheet row
     //
     // This means ScenarioTree.RowId IS the quest RowId, and the addon
     // ScenarioTree renders the live objective (TODO row) for that quest.

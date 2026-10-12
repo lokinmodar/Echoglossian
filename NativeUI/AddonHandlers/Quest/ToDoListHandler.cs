@@ -488,7 +488,9 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         RuntimeLanguageHelper.GetConfiguredTargetLanguageCode(this.Config.Lang),
         this.Config.ChosenTransEngine,
         DateTime.Now);
-    var foundQuestPlate = this.FindQuestPlate(questPlate);
+    var foundQuestPlate = this.FindQuestPlateCacheFirst(
+        questPlate,
+        sourceLanguage);
     if (foundQuestPlate == null ||
         string.IsNullOrWhiteSpace(foundQuestPlate.TranslatedQuestName))
     {
@@ -627,7 +629,9 @@ internal sealed class ToDoListHandler : QuestAddonHandlerBase
         sourceLanguage,
         originalQuestText,
         string.Empty);
-    var foundFallbackQuestPlate = this.FindQuestPlateByName(fallbackQuestPlate);
+    var foundFallbackQuestPlate = this.FindQuestPlateCacheFirst(
+        fallbackQuestPlate,
+        sourceLanguage);
     if (foundFallbackQuestPlate == null ||
         string.IsNullOrWhiteSpace(foundFallbackQuestPlate.TranslatedQuestName))
     {

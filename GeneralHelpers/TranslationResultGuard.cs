@@ -49,6 +49,9 @@ internal static class TranslationResultGuard
     {
         return !string.IsNullOrWhiteSpace(text) &&
                !ContainsSyntheticTranslationError(text) &&
+               !text.Contains(
+                   GoogleTranslator.V2NoTranslationMarker,
+                   StringComparison.Ordinal) &&
                !TranslationFailureTextClassifier.IsKnownUnavailableTranslation(
                    text);
     }

@@ -32,6 +32,41 @@ public sealed class ToDoHandlerContractTests
     }
 
     /// <summary>
+    ///     Ensures the callback-reachable ToDoList QuestPlate paths consume
+    ///     the shared cache-first dependency rather than synchronous database
+    ///     lookup delegates.
+    /// </summary>
+    [Fact]
+    public void ToDoListQuestPlateResolution_UsesCacheFirstDependencyOnly()
+    {
+        var visibleResolver = typeof(ToDoListHandler).GetMethod(
+            "TryResolveVisibleQuestEntries",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var fallbackResolver = typeof(ToDoListHandler).GetMethod(
+            "TryResolveToDoListFallbackQuestTitle",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var cacheFirstResolver = typeof(QuestAddonHandlerBase).GetMethod(
+            "FindQuestPlateCacheFirst",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var synchronousResolver = typeof(QuestAddonHandlerBase).GetMethod(
+            "FindQuestPlate",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var synchronousNameResolver = typeof(QuestAddonHandlerBase).GetMethod(
+            "FindQuestPlateByName",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(visibleResolver);
+        Assert.NotNull(fallbackResolver);
+        Assert.NotNull(cacheFirstResolver);
+        Assert.NotNull(synchronousResolver);
+        Assert.NotNull(synchronousNameResolver);
+        Assert.True(MethodReferences(visibleResolver!, cacheFirstResolver!));
+        Assert.True(MethodReferences(fallbackResolver!, cacheFirstResolver!));
+        Assert.False(MethodReferences(visibleResolver!, synchronousResolver!));
+        Assert.False(MethodReferences(fallbackResolver!, synchronousNameResolver!));
+    }
+
+    /// <summary>
     ///     Ensures in-flight and failed payloads are short-circuited before
     ///     persistence lookup and newer visible work rejects stale completion.
     /// </summary>

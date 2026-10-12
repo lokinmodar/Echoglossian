@@ -1,4 +1,4 @@
-﻿// <copyright file="LanguageEngineSupport.cs" company="lokinmodar">
+// <copyright file="LanguageEngineSupport.cs" company="lokinmodar">
 // Copyright (c) lokinmodar. All rights reserved.
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
@@ -83,28 +83,28 @@ namespace Echoglossian.LanguagesHandling
         private static readonly Dictionary<int, HashSet<string>> VendorSets =
             new Dictionary<int, HashSet<string>>
             {
-                // GOOGLE — plugin-exposed codes verified against the official supported-language page.
+                // GOOGLE  -  plugin-exposed codes verified against the official supported-language page.
                 { Google, new HashSet<string>(GetGoogleCommonCodes(), StringComparer.OrdinalIgnoreCase) },
 
-                // GTRANSLATE — tracks Google.
+                // GTRANSLATE  -  tracks Google.
                 { GTranslate, new HashSet<string>(GetGoogleCommonCodes(), StringComparer.OrdinalIgnoreCase) },
 
-                // DEEPL — official supported languages; includes 2025 expansion (he, vi, th, id, zh).
+                // DEEPL  -  official supported languages; includes 2025 expansion (he, vi, th, id, zh).
                 { DeepL, new HashSet<string>(GetDeepLCodes(), StringComparer.OrdinalIgnoreCase) },
 
-                // MICROSOFT TRANSLATOR — large official set (table).
+                // MICROSOFT TRANSLATOR  -  large official set (table).
                 { Microsoft, new HashSet<string>(GetMicrosoftCodes(), StringComparer.OrdinalIgnoreCase) },
 
-                // AMAZON TRANSLATE — official list.
+                // AMAZON TRANSLATE  -  official list.
                 { Amazon, new HashSet<string>(GetAmazonCodes(), StringComparer.OrdinalIgnoreCase) },
 
-                // YANDEX CLOUD — official supported languages.
+                // YANDEX CLOUD  -  official supported languages.
                 { YandexCloud, new HashSet<string>(GetYandexCloudCodes(), StringComparer.OrdinalIgnoreCase) },
 
-                // YANDEX PUBLIC — align to Yandex Cloud for consistency.
+                // YANDEX PUBLIC  -  align to Yandex Cloud for consistency.
                 { YandexPublic, new HashSet<string>(GetYandexCloudCodes(), StringComparer.OrdinalIgnoreCase) },
 
-                // LIBRETRANSLATE — canonical upstream set (varies by instance).
+                // LIBRETRANSLATE  -  canonical upstream set (varies by instance).
                 { LibreTranslate, new HashSet<string>(GetLibreTranslateCodes(), StringComparer.OrdinalIgnoreCase) },
             };
 

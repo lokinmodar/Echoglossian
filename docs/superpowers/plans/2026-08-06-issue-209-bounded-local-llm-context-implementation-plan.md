@@ -25,21 +25,21 @@
 
 ### New files
 
-- `Translators/DialogueContextPolicy.cs` — normalized immutable context settings.
-- `Translators/Helpers/DialogueContextBudgetHelper.cs` — deterministic estimated-token calculation and newest-first trimming.
+- `Translators/DialogueContextPolicy.cs`  -  normalized immutable context settings.
+- `Translators/Helpers/DialogueContextBudgetHelper.cs`  -  deterministic estimated-token calculation and newest-first trimming.
 - `Echoglossian.Tests/DialogueContextBudgetHelperTests.cs`.
 
 ### Modified files
 
-- `Config.cs` — enabled, max prior turns, estimated token budget, and TTL fields.
-- `PluginUI/Tabs/TranslationEnginesTab.cs` — LLM dialogue context controls.
-- `GeneralHelpers/RuntimeConfigurationRefresh.cs` — signature and session reset on policy change.
-- `Translators/DialogueTranslationSessionStore.cs` — consume `DialogueContextPolicy` and bounded snapshots.
+- `Config.cs`  -  enabled, max prior turns, estimated token budget, and TTL fields.
+- `PluginUI/Tabs/TranslationEnginesTab.cs`  -  LLM dialogue context controls.
+- `GeneralHelpers/RuntimeConfigurationRefresh.cs`  -  signature and session reset on policy change.
+- `Translators/DialogueTranslationSessionStore.cs`  -  consume `DialogueContextPolicy` and bounded snapshots.
 - `NativeUI/AddonHandlers/Talk/TalkHandler.cs`.
-- `NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs` — remove hardcoded history/TTL constants and capture policy into each operation.
+- `NativeUI/AddonHandlers/Talk/BattleTalkHandler.cs`  -  remove hardcoded history/TTL constants and capture policy into each operation.
 - `Echoglossian.Tests/DialogueTranslationSessionStoreTests.cs`.
 - `Echoglossian.Tests/NativeDialogueHandlerLifecycleTests.cs`.
-- `Properties/Resources.resx`, `Properties/Resources.en-US.resx`, `Properties/Resources.pt-BR.resx`, and `Properties/Resources.Designer.cs` — context setting labels/tooltips.
+- `Properties/Resources.resx`, `Properties/Resources.en-US.resx`, `Properties/Resources.pt-BR.resx`, and `Properties/Resources.Designer.cs`  -  context setting labels/tooltips.
 
 ## Interfaces produced and consumed
 

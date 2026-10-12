@@ -521,6 +521,48 @@ public class ReferenceTextPrefetchRuntimeTests
         Assert.Empty(await context.MainCommandTexts.ToListAsync());
     }
 
+    /// <summary>
+    ///     Ensures the shared broker persists valid sibling fields while a
+    ///     Google V2 no-translation field keeps its original source text.
+    /// </summary>
+    [Fact]
+    public async Task Broker_GoogleV2NoTranslation_PersistsNoInternalMarker()
+    {
+        await using var harness = await Harness.CreateAsync();
+        var translator = new GoogleV2NoTranslationPayloadTranslator();
+        var service = new TranslationService(
+            static text => text,
+            translator,
+            translationEngine: (int)Echoglossian.TransEngines.Google);
+        Task<TranslationFieldBatchResult> Translate(
+            IReadOnlyList<TranslationField> fields,
+            SourceClientLanguage source,
+            string target,
+            string? origin,
+            CancellationToken token) => service.TranslateFieldsAsync(
+                fields,
+                source,
+                target,
+                origin,
+                token);
+
+        Assert.True(await harness.Start(Harness.Payload(), Translate)
+            .WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.Equal(3, translator.Calls);
+        var cached = harness.Cache.TryFindCanonicalMatch(
+            12,
+            Harness.Scope,
+            "7.3",
+            harness.Probe.SourceContentHash!);
+        Assert.NotNull(cached);
+        Assert.Equal("Acoes", cached!.TranslatedName);
+        Assert.Equal("Open actions.", cached.TranslatedDescription);
+        Assert.DoesNotContain(
+            GoogleTranslator.V2NoTranslationMarker,
+            cached.TranslatedDescription,
+            StringComparison.Ordinal);
+    }
+
     /// <summary>A terminal broker failure advances the actual cursor once and admits the next row.</summary>
     [Fact]
     public async Task RuntimeCursor_TerminalTranslationFailure_AdvancesToNextRow()
@@ -1456,6 +1498,31 @@ public class ReferenceTextPrefetchRuntimeTests
         /// <inheritdoc />
         public Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage) =>
             Task.FromResult(this.Translate(text, sourceLanguage, targetLanguage));
+    }
+
+    private sealed class GoogleV2NoTranslationPayloadTranslator : ITranslator
+    {
+        /// <summary>Gets the actual provider invocation count.</summary>
+        internal int Calls { get; private set; }
+
+        /// <inheritdoc />
+        public string? Translate(string text, string sourceLanguage, string targetLanguage)
+        {
+            this.Calls++;
+            if (text.StartsWith("0|Actions|1|Open actions.", StringComparison.Ordinal) ||
+                string.Equals(text, "Open actions.", StringComparison.Ordinal))
+            {
+                throw new GoogleV2NoTranslationException();
+            }
+
+            return "Acoes";
+        }
+
+        /// <inheritdoc />
+        public Task<string?> TranslateAsync(string text, string sourceLanguage, string targetLanguage)
+        {
+            return Task.FromResult(this.Translate(text, sourceLanguage, targetLanguage));
+        }
     }
 
     /// <summary>Returns a synthetic rate-limit failure before the next provider call succeeds.</summary>

@@ -26,12 +26,12 @@
 
 ### New files
 
-- `Translators/TranslationEngineRuntimeDescriptor.cs` — immutable engine/config/support diagnostic descriptor.
-- `Translators/TranslationEngineRuntimeMatrixBuilder.cs` — pure current-config matrix rows.
-- `Translators/TranslationEngineHealthProbe.cs` — explicit async provider probe through `TranslationService` with sanitized result.
+- `Translators/TranslationEngineRuntimeDescriptor.cs`  -  immutable engine/config/support diagnostic descriptor.
+- `Translators/TranslationEngineRuntimeMatrixBuilder.cs`  -  pure current-config matrix rows.
+- `Translators/TranslationEngineHealthProbe.cs`  -  explicit async provider probe through `TranslationService` with sanitized result.
 - `Echoglossian.Tests/TranslationEngineRuntimeMatrixTests.cs`.
 - `Echoglossian.Tests/TranslationEngineHealthProbeTests.cs`.
-- `docs/testing/llm-engine-surface-matrix.md` — reproducible current-version operator checklist and result table.
+- `docs/testing/llm-engine-surface-matrix.md`  -  reproducible current-version operator checklist and result table.
 
 ### Modified files
 
@@ -41,7 +41,7 @@
 - `Translators/LlmSurfaceGroupRoutingPolicy.cs`.
 - `PluginUI/Helpers/TranslationEngineConfigurationHelper.cs`.
 - `Translators/TranslationService.cs` only for a matrix-proven resolver defect.
-- `PluginUI/TranslatorMetricsWindow.cs` or `PluginUI/Tabs/TroubleshootingTab.cs` — explicit health probe and matrix snapshot.
+- `PluginUI/TranslatorMetricsWindow.cs` or `PluginUI/Tabs/TroubleshootingTab.cs`  -  explicit health probe and matrix snapshot.
 - Existing selection, activation, language support, routing, service, and Mock tests.
 - `Properties/Resources.resx`, `Properties/Resources.en-US.resx`, `Properties/Resources.pt-BR.resx`, and `Properties/Resources.Designer.cs`.
 

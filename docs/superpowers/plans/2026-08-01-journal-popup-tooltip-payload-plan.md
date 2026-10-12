@@ -25,17 +25,17 @@
 
 ### New files
 
-- NativeUI/Helpers/PopupBodyHoverGeometryHelper.cs — pure candidate model and deterministic selector for practical body-region geometry.
-- Echoglossian.Tests/PopupBodyHoverGeometryTests.cs — allocation-free tests for candidate selection and rejection.
+- NativeUI/Helpers/PopupBodyHoverGeometryHelper.cs - pure candidate model and deterministic selector for practical body-region geometry.
+- Echoglossian.Tests/PopupBodyHoverGeometryTests.cs - allocation-free tests for candidate selection and rejection.
 
 ### Modified files
 
-- NativeUI/Helpers/ReadableSeStringPayloadHelper.cs — safe wrapper-aware payload matching.
-- NativeUI/AddonHandlers/Quest/QuestAddonHandlerBase.cs — shared native traversal and bounds construction around the pure geometry selector.
-- NativeUI/AddonHandlers/Quest/JournalAcceptHandler.cs — use shared body bounds and retain the live body text node for capture/swap.
-- NativeUI/AddonHandlers/Quest/JournalResultHandler.cs — use shared body bounds and enforce canonical lookup precedence.
-- Echoglossian.Tests/QuestReadableTextMatchTests.cs — payload regression coverage and removal/replacement of handler-local geometry tests.
-- Echoglossian.Tests/QuestAddonHandlerLifecycleTests.cs — lookup and shared-registration contracts.
+- NativeUI/Helpers/ReadableSeStringPayloadHelper.cs - safe wrapper-aware payload matching.
+- NativeUI/AddonHandlers/Quest/QuestAddonHandlerBase.cs - shared native traversal and bounds construction around the pure geometry selector.
+- NativeUI/AddonHandlers/Quest/JournalAcceptHandler.cs - use shared body bounds and retain the live body text node for capture/swap.
+- NativeUI/AddonHandlers/Quest/JournalResultHandler.cs - use shared body bounds and enforce canonical lookup precedence.
+- Echoglossian.Tests/QuestReadableTextMatchTests.cs - payload regression coverage and removal/replacement of handler-local geometry tests.
+- Echoglossian.Tests/QuestAddonHandlerLifecycleTests.cs - lookup and shared-registration contracts.
 
 No changes are planned for HoverTooltipManager, Journal, JournalDetail, ScenarioTree, ToDoList, RecommendList, or the database model.
 

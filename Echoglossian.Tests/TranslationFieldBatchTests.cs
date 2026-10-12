@@ -489,6 +489,35 @@ public sealed class TranslationFieldBatchTests
     }
 
     /// <summary>
+    ///     Ensures one explicit Google V2 no-translation result preserves only
+    ///     that field's source text while other fields remain translated.
+    /// </summary>
+    [Fact]
+    public async Task TranslateFieldsAsync_GoogleV2NoTranslation_PreservesOnlyUnavailableField()
+    {
+        var translator = new GoogleV2NoTranslationTranslator(static text =>
+            text.Contains("Opens the window.", StringComparison.Ordinal)
+                ? throw new GoogleV2NoTranslationException()
+                : "Acoes");
+        var service = this.CreateService(
+            translator,
+            Echoglossian.TransEngines.Google);
+
+        var result = await service.TranslateFieldsAsync(
+            [
+                new TranslationField("Name", "Actions"),
+                new TranslationField("Description", "Opens the window."),
+            ],
+            new SourceClientLanguage("en", "en"),
+            "pt-BR");
+
+        Assert.True(result.UsedIndividualFallback);
+        Assert.Equal("Acoes", result.GetTranslation("Name"));
+        Assert.Equal("Opens the window.", result.GetTranslation("Description"));
+        Assert.Equal(3, translator.CallCount);
+    }
+
+    /// <summary>
     ///     Ensures blank field identifiers cannot enter a batch request.
     /// </summary>
     /// <returns>The asynchronous test task.</returns>
@@ -650,6 +679,34 @@ public sealed class TranslationFieldBatchTests
             string targetLanguage)
         {
             this.Requests.Add(text);
+            return response(text);
+        }
+
+        /// <inheritdoc />
+        public Task<string?> TranslateAsync(
+            string text,
+            string sourceLanguage,
+            string targetLanguage)
+        {
+            return Task.FromResult(this.Translate(
+                text,
+                sourceLanguage,
+                targetLanguage));
+        }
+    }
+
+    private sealed class GoogleV2NoTranslationTranslator(
+        Func<string, string> response) : ITranslator
+    {
+        internal int CallCount { get; private set; }
+
+        /// <inheritdoc />
+        public string? Translate(
+            string text,
+            string sourceLanguage,
+            string targetLanguage)
+        {
+            this.CallCount++;
             return response(text);
         }
 

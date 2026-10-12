@@ -99,4 +99,30 @@ public class TranslationFailureCacheManagerTests
       TranslationFailureCacheManager.Clear();
     }
   }
+
+  /// <summary>Ensures a V2-only record cannot short circuit Google V0.</summary>
+  [Fact]
+  public void Contains_V2OnlyFailure_RespectsVariantApplicability()
+  {
+    const int Google = (int)Echoglossian.TransEngines.Google;
+    TranslationFailureCacheManager.Clear();
+    try
+    {
+      TranslationFailureCacheManager.Update(new TranslationFailure
+      {
+        SourceText = "term", SourceTextHash = TranslationFailureKey.ComputeSourceTextHash("term"),
+        SourceLanguage = "en", TargetLanguage = "pt-BR", TranslationEngine = Google,
+        FailureReason = "google-v2-no-translation",
+      });
+
+      Assert.True(TranslationFailureCacheManager.Contains("term", "en", "pt-BR", Google,
+          row => row.FailureReason == "google-v2-no-translation"));
+      Assert.False(TranslationFailureCacheManager.Contains("term", "en", "pt-BR", Google,
+          row => row.FailureReason != "google-v2-no-translation"));
+    }
+    finally
+    {
+      TranslationFailureCacheManager.Clear();
+    }
+  }
 }

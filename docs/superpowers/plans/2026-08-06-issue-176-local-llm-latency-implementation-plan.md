@@ -24,17 +24,17 @@
 
 ### New files
 
-- `Translators/TranslationPipelinePhase.cs` — queue, DB, provider, validation, persistence, publication phases.
-- `Translators/TranslationPipelineTiming.cs` — immutable per-request aggregate input.
-- `Echoglossian.Tests/LocalLlmTransportTests.cs` — fake-handler request count, connection reuse contract, cancellation, and optional stream parsing.
-- `scripts/Measure-LocalLlmTranslation.ps1` — safe repeatable localhost benchmark producing content-free JSON/CSV summary.
+- `Translators/TranslationPipelinePhase.cs`  -  queue, DB, provider, validation, persistence, publication phases.
+- `Translators/TranslationPipelineTiming.cs`  -  immutable per-request aggregate input.
+- `Echoglossian.Tests/LocalLlmTransportTests.cs`  -  fake-handler request count, connection reuse contract, cancellation, and optional stream parsing.
+- `scripts/Measure-LocalLlmTranslation.ps1`  -  safe repeatable localhost benchmark producing content-free JSON/CSV summary.
 
 ### Modified files
 
-- `Translators/TranslatorMetricsCollector.cs` and `PluginUI/TranslatorMetricsWindow.cs` — per-phase aggregate p50/p95/count display.
-- `NativeUI/Helpers/QueuedTranslationBroker.cs` — enqueue timestamp and zero local idle spacing.
-- `NativeUI/AddonHandlers/Talk/TalkHandler.cs`, `BattleTalkHandler.cs` — DB/provider/persistence/publication phase marks.
-- `Translators/OllamaTranslator.cs`, `LmStudioTranslator.cs` — transport timings and selected response-reading optimization.
+- `Translators/TranslatorMetricsCollector.cs` and `PluginUI/TranslatorMetricsWindow.cs`  -  per-phase aggregate p50/p95/count display.
+- `NativeUI/Helpers/QueuedTranslationBroker.cs`  -  enqueue timestamp and zero local idle spacing.
+- `NativeUI/AddonHandlers/Talk/TalkHandler.cs`, `BattleTalkHandler.cs`  -  DB/provider/persistence/publication phase marks.
+- `Translators/OllamaTranslator.cs`, `LmStudioTranslator.cs`  -  transport timings and selected response-reading optimization.
 - `Echoglossian.Tests/TranslatorMetricsCollectorTests.cs`, `QueuedTranslationBrokerTests.cs`, and handler lifecycle tests.
 - `Properties/Resources.resx`, `Properties/Resources.en-US.resx`, `Properties/Resources.pt-BR.resx`, and `Properties/Resources.Designer.cs` for metric labels.
 
