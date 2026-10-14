@@ -3,6 +3,9 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
+using Echoglossian.DBHelpers;
+using Echoglossian.Persistence;
+using Echoglossian.Translators;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ActionSheet = Lumina.Excel.Sheets.Action;
 using ActionTransientSheet = Lumina.Excel.Sheets.ActionTransient;
@@ -77,8 +80,10 @@ internal enum PrefetchTranslationDispatchResult
 ///     Provides DB-first background prefetch for canonical ActionDetail
 ///     payloads.
 /// </summary>
-public unsafe partial class Echoglossian
+public partial class Echoglossian
 {
+    private readonly StructuredTooltipOperationOwner structuredTooltipOperationOwner = new();
+
     private const int ActionDetailPrefetchActionsPerTick = 6;
 
     private static readonly TimeSpan ActionDetailPrefetchTickInterval =
@@ -135,16 +140,30 @@ public unsafe partial class Echoglossian
             return;
         }
 
+        this.TickActionDetailPrefetchQueue(id => this.PrefetchActionDetail(id, currentClassJobId));
+    }
+
+    /// <summary>Advances the captured queue only when ownership does not reject capacity.</summary>
+    /// <param name="capture">The Framework capture and admission callback.</param>
+    /// <returns>The captures attempted within this tick's existing budget.</returns>
+    internal int TickActionDetailPrefetchQueue(Func<uint, StructuredTooltipOperationAdmission> capture)
+    {
         var processedCount = 0;
         while (processedCount < ActionDetailPrefetchActionsPerTick &&
-               this.actionDetailPrefetchQueueIndex <
-               this.actionDetailPrefetchQueue.Count)
+               this.actionDetailPrefetchQueueIndex < this.actionDetailPrefetchQueue.Count)
         {
-            var actionId =
-                this.actionDetailPrefetchQueue[this.actionDetailPrefetchQueueIndex++];
-            this.PrefetchActionDetail(actionId, currentClassJobId);
+            var id = this.actionDetailPrefetchQueue[this.actionDetailPrefetchQueueIndex];
+            var admission = capture(id);
             processedCount++;
+            if (admission == StructuredTooltipOperationAdmission.RejectedCapacity)
+            {
+                break;
+            }
+
+            this.actionDetailPrefetchQueueIndex++;
         }
+
+        return processedCount;
     }
 
     /// <summary>
@@ -158,133 +177,108 @@ public unsafe partial class Echoglossian
         this.actionDetailPrefetchLastTickUtc = DateTime.MinValue;
     }
 
-    /// <summary>
-    ///     Prefetches one canonical action-tooltip payload and any missing translations.
-    /// </summary>
-    /// <param name="actionId">The action row identifier.</param>
-    /// <param name="currentClassJobId">The current class-job identifier.</param>
-    private void PrefetchActionDetail(uint actionId, byte currentClassJobId)
+
+    /// <summary>Captures a canonical sheet payload on the Framework before asynchronous work.</summary>
+    /// <param name="actionId">The source row id.</param>
+    /// <param name="currentClassJobId">The captured player class/job.</param>
+    private StructuredTooltipOperationAdmission PrefetchActionDetail(uint actionId, byte currentClassJobId)
     {
-        if (!TryBuildActionTooltipCanonicalPayload(
-                actionId,
-                currentClassJobId,
-                out var originalPayload))
+        if (!TryCapturePrefetchOperationScope(ResolveCurrentPrefetchSourceLanguage, this.configuration, out var source, out var scope) ||
+            !TryBuildActionTooltipCanonicalPayload(actionId, currentClassJobId, out var payload))
         {
-            return;
+            return StructuredTooltipOperationAdmission.RejectedCapture;
         }
 
-        var translationService = TranslationService;
-        RunActionDetailPrefetchOperationEntry(
-            originalPayload,
-            GetGameVersion(),
-            ResolveCurrentPrefetchSourceLanguage,
-            this.configuration,
-            this.TryGetQueuedTranslation,
-            this.QueueTranslation,
-            (sourceText, capturedSource, targetLanguage, originContext) =>
-                translationService.Translate(
-                    sourceText,
-                    capturedSource,
-                    targetLanguage,
-                    originContext: originContext),
-            this.FindActionTooltip,
-            row => this.InsertActionTooltip(row),
-            out var sourceLanguage,
-            out var scope,
-            out var existingRow);
-        if (existingRow == null)
-        {
-            return;
-        }
-
-        this.PrefetchActionDetailDescription(
-            originalPayload,
-            existingRow,
-            sourceLanguage,
-            scope);
+        return this.StartActionDetailOperation(payload, source, scope, GetGameVersion(), PersistencePriority.Background);
     }
 
-    /// <summary>
-    ///     Prefetches the translated action description when it is not yet persisted.
-    /// </summary>
-    /// <param name="originalPayload">The canonical original payload.</param>
-    /// <param name="existingRow">The currently persisted row, if any.</param>
-    /// <param name="sourceLanguage">The resolved source language.</param>
-    /// <param name="scope">The immutable operation reuse scope.</param>
-    private void PrefetchActionDetailDescription(
-        ActionTooltipCanonicalPayload originalPayload,
-        ActionTooltip existingRow,
-        SourceClientLanguage sourceLanguage,
-        TranslationReuseScope scope)
+    /// <summary>Admits one managed snapshot while preserving terminal canonical ownership.</summary>
+    /// <param name="payload">The Framework-captured source payload.</param>
+    /// <param name="source">The captured provider source.</param>
+    /// <param name="scope">The immutable translation policy.</param>
+    /// <param name="gameVersion">The captured source version.</param>
+    /// <param name="priority">The originating persistence lane.</param>
+    private StructuredTooltipOperationAdmission StartActionDetailOperation(ActionTooltipCanonicalPayload payload, SourceClientLanguage source, TranslationReuseScope scope, string? gameVersion, PersistencePriority priority)
     {
-        if (string.IsNullOrWhiteSpace(originalPayload.Description) ||
-            StructuredTooltipTranslationValidation
-                .GetMeaningfulTranslationOrNull(
-                    originalPayload.Description,
-                    existingRow.TranslatedActionDescription) != null)
+        var writer = this.actionItemTooltipPersistenceWriter;
+        if (writer == null || writer.ShutdownToken.IsCancellationRequested)
         {
-            return;
+            return StructuredTooltipOperationAdmission.RejectedShutdown;
         }
 
+        var snapshot = payload.Serialize();
+        var probe = ActionTooltipPersistenceHelper.CreateCanonicalRow(scope.SourceLanguageCode, scope.TargetLanguageCode, scope.TranslationEngine, gameVersion, payload);
+        var key = ActionItemTooltipPersistenceWriter.BuildIdentity("ActionTooltip", payload.ActionId, scope, gameVersion, probe.SourceContentHash);
         var translationService = TranslationService;
-        DispatchActionDetailPrefetchTranslation(
-            $"ActionDetailPrefetch|{originalPayload.ActionId}|Description|{originalPayload.Description}",
-            sourceLanguage,
-            scope,
-            this.TryGetQueuedTranslation,
-            this.QueueTranslation,
-            () => translationService.Translate(
-                originalPayload.Description,
-                sourceLanguage,
-                scope.TargetLanguageCode,
-                originContext: BuildActionDetailOriginContext(
-                    originalPayload,
-                    "Description")),
-            (translatedDescription, capturedScope, _) =>
-                this.ApplyActionDetailTranslation(
-                    originalPayload.ActionId,
-                    originalPayload.ClassJobId,
-                    capturedScope,
-                    translatedDescription: translatedDescription));
+        var resolution = translationService.CaptureTranslatorResolution(scope.TranslationEngine!.Value, TranslationSurfaceGroup.Default);
+        var broker = this.queuedTranslationBroker;
+        return this.structuredTooltipOperationOwner.TryStart(key, () => CompleteActionDetailOperationAsync(
+            writer, broker, snapshot, probe, scope, priority,
+            (text, origin, token) => translationService.TranslateAsync(text, source, scope.TargetLanguageCode,
+                TranslationSurfaceGroup.Default, resolution, token, origin)), writer.ShutdownToken).Status;
     }
 
-    /// <summary>
-    ///     Applies one resolved action-tooltip translation into canonical storage.
-    /// </summary>
-    /// <param name="actionId">The action row identifier.</param>
-    /// <param name="currentClassJobId">The current class-job identifier.</param>
-    /// <param name="scope">The immutable operation reuse scope.</param>
-    /// <param name="translatedName">The translated name, if any.</param>
-    /// <param name="translatedDescription">The translated description, if any.</param>
-    private void ApplyActionDetailTranslation(
-        uint actionId,
-        uint currentClassJobId,
-        TranslationReuseScope scope,
-        string? translatedName = null,
-        string? translatedDescription = null)
+    /// <summary>Completes captured managed work without consulting game state or mutating native UI.</summary>
+    /// <param name="writer">The process-lifetime persistence adapter.</param>
+    /// <param name="broker">The existing shared translation broker.</param>
+    /// <param name="snapshot">The immutable serialized source payload.</param>
+    /// <param name="probe">The operation-owned canonical identity.</param>
+    /// <param name="scope">The captured translation policy.</param>
+    /// <param name="priority">The originating persistence lane.</param>
+    /// <param name="translate">The captured translator operation.</param>
+    internal static async Task CompleteActionDetailOperationAsync(
+        ActionItemTooltipPersistenceWriter writer, QueuedTranslationBroker broker, string snapshot,
+        ActionTooltip probe, TranslationReuseScope scope, PersistencePriority priority,
+        Func<string, string, CancellationToken, Task<string>> translate)
     {
-        if (!TryBuildActionTooltipCanonicalPayload(
-                actionId,
-                (byte)currentClassJobId,
-                out var originalPayload))
+        var token = writer.ShutdownToken;
+        writer.TryFind(probe, scope, out var read, priority);
+        var result = await read.WaitAsync(token).ConfigureAwait(false);
+        if (result.Status is not (PersistenceCompletionStatus.Succeeded or PersistenceCompletionStatus.Unchanged))
         {
             return;
         }
 
-        var translatedRow = CreateActionDetailTranslationRow(
-            originalPayload,
-            GetGameVersion(),
-            scope,
-            this.FindActionTooltip,
-            this.TryGetQueuedTranslation,
-            translatedName,
-            translatedDescription);
-        if (translatedRow == null)
+        var original = ActionTooltipCanonicalPayload.Deserialize(snapshot)!;
+        var translated = ActionTooltipCanonicalPayload.Deserialize(snapshot)!;
+        translated.TranslatedName = string.IsNullOrWhiteSpace(original.Description)
+            ? StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original.Name, result.Value?.TranslatedActionName)
+            : result.Value?.TranslatedActionName;
+        translated.TranslatedDescription = StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original.Description, result.Value?.TranslatedActionDescription);
+        if (translated.HasCompleteTranslation)
         {
             return;
         }
 
-        this.InsertActionTooltip(translatedRow);
+        // Preserve original-row registration, but let the coordinator suppress unchanged writes.
+        writer.TryPersist(probe, out var registration, priority);
+        var registered = await registration.WaitAsync(token).ConfigureAwait(false);
+        if (registered.Status is not (PersistenceCompletionStatus.Succeeded or PersistenceCompletionStatus.Unchanged))
+        {
+            return;
+        }
+
+        var name = ResolveStructuredTooltipFieldAsync(
+            broker,
+            BuildTranslationReuseScopedKey($"ActionDetailPrefetch|{original.ActionId}|Name|{original.Name}", scope),
+            original.Name, translated.TranslatedName, $"ActionTooltip/{original.ActionId}/Name", translate, token,
+            preserveSourceEquivalent: !string.IsNullOrWhiteSpace(original.Description));
+        var description = ResolveStructuredTooltipFieldAsync(
+            broker,
+            BuildTranslationReuseScopedKey($"ActionDetailPrefetch|{original.ActionId}|Description|{original.Description}", scope),
+            original.Description, translated.TranslatedDescription, $"ActionTooltip/{original.ActionId}/Description", translate, token);
+        await Task.WhenAll(name, description).ConfigureAwait(false);
+        translated.TranslatedName = await name.ConfigureAwait(false);
+        translated.TranslatedDescription = await description.ConfigureAwait(false);
+        if (!translated.HasCompleteTranslation)
+        {
+            return;
+        }
+
+        var row = ActionTooltipPersistenceHelper.CreateCanonicalRow(scope.SourceLanguageCode, scope.TargetLanguageCode,
+            scope.TranslationEngine, probe.GameVersion, original, translated);
+        writer.TryPersist(row, out var write, priority);
+        await write.WaitAsync(token).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -886,7 +880,7 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="currentClassJobId">The current class/job id.</param>
     /// <returns>True when the current class/job was resolved.</returns>
-    private static bool TryGetCurrentClassJobId(out byte currentClassJobId)
+    private static unsafe bool TryGetCurrentClassJobId(out byte currentClassJobId)
     {
         currentClassJobId = 0;
 
@@ -898,5 +892,46 @@ public unsafe partial class Echoglossian
 
         currentClassJobId = playerState->CurrentClassJobId;
         return true;
+    }
+
+    /// <summary>Resolves one source-scoped field through the existing broker, observing terminal failure.</summary>
+    /// <param name="broker">The shared broker.</param>
+    /// <param name="key">The source-scoped field identity.</param>
+    /// <param name="original">The captured source text.</param>
+    /// <param name="existing">The persisted usable translation.</param>
+    /// <param name="origin">The canonical diagnostic origin.</param>
+    /// <param name="translate">The captured translator.</param>
+    /// <param name="token">The plugin lifetime.</param>
+    /// <param name="preserveSourceEquivalent">Whether an unchanged name can accompany a translated description.</param>
+    /// <returns>The usable translated field or null.</returns>
+    private static async Task<string?> ResolveStructuredTooltipFieldAsync(
+        QueuedTranslationBroker broker, string key, string? original, string? existing, string origin,
+        Func<string, string, CancellationToken, Task<string>> translate, CancellationToken token, bool preserveSourceEquivalent = false)
+    {
+        if (string.IsNullOrWhiteSpace(original) || !string.IsNullOrWhiteSpace(existing))
+        {
+            return existing;
+        }
+
+        if (broker.TryGetCached(key, out var cached))
+        {
+            return preserveSourceEquivalent ? cached : StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original, cached);
+        }
+
+        var completion = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var admission = broker.TryQueueOrJoin(key, async () =>
+        {
+            var value = await translate(original, origin, token).ConfigureAwait(false);
+            return preserveSourceEquivalent
+                ? value
+                : StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original, value) ?? string.Empty;
+        }, value => completion.TrySetResult(value), origin,
+            _ => completion.TrySetResult(null), retainExisting: true, tryRetainOnJoin: () => true);
+        if (admission is not (QueuedTranslationAdmission.Accepted or QueuedTranslationAdmission.JoinedInFlight))
+        {
+            return null;
+        }
+
+        return await completion.Task.WaitAsync(token).ConfigureAwait(false);
     }
 }

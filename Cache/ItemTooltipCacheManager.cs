@@ -56,28 +56,31 @@ public static class ItemTooltipCacheManager
     /// <param name="newRecord">The row to cache.</param>
     public static void Update(ItemTooltip newRecord)
     {
-        if (newRecord == null || newRecord.ItemId == 0)
+        lock (Cache)
         {
-            return;
+            if (newRecord == null || newRecord.ItemId == 0)
+            {
+                return;
+            }
+
+            if (!Cache.TryGetValue(newRecord.ItemId, out var rows))
+            {
+                rows = [];
+                Cache[newRecord.ItemId] = rows;
+            }
+
+            var matchingRows = rows
+                .Where(row => HasSameCacheIdentity(row, newRecord))
+                .ToList();
+            var preferredRecord = matchingRows
+                .Append(newRecord)
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(static row => row.UpdatedDate)
+                .First();
+
+            rows.RemoveAll(row => HasSameCacheIdentity(row, newRecord));
+            rows.Add(preferredRecord);
         }
-
-        if (!Cache.TryGetValue(newRecord.ItemId, out var rows))
-        {
-            rows = [];
-            Cache[newRecord.ItemId] = rows;
-        }
-
-        var matchingRows = rows
-            .Where(row => HasSameCacheIdentity(row, newRecord))
-            .ToList();
-        var preferredRecord = matchingRows
-            .Append(newRecord)
-            .OrderByDescending(GetTranslationCompletenessScore)
-            .ThenByDescending(static row => row.UpdatedDate)
-            .First();
-
-        rows.RemoveAll(row => HasSameCacheIdentity(row, newRecord));
-        rows.Add(preferredRecord);
     }
 
     /// <summary>
@@ -94,32 +97,35 @@ public static class ItemTooltipCacheManager
         string? gameVersion,
         string sourceContentHash)
     {
-        if (itemId == 0 ||
-            string.IsNullOrWhiteSpace(sourceContentHash))
+        lock (Cache)
         {
-            return null;
-        }
+            if (itemId == 0 ||
+                string.IsNullOrWhiteSpace(sourceContentHash))
+            {
+                return null;
+            }
 
-        if (!Cache.TryGetValue(itemId, out var rows) || rows.Count == 0)
-        {
-            return null;
-        }
+            if (!Cache.TryGetValue(itemId, out var rows) || rows.Count == 0)
+            {
+                return null;
+            }
 
-        return rows
-            .Where(row =>
-                scope.Matches(
-                    row.OriginalLang,
-                    row.TranslationLang,
-                    row.TranslationEngine) &&
-                GameVersionLookupHelper.MatchesStoredVersion(
-                    row.GameVersion,
-                    gameVersion) &&
-                row.SourceContentHash == sourceContentHash)
-            .OrderByDescending(row => ComputeCanonicalMatchScore(
-                row,
-                gameVersion))
-            .ThenByDescending(row => row.UpdatedDate)
-            .FirstOrDefault();
+            return rows
+                .Where(row =>
+                    scope.Matches(
+                        row.OriginalLang,
+                        row.TranslationLang,
+                        row.TranslationEngine) &&
+                    GameVersionLookupHelper.MatchesStoredVersion(
+                        row.GameVersion,
+                        gameVersion) &&
+                    row.SourceContentHash == sourceContentHash)
+                .OrderByDescending(row => ComputeCanonicalMatchScore(
+                    row,
+                    gameVersion))
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
+        }
     }
 
     /// <summary>
@@ -138,33 +144,36 @@ public static class ItemTooltipCacheManager
         string? requestedGameVersion,
         string sourceContentHash)
     {
-        if (itemId == 0 ||
-            string.IsNullOrWhiteSpace(requestedGameVersion) ||
-            string.IsNullOrWhiteSpace(sourceContentHash))
+        lock (Cache)
         {
-            return null;
-        }
+            if (itemId == 0 ||
+                string.IsNullOrWhiteSpace(requestedGameVersion) ||
+                string.IsNullOrWhiteSpace(sourceContentHash))
+            {
+                return null;
+            }
 
-        if (!Cache.TryGetValue(itemId, out var rows) || rows.Count == 0)
-        {
-            return null;
-        }
+            if (!Cache.TryGetValue(itemId, out var rows) || rows.Count == 0)
+            {
+                return null;
+            }
 
-        return rows
-            .Where(row =>
-                scope.Matches(
-                    row.OriginalLang,
-                    row.TranslationLang,
-                    row.TranslationEngine) &&
-                row.SourceContentHash == sourceContentHash &&
-                !string.IsNullOrWhiteSpace(row.GameVersion) &&
-                !string.Equals(
-                    row.GameVersion,
-                    requestedGameVersion,
-                    StringComparison.Ordinal))
-            .OrderByDescending(static row => HasAnyTranslatedContent(row))
-            .ThenByDescending(row => row.UpdatedDate)
-            .FirstOrDefault();
+            return rows
+                .Where(row =>
+                    scope.Matches(
+                        row.OriginalLang,
+                        row.TranslationLang,
+                        row.TranslationEngine) &&
+                    row.SourceContentHash == sourceContentHash &&
+                    !string.IsNullOrWhiteSpace(row.GameVersion) &&
+                    !string.Equals(
+                        row.GameVersion,
+                        requestedGameVersion,
+                        StringComparison.Ordinal))
+                .OrderByDescending(static row => HasAnyTranslatedContent(row))
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
+        }
     }
 
     /// <summary>
@@ -184,31 +193,34 @@ public static class ItemTooltipCacheManager
         string? gameVersion,
         uint classJobCategoryId)
     {
-        if (itemId == 0)
+        lock (Cache)
         {
-            return null;
-        }
+            if (itemId == 0)
+            {
+                return null;
+            }
 
-        if (!Cache.TryGetValue(itemId, out var rows) || rows.Count == 0)
-        {
-            return null;
-        }
+            if (!Cache.TryGetValue(itemId, out var rows) || rows.Count == 0)
+            {
+                return null;
+            }
 
-        return rows
-            .Where(row =>
-                scope.Matches(
-                    row.OriginalLang,
-                    row.TranslationLang,
-                    row.TranslationEngine) &&
-                GameVersionLookupHelper.MatchesStoredVersion(
-                    row.GameVersion,
-                    gameVersion))
-            .OrderByDescending(row => ComputeIdentityMatchScore(
-                row,
-                gameVersion,
-                classJobCategoryId))
-            .ThenByDescending(row => row.UpdatedDate)
-            .FirstOrDefault();
+            return rows
+                .Where(row =>
+                    scope.Matches(
+                        row.OriginalLang,
+                        row.TranslationLang,
+                        row.TranslationEngine) &&
+                    GameVersionLookupHelper.MatchesStoredVersion(
+                        row.GameVersion,
+                        gameVersion))
+                .OrderByDescending(row => ComputeIdentityMatchScore(
+                    row,
+                    gameVersion,
+                    classJobCategoryId))
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
+        }
     }
 
     /// <summary>
@@ -216,10 +228,13 @@ public static class ItemTooltipCacheManager
     /// </summary>
     public static void Clear()
     {
-        Cache.Clear();
-        PluginRuntimeLog.Debug(
-            "ItemTooltipCacheManager",
-            "Cleared item-tooltip cache.");
+        lock (Cache)
+        {
+            Cache.Clear();
+            PluginRuntimeLog.Debug(
+                "ItemTooltipCacheManager",
+                "Cleared item-tooltip cache.");
+        }
     }
 
     /// <summary>

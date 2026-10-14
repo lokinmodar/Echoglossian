@@ -6,12 +6,16 @@
 using TraitSheet = Lumina.Excel.Sheets.Trait;
 using TraitTransientSheet = Lumina.Excel.Sheets.TraitTransient;
 
+using Echoglossian.DBHelpers;
+using Echoglossian.Persistence;
+using Echoglossian.Translators;
+
 namespace Echoglossian;
 
 /// <summary>
 ///     Provides DB-first background prefetch for canonical trait payloads.
 /// </summary>
-public unsafe partial class Echoglossian
+public partial class Echoglossian
 {
     private const int TraitDetailPrefetchTraitsPerTick = 6;
 
@@ -69,16 +73,30 @@ public unsafe partial class Echoglossian
             return;
         }
 
+        this.TickTraitDetailPrefetchQueue(id => this.PrefetchTraitDetail(id, currentClassJobId));
+    }
+
+    /// <summary>Advances the captured queue only when ownership does not reject capacity.</summary>
+    /// <param name="capture">The Framework capture and admission callback.</param>
+    /// <returns>The captures attempted within this tick's existing budget.</returns>
+    internal int TickTraitDetailPrefetchQueue(Func<uint, StructuredTooltipOperationAdmission> capture)
+    {
         var processedCount = 0;
         while (processedCount < TraitDetailPrefetchTraitsPerTick &&
-               this.traitDetailPrefetchQueueIndex <
-               this.traitDetailPrefetchQueue.Count)
+               this.traitDetailPrefetchQueueIndex < this.traitDetailPrefetchQueue.Count)
         {
-            var traitId =
-                this.traitDetailPrefetchQueue[this.traitDetailPrefetchQueueIndex++];
-            this.PrefetchTraitDetail(traitId, currentClassJobId);
+            var id = this.traitDetailPrefetchQueue[this.traitDetailPrefetchQueueIndex];
+            var admission = capture(id);
             processedCount++;
+            if (admission == StructuredTooltipOperationAdmission.RejectedCapacity)
+            {
+                break;
+            }
+
+            this.traitDetailPrefetchQueueIndex++;
         }
+
+        return processedCount;
     }
 
     /// <summary>
@@ -92,250 +110,108 @@ public unsafe partial class Echoglossian
         this.traitDetailPrefetchLastTickUtc = DateTime.MinValue;
     }
 
-    /// <summary>
-    ///     Prefetches one canonical trait payload and any missing translations.
-    /// </summary>
-    /// <param name="traitId">The trait row identifier.</param>
-    /// <param name="currentClassJobId">The current class-job identifier.</param>
-    private void PrefetchTraitDetail(uint traitId, byte currentClassJobId)
+
+    /// <summary>Captures a canonical sheet payload on the Framework before asynchronous work.</summary>
+    /// <param name="traitId">The source row id.</param>
+    /// <param name="currentClassJobId">The captured player class/job.</param>
+    private StructuredTooltipOperationAdmission PrefetchTraitDetail(uint traitId, byte currentClassJobId)
     {
-        if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-                out var sourceLanguage))
+        if (!TryCapturePrefetchOperationScope(ResolveCurrentPrefetchSourceLanguage, this.configuration, out var source, out var scope) ||
+            !TryBuildTraitCanonicalPayload(traitId, currentClassJobId, out var payload))
         {
-            return;
+            return StructuredTooltipOperationAdmission.RejectedCapture;
         }
 
-        if (!TryBuildTraitCanonicalPayload(
-                traitId,
-                currentClassJobId,
-                out var originalPayload))
-        {
-            return;
-        }
-
-        var originalRow = TraitPersistenceHelper.CreateCanonicalRow(
-            sourceLanguage.PersistenceCode,
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
-            GetGameVersion(),
-            originalPayload);
-        var existingRow = this.FindTrait(originalRow) ?? originalRow;
-        this.InsertTrait(originalRow);
-
-        this.PrefetchTraitDetailName(
-            originalPayload,
-            existingRow,
-            sourceLanguage);
-        this.PrefetchTraitDetailDescription(
-            originalPayload,
-            existingRow,
-            sourceLanguage);
+        return this.StartTraitDetailOperation(payload, source, scope, GetGameVersion(), PersistencePriority.Background);
     }
 
-    /// <summary>
-    ///     Prefetches the translated trait name when it is not yet persisted.
-    /// </summary>
-    /// <param name="originalPayload">The canonical original payload.</param>
-    /// <param name="existingRow">The currently persisted row, if any.</param>
-    /// <param name="sourceLanguage">The resolved source language.</param>
-    private void PrefetchTraitDetailName(
-        TraitCanonicalPayload originalPayload,
-        Trait existingRow,
-        SourceClientLanguage sourceLanguage)
+    /// <summary>Admits one managed snapshot while preserving terminal canonical ownership.</summary>
+    /// <param name="payload">The Framework-captured source payload.</param>
+    /// <param name="source">The captured provider source.</param>
+    /// <param name="scope">The immutable translation policy.</param>
+    /// <param name="gameVersion">The captured source version.</param>
+    /// <param name="priority">The originating persistence lane.</param>
+    private StructuredTooltipOperationAdmission StartTraitDetailOperation(TraitCanonicalPayload payload, SourceClientLanguage source, TranslationReuseScope scope, string? gameVersion, PersistencePriority priority)
     {
-        if (string.IsNullOrWhiteSpace(originalPayload.Name) ||
-            !string.IsNullOrWhiteSpace(existingRow.TranslatedTraitName))
+        var writer = this.actionItemTooltipPersistenceWriter;
+        if (writer == null || writer.ShutdownToken.IsCancellationRequested)
         {
-            return;
+            return StructuredTooltipOperationAdmission.RejectedShutdown;
         }
 
-        var translationKey =
-            BuildTraitDetailNameTranslationKey(originalPayload);
-        if (this.TryGetQueuedTranslation(
-                translationKey,
-                out var cachedTranslatedName))
-        {
-            this.ApplyTraitDetailTranslation(
-                originalPayload.TraitId,
-                originalPayload.ClassJobId,
-                sourceLanguage,
-                translatedName: cachedTranslatedName);
-            return;
-        }
-
-        this.QueueTranslation(
-            translationKey,
-            () => TranslationService.Translate(
-                originalPayload.Name,
-                sourceLanguage,
-                LangDict[LanguageInt].Code,
-                originContext: BuildTraitDetailOriginContext(
-                    originalPayload,
-                    "Name")),
-            translatedName => this.ApplyTraitDetailTranslation(
-                originalPayload.TraitId,
-                originalPayload.ClassJobId,
-                sourceLanguage,
-                translatedName: translatedName));
+        var snapshot = payload.Serialize();
+        var probe = TraitPersistenceHelper.CreateCanonicalRow(scope.SourceLanguageCode, scope.TargetLanguageCode, scope.TranslationEngine, gameVersion, payload);
+        var key = ActionItemTooltipPersistenceWriter.BuildIdentity("Trait", payload.TraitId, scope, gameVersion, probe.SourceContentHash);
+        var translationService = TranslationService;
+        var resolution = translationService.CaptureTranslatorResolution(scope.TranslationEngine!.Value, TranslationSurfaceGroup.Default);
+        var broker = this.queuedTranslationBroker;
+        return this.structuredTooltipOperationOwner.TryStart(key, () => CompleteTraitDetailOperationAsync(
+            writer, broker, snapshot, probe, scope, priority,
+            (text, origin, token) => translationService.TranslateAsync(text, source, scope.TargetLanguageCode,
+                TranslationSurfaceGroup.Default, resolution, token, origin)), writer.ShutdownToken).Status;
     }
 
-    /// <summary>
-    ///     Prefetches the translated trait description when it is not yet persisted.
-    /// </summary>
-    /// <param name="originalPayload">The canonical original payload.</param>
-    /// <param name="existingRow">The currently persisted row, if any.</param>
-    /// <param name="sourceLanguage">The resolved source language.</param>
-    private void PrefetchTraitDetailDescription(
-        TraitCanonicalPayload originalPayload,
-        Trait existingRow,
-        SourceClientLanguage sourceLanguage)
+    /// <summary>Completes captured managed work without consulting game state or mutating native UI.</summary>
+    /// <param name="writer">The process-lifetime persistence adapter.</param>
+    /// <param name="broker">The existing shared translation broker.</param>
+    /// <param name="snapshot">The immutable serialized source payload.</param>
+    /// <param name="probe">The operation-owned canonical identity.</param>
+    /// <param name="scope">The captured translation policy.</param>
+    /// <param name="priority">The originating persistence lane.</param>
+    /// <param name="translate">The captured translator operation.</param>
+    internal static async Task CompleteTraitDetailOperationAsync(
+        ActionItemTooltipPersistenceWriter writer, QueuedTranslationBroker broker, string snapshot,
+        Trait probe, TranslationReuseScope scope, PersistencePriority priority,
+        Func<string, string, CancellationToken, Task<string>> translate)
     {
-        if (string.IsNullOrWhiteSpace(originalPayload.Description) ||
-            StructuredTooltipTranslationValidation
-                .GetMeaningfulTranslationOrNull(
-                    originalPayload.Description,
-                    existingRow.TranslatedTraitDescription) != null)
+        var token = writer.ShutdownToken;
+        writer.TryFind(probe, scope, out var read, priority);
+        var result = await read.WaitAsync(token).ConfigureAwait(false);
+        if (result.Status is not (PersistenceCompletionStatus.Succeeded or PersistenceCompletionStatus.Unchanged))
         {
             return;
         }
 
-        var translationKey =
-            BuildTraitDetailDescriptionTranslationKey(originalPayload);
-        if (this.TryGetQueuedTranslation(
-                translationKey,
-                out var cachedTranslatedDescription))
-        {
-            this.ApplyTraitDetailTranslation(
-                originalPayload.TraitId,
-                originalPayload.ClassJobId,
-                sourceLanguage,
-                translatedDescription: cachedTranslatedDescription);
-            return;
-        }
-
-        this.QueueTranslation(
-            translationKey,
-            () => TranslationService.Translate(
-                originalPayload.Description,
-                sourceLanguage,
-                LangDict[LanguageInt].Code,
-                originContext: BuildTraitDetailOriginContext(
-                    originalPayload,
-                    "Description")),
-            translatedDescription => this.ApplyTraitDetailTranslation(
-                originalPayload.TraitId,
-                originalPayload.ClassJobId,
-                sourceLanguage,
-                translatedDescription: translatedDescription));
-    }
-
-    /// <summary>
-    ///     Applies one resolved trait translation into canonical storage.
-    /// </summary>
-    /// <param name="traitId">The trait row identifier.</param>
-    /// <param name="currentClassJobId">The current class-job identifier.</param>
-    /// <param name="sourceLanguage">The resolved source language.</param>
-    /// <param name="translatedName">The translated name, if any.</param>
-    /// <param name="translatedDescription">The translated description, if any.</param>
-    private void ApplyTraitDetailTranslation(
-        uint traitId,
-        uint currentClassJobId,
-        SourceClientLanguage sourceLanguage,
-        string? translatedName = null,
-        string? translatedDescription = null)
-    {
-        if (!TryBuildTraitCanonicalPayload(
-                traitId,
-                (byte)currentClassJobId,
-                out var originalPayload))
+        var original = TraitCanonicalPayload.Deserialize(snapshot)!;
+        var translated = TraitCanonicalPayload.Deserialize(snapshot)!;
+        translated.TranslatedName = string.IsNullOrWhiteSpace(original.Description)
+            ? StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original.Name, result.Value?.TranslatedTraitName)
+            : result.Value?.TranslatedTraitName;
+        translated.TranslatedDescription = StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original.Description, result.Value?.TranslatedTraitDescription);
+        if (translated.HasCompleteTranslation)
         {
             return;
         }
 
-        var existingProbe = TraitPersistenceHelper.CreateCanonicalRow(
-            sourceLanguage.PersistenceCode,
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
-            GetGameVersion(),
-            originalPayload);
-        var existingRow = this.FindTrait(existingProbe);
-        var translatedPayload = existingRow == null
-            ? originalPayload
-            : TraitCanonicalPayload.Deserialize(
-                    existingRow.CanonicalPayloadAsText) ??
-                originalPayload;
-
-        translatedPayload.TraitId = originalPayload.TraitId;
-        translatedPayload.IconId = originalPayload.IconId;
-        translatedPayload.ClassJobId = originalPayload.ClassJobId;
-        translatedPayload.ClassJobCategoryId =
-            originalPayload.ClassJobCategoryId;
-        translatedPayload.Name = originalPayload.Name;
-        translatedPayload.Description = originalPayload.Description;
-        translatedPayload.TranslatedName =
-            !string.IsNullOrWhiteSpace(translatedName)
-                ? translatedName
-                : translatedPayload.TranslatedName;
-        translatedPayload.TranslatedDescription =
-            !string.IsNullOrWhiteSpace(translatedDescription)
-                ? translatedDescription
-                : translatedPayload.TranslatedDescription;
-        translatedPayload.TranslatedName =
-            StructuredTooltipTranslationValidation
-                .GetMeaningfulTranslationOrNull(
-                    originalPayload.Name,
-                    translatedPayload.TranslatedName);
-        translatedPayload.TranslatedDescription =
-            StructuredTooltipTranslationValidation
-                .GetMeaningfulTranslationOrNull(
-                    originalPayload.Description,
-                    translatedPayload.TranslatedDescription);
-        this.TryPopulatePendingTraitDetailTranslations(
-            originalPayload,
-            translatedPayload);
-        if (!translatedPayload.HasCompleteTranslation)
+        // Preserve original-row registration, but let the coordinator suppress unchanged writes.
+        writer.TryPersist(probe, out var registration, priority);
+        var registered = await registration.WaitAsync(token).ConfigureAwait(false);
+        if (registered.Status is not (PersistenceCompletionStatus.Succeeded or PersistenceCompletionStatus.Unchanged))
         {
             return;
         }
 
-        var translatedRow = TraitPersistenceHelper.CreateCanonicalRow(
-            sourceLanguage.PersistenceCode,
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
-            GetGameVersion(),
-            originalPayload,
-            translatedPayload);
-        this.InsertTrait(translatedRow);
-    }
-
-    /// <summary>
-    ///     Tries to enrich one trait-detail payload with any queued counterpart
-    ///     translation so canonical persistence only happens when the payload is complete.
-    /// </summary>
-    /// <param name="originalPayload">The canonical original payload.</param>
-    /// <param name="translatedPayload">The partially translated payload.</param>
-    private void TryPopulatePendingTraitDetailTranslations(
-        TraitCanonicalPayload originalPayload,
-        TraitCanonicalPayload translatedPayload)
-    {
-        if (string.IsNullOrWhiteSpace(translatedPayload.TranslatedName) &&
-            !string.IsNullOrWhiteSpace(originalPayload.Name) &&
-            this.TryGetQueuedTranslation(
-                BuildTraitDetailNameTranslationKey(originalPayload),
-                out var cachedTranslatedName))
+        var name = ResolveStructuredTooltipFieldAsync(
+            broker,
+            BuildTranslationReuseScopedKey($"TraitDetailPrefetch|{original.TraitId}|Name|{original.Name}", scope),
+            original.Name, translated.TranslatedName, BuildTraitDetailOriginContext(original, "Name"), translate, token,
+            preserveSourceEquivalent: !string.IsNullOrWhiteSpace(original.Description));
+        var description = ResolveStructuredTooltipFieldAsync(
+            broker,
+            BuildTranslationReuseScopedKey($"TraitDetailPrefetch|{original.TraitId}|Description|{original.Description}", scope),
+            original.Description, translated.TranslatedDescription, BuildTraitDetailOriginContext(original, "Description"), translate, token);
+        await Task.WhenAll(name, description).ConfigureAwait(false);
+        translated.TranslatedName = await name.ConfigureAwait(false);
+        translated.TranslatedDescription = await description.ConfigureAwait(false);
+        if (!translated.HasCompleteTranslation)
         {
-            translatedPayload.TranslatedName = cachedTranslatedName;
+            return;
         }
 
-        if (string.IsNullOrWhiteSpace(translatedPayload.TranslatedDescription) &&
-            !string.IsNullOrWhiteSpace(originalPayload.Description) &&
-            this.TryGetQueuedTranslation(
-                BuildTraitDetailDescriptionTranslationKey(originalPayload),
-                out var cachedTranslatedDescription))
-        {
-            translatedPayload.TranslatedDescription =
-                cachedTranslatedDescription;
-        }
+        var row = TraitPersistenceHelper.CreateCanonicalRow(scope.SourceLanguageCode, scope.TargetLanguageCode,
+            scope.TranslationEngine, probe.GameVersion, original, translated);
+        writer.TryPersist(row, out var write, priority);
+        await write.WaitAsync(token).ConfigureAwait(false);
     }
 
     /// <summary>
