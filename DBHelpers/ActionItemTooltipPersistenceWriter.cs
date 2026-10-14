@@ -397,7 +397,12 @@ internal sealed class ActionItemTooltipPersistenceWriter
 
             if (this.writes.TryGetValue(request.Key, out completion!))
             {
-                return PersistenceAdmissionStatus.Joined;
+                if (!completion.IsCompleted)
+                {
+                    return PersistenceAdmissionStatus.Joined;
+                }
+
+                this.writes.Remove(request.Key);
             }
 
             var admission = this.coordinator.TryScheduleWrite(request, out completion);

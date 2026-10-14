@@ -118,6 +118,48 @@ public sealed class ActionItemTooltipPersistenceWriterTests
         Assert.Equal(before.Id, Describe(FindCached(CreateRow(kind))!).Id);
     }
 
+    /// <summary>Delayed ownership cleanup cannot make a translated write join a completed original registration.</summary>
+    /// <param name="kind">The canonical family.</param>
+    [Theory]
+    [InlineData("Action")]
+    [InlineData("Trait")]
+    [InlineData("Item")]
+    public async Task CompletedRegistrationWithDelayedCleanupAdmitsTranslatedWrite(string kind)
+    {
+        await using var harness = await Harness.CreateAsync();
+        var original = CreateRow(kind, translated: false);
+        Assert.Equal(PersistenceAdmissionStatus.Accepted, Persist(harness.Writer, original, out var registration));
+        Assert.Equal(PersistenceCompletionStatus.Succeeded,
+            (await registration.WaitAsync(TimeSpan.FromSeconds(5))).Status);
+        Assert.True(registration.IsCompletedSuccessfully);
+        Assert.Null(Describe(Assert.Single(await harness.StoredRowsAsync(kind))).Name);
+        Assert.Null(Describe(FindCached(original)!).Name);
+
+        const System.Reflection.BindingFlags Flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        var publicationGate = typeof(ActionItemTooltipPersistenceWriter).GetField("publicationGate", Flags)!
+            .GetValue(harness.Writer)!;
+        var writes = (Dictionary<PersistenceWorkKey, Task<PersistenceWriteResult>>)typeof(ActionItemTooltipPersistenceWriter)
+            .GetField("writes", Flags)!.GetValue(harness.Writer)!;
+        var family = kind == "Trait" ? "Trait" : kind + "Tooltip";
+        var identity = Describe(original);
+        var key = new PersistenceWorkKey(family + "-write", ActionItemTooltipPersistenceWriter.BuildIdentity(
+            family, identity.ContentId, Scope, identity.Version, identity.Hash));
+        Task<PersistenceWriteResult> translatedCompletion;
+        lock (publicationGate)
+        {
+            // Hold the gate across injection and admission to model delayed cleanup without timing assumptions.
+            writes[key] = registration;
+            Assert.Equal(PersistenceAdmissionStatus.Accepted,
+                Persist(harness.Writer, CreateRow(kind), out translatedCompletion));
+            Assert.NotSame(registration, translatedCompletion);
+        }
+
+        Assert.Equal(PersistenceCompletionStatus.Succeeded,
+            (await translatedCompletion.WaitAsync(TimeSpan.FromSeconds(5))).Status);
+        Assert.Equal("Traduzido", Describe(Assert.Single(await harness.StoredRowsAsync(kind))).Name);
+        Assert.Equal("Traduzido", Describe(FindCached(original)!).Name);
+    }
+
     /// <summary>Reads coalesce while SQLite is blocked and publish only after successful completion.</summary>
     /// <param name="kind">The canonical family.</param>
     [Theory]
