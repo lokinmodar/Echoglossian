@@ -554,13 +554,13 @@ public sealed class ActionItemTooltipPersistenceWriterTests
             return Task.FromResult(rejected);
         }
 
-        var completion = owner.TryStart("canonical", () => RunWorker(kind, harness, broker, probe, Scope, Translate), harness.Writer.ShutdownToken)!;
+        var completion = owner.TryStart("canonical", () => RunWorker(kind, harness, broker, probe, Scope, Translate), harness.Writer.ShutdownToken).Completion!;
         await completion.WaitAsync(TimeSpan.FromSeconds(5));
         var after = calls;
         Assert.Equal(2, after);
         Assert.Null(Describe(Assert.Single(await harness.StoredRowsAsync(kind))).Name);
         Assert.Null(Describe(FindCached(probe)!).Name);
-        Assert.Same(completion, owner.TryStart("canonical", () => throw new InvalidOperationException("Cooldown must suppress retry."), harness.Writer.ShutdownToken));
+        Assert.Same(completion, owner.TryStart("canonical", () => throw new InvalidOperationException("Cooldown must suppress retry."), harness.Writer.ShutdownToken).Completion);
         Assert.Equal(after, calls);
         Assert.Empty(errors);
     }
@@ -586,18 +586,18 @@ public sealed class ActionItemTooltipPersistenceWriterTests
             return Task.FromResult(text == "Original" ? "Traduzido" : "Descricao");
         }
 
-        var completion = owner.TryStart("canonical", () => RunWorker(kind, harness, broker, probe, Scope, Translate), harness.Writer.ShutdownToken)!;
+        var completion = owner.TryStart("canonical", () => RunWorker(kind, harness, broker, probe, Scope, Translate), harness.Writer.ShutdownToken).Completion!;
         try
         {
             await gate.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.False(completion.IsCompleted);
             Assert.Equal(2, calls);
             Assert.Null(Describe(FindCached(probe)!).Name);
-            Assert.Same(completion, owner.TryStart("canonical", () => throw new InvalidOperationException("Commit is still active."), harness.Writer.ShutdownToken));
+            Assert.Same(completion, owner.TryStart("canonical", () => throw new InvalidOperationException("Commit is still active."), harness.Writer.ShutdownToken).Completion);
             gate.Release.TrySetResult(true);
             await completion.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Equal("Traduzido", Describe(FindCached(probe)!).Name);
-            Assert.Same(completion, owner.TryStart("canonical", () => throw new InvalidOperationException("Terminal cooldown must remain owned."), harness.Writer.ShutdownToken));
+            Assert.Same(completion, owner.TryStart("canonical", () => throw new InvalidOperationException("Terminal cooldown must remain owned."), harness.Writer.ShutdownToken).Completion);
         }
         finally
         {
@@ -625,13 +625,13 @@ public sealed class ActionItemTooltipPersistenceWriterTests
             return "unreachable";
         }
 
-        var completion = owner.TryStart("canonical", () => RunWorker(kind, harness, broker, probe, Scope, Translate), harness.Writer.ShutdownToken)!;
+        var completion = owner.TryStart("canonical", () => RunWorker(kind, harness, broker, probe, Scope, Translate), harness.Writer.ShutdownToken).Completion!;
         await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
         harness.Writer.DisablePublication();
         await completion.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.True(completion.IsCompletedSuccessfully);
         Assert.Null(Describe(Assert.Single(await harness.StoredRowsAsync(kind))).Name);
-        Assert.Null(owner.TryStart("canonical", () => Task.CompletedTask, harness.Writer.ShutdownToken));
+        Assert.Null(owner.TryStart("canonical", () => Task.CompletedTask, harness.Writer.ShutdownToken).Completion);
     }
 
     /// <summary>Gets the fixed canonical policy used by all overload families.</summary>

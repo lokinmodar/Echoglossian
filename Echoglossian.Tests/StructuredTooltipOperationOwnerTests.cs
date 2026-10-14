@@ -29,7 +29,7 @@ public sealed class StructuredTooltipOperationOwnerTests
             {
                 entered.SetResult(admissionActive);
                 await release.Task;
-            }, CancellationToken.None);
+            }, CancellationToken.None).Completion;
         }
         finally
         {
@@ -41,7 +41,7 @@ public sealed class StructuredTooltipOperationOwnerTests
             Assert.NotNull(first);
             Assert.False(await entered.Task.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.Same(first, owner.TryStart("canonical",
-                () => throw new InvalidOperationException("Joined work must not execute."), CancellationToken.None));
+                () => throw new InvalidOperationException("Joined work must not execute."), CancellationToken.None).Completion);
             Assert.False(first.IsCompleted);
         }
         finally
@@ -63,13 +63,13 @@ public sealed class StructuredTooltipOperationOwnerTests
         {
             for (var index = 0; index < 128; index++)
             {
-                var completion = owner.TryStart("canonical-" + index, () => release.Task, CancellationToken.None);
+                var completion = owner.TryStart("canonical-" + index, () => release.Task, CancellationToken.None).Completion;
                 Assert.NotNull(completion);
                 active.Add(completion);
             }
 
-            Assert.Null(owner.TryStart("overflow", () => throw new InvalidOperationException("Overflow must not run."), CancellationToken.None));
-            Assert.Same(active[0], owner.TryStart("canonical-0", () => Task.CompletedTask, CancellationToken.None));
+            Assert.Null(owner.TryStart("overflow", () => throw new InvalidOperationException("Overflow must not run."), CancellationToken.None).Completion);
+            Assert.Same(active[0], owner.TryStart("canonical-0", () => Task.CompletedTask, CancellationToken.None).Completion);
             Assert.All(active, completion => Assert.False(completion.IsCompleted));
         }
         finally
@@ -89,7 +89,7 @@ public sealed class StructuredTooltipOperationOwnerTests
         {
             Interlocked.Increment(ref calls);
             throw new InvalidOperationException("Injected failure.");
-        }, CancellationToken.None)!;
+        }, CancellationToken.None).Completion!;
         await completion.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.True(completion.IsCompletedSuccessfully);
         for (var frame = 0; frame < 20; frame++)
@@ -98,7 +98,7 @@ public sealed class StructuredTooltipOperationOwnerTests
             {
                 Interlocked.Increment(ref calls);
                 return Task.CompletedTask;
-            }, CancellationToken.None));
+            }, CancellationToken.None).Completion);
         }
 
         Assert.Equal(1, calls);
@@ -112,11 +112,13 @@ public sealed class StructuredTooltipOperationOwnerTests
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
         var calls = 0;
-        Assert.Null(owner.TryStart("canonical", () =>
+        var result = owner.TryStart("canonical", () =>
         {
             calls++;
             return Task.CompletedTask;
-        }, cancellation.Token));
+        }, cancellation.Token);
+        Assert.Equal(StructuredTooltipOperationAdmission.RejectedShutdown, result.Status);
+        Assert.Null(result.Completion);
         Assert.Equal(0, calls);
     }
 }

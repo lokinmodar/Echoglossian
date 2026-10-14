@@ -103,16 +103,30 @@ public partial class Echoglossian
             return;
         }
 
+        this.TickItemDetailPrefetchQueue(this.PrefetchItemDetail);
+    }
+
+    /// <summary>Advances the captured queue only when ownership does not reject capacity.</summary>
+    /// <param name="capture">The Framework capture and admission callback.</param>
+    /// <returns>The captures attempted within this tick's existing budget.</returns>
+    internal int TickItemDetailPrefetchQueue(Func<uint, StructuredTooltipOperationAdmission> capture)
+    {
         var processedCount = 0;
         while (processedCount < ItemDetailPrefetchItemsPerTick &&
-               this.itemDetailPrefetchQueueIndex <
-               this.itemDetailPrefetchQueue.Count)
+               this.itemDetailPrefetchQueueIndex < this.itemDetailPrefetchQueue.Count)
         {
-            var itemId =
-                this.itemDetailPrefetchQueue[this.itemDetailPrefetchQueueIndex++];
-            this.PrefetchItemDetail(itemId);
+            var id = this.itemDetailPrefetchQueue[this.itemDetailPrefetchQueueIndex];
+            var admission = capture(id);
             processedCount++;
+            if (admission == StructuredTooltipOperationAdmission.RejectedCapacity)
+            {
+                break;
+            }
+
+            this.itemDetailPrefetchQueueIndex++;
         }
+
+        return processedCount;
     }
 
     /// <summary>
@@ -153,15 +167,15 @@ public partial class Echoglossian
 
     /// <summary>Captures a canonical sheet payload on the Framework before asynchronous work.</summary>
     /// <param name="itemId">The source row id.</param>
-    private void PrefetchItemDetail(uint itemId)
+    private StructuredTooltipOperationAdmission PrefetchItemDetail(uint itemId)
     {
         if (!TryCapturePrefetchOperationScope(ResolveCurrentPrefetchSourceLanguage, this.configuration, out var source, out var scope) ||
             !TryBuildItemTooltipCanonicalPayload(itemId, out var payload))
         {
-            return;
+            return StructuredTooltipOperationAdmission.RejectedCapture;
         }
 
-        this.StartItemDetailOperation(payload, source, scope, GetGameVersion(), PersistencePriority.Background);
+        return this.StartItemDetailOperation(payload, source, scope, GetGameVersion(), PersistencePriority.Background);
     }
 
     /// <summary>Admits one managed snapshot while preserving terminal canonical ownership.</summary>
@@ -170,12 +184,12 @@ public partial class Echoglossian
     /// <param name="scope">The immutable translation policy.</param>
     /// <param name="gameVersion">The captured source version.</param>
     /// <param name="priority">The originating persistence lane.</param>
-    private void StartItemDetailOperation(ItemTooltipCanonicalPayload payload, SourceClientLanguage source, TranslationReuseScope scope, string? gameVersion, PersistencePriority priority)
+    private StructuredTooltipOperationAdmission StartItemDetailOperation(ItemTooltipCanonicalPayload payload, SourceClientLanguage source, TranslationReuseScope scope, string? gameVersion, PersistencePriority priority)
     {
         var writer = this.actionItemTooltipPersistenceWriter;
         if (writer == null || writer.ShutdownToken.IsCancellationRequested)
         {
-            return;
+            return StructuredTooltipOperationAdmission.RejectedShutdown;
         }
 
         var snapshot = payload.Serialize();
@@ -184,10 +198,10 @@ public partial class Echoglossian
         var translationService = TranslationService;
         var resolution = translationService.CaptureTranslatorResolution(scope.TranslationEngine!.Value, TranslationSurfaceGroup.Default);
         var broker = this.queuedTranslationBroker;
-        this.structuredTooltipOperationOwner.TryStart(key, () => CompleteItemDetailOperationAsync(
+        return this.structuredTooltipOperationOwner.TryStart(key, () => CompleteItemDetailOperationAsync(
             writer, broker, snapshot, probe, scope, priority,
             (text, origin, token) => translationService.TranslateAsync(text, source, scope.TargetLanguageCode,
-                TranslationSurfaceGroup.Default, resolution, token, origin)), writer.ShutdownToken);
+                TranslationSurfaceGroup.Default, resolution, token, origin)), writer.ShutdownToken).Status;
     }
 
     /// <summary>Completes captured managed work without consulting game state or mutating native UI.</summary>

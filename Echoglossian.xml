@@ -4923,6 +4923,11 @@
                 are translated into canonical storage ahead of tooltip use.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TickActionDetailPrefetchQueue(System.Func{System.UInt32,Echoglossian.NativeUI.Helpers.StructuredTooltipOperationAdmission})">
+            <summary>Advances the captured queue only when ownership does not reject capacity.</summary>
+            <param name="capture">The Framework capture and admission callback.</param>
+            <returns>The captures attempted within this tick's existing budget.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ClearActionDetailPrefetchState">
             <summary>
                 Clears the action-tooltip prefetch runtime state.
@@ -6549,6 +6554,11 @@
                 are translated into canonical storage ahead of tooltip use.
             </summary>
         </member>
+        <member name="M:Echoglossian.Echoglossian.TickItemDetailPrefetchQueue(System.Func{System.UInt32,Echoglossian.NativeUI.Helpers.StructuredTooltipOperationAdmission})">
+            <summary>Advances the captured queue only when ownership does not reject capacity.</summary>
+            <param name="capture">The Framework capture and admission callback.</param>
+            <returns>The captures attempted within this tick's existing budget.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.ClearItemDetailPrefetchState">
             <summary>
                 Clears the item-tooltip prefetch runtime state.
@@ -7974,6 +7984,11 @@
                 Ticks the trait prefetch runtime so current class/job traits are translated
                 into canonical storage ahead of tooltip and ActionMenu use.
             </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.TickTraitDetailPrefetchQueue(System.Func{System.UInt32,Echoglossian.NativeUI.Helpers.StructuredTooltipOperationAdmission})">
+            <summary>Advances the captured queue only when ownership does not reject capacity.</summary>
+            <param name="capture">The Framework capture and admission callback.</param>
+            <returns>The captures attempted within this tick's existing budget.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.ClearTraitDetailPrefetchState">
             <summary>
@@ -32691,15 +32706,53 @@
             <param name="slot">The slot to clone.</param>
             <returns>The cloned slot.</returns>
         </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationAdmission">
+            <summary>Specifies whether canonical ownership was admitted or must retry.</summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationAdmission.Started">
+            <summary>New work was started.</summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationAdmission.Joined">
+            <summary>Active work or terminal cooldown already owns the identity.</summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationAdmission.RejectedCapacity">
+            <summary>No slot is available; the current prefetch entry must retry.</summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationAdmission.RejectedShutdown">
+            <summary>The plugin lifetime has ended.</summary>
+        </member>
+        <member name="F:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationAdmission.RejectedCapture">
+            <summary>No valid captured payload is available for this entry.</summary>
+        </member>
+        <member name="T:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationStart">
+            <summary>Returns admission separately from the shared terminal completion.</summary>
+            <param name="Status">The nonblocking admission outcome.</param>
+            <param name="Completion">The shared completion, if work owns this identity.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationStart.#ctor(Echoglossian.NativeUI.Helpers.StructuredTooltipOperationAdmission,System.Threading.Tasks.Task)">
+            <summary>Returns admission separately from the shared terminal completion.</summary>
+            <param name="Status">The nonblocking admission outcome.</param>
+            <param name="Completion">The shared completion, if work owns this identity.</param>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationStart.Status">
+            <summary>The nonblocking admission outcome.</summary>
+        </member>
+        <member name="P:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationStart.Completion">
+            <summary>The shared completion, if work owns this identity.</summary>
+        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationOwner">
             <summary>Retains bounded canonical ownership through translation and persistence completion.</summary>
+        </member>
+        <member name="M:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationOwner.#ctor(System.Func{System.DateTime})">
+            <summary>Initializes bounded ownership with an injectable clock for deterministic cooldown tests.</summary>
+            <param name="utcNow">The clock; production uses UTC wall time.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationOwner.TryStart(System.String,System.Func{System.Threading.Tasks.Task},System.Threading.CancellationToken)">
             <summary>Shares active work or retains a terminal cooldown without creating another queue.</summary>
             <param name="key">The complete captured canonical identity.</param>
             <param name="operation">The managed orchestration to run on a worker.</param>
             <param name="cancellationToken">The plugin lifetime.</param>
-            <returns>The shared completion, or null when capacity or shutdown rejects admission.</returns>
+            <returns>The admission outcome and the shared completion when admitted.</returns>
         </member>
         <member name="T:Echoglossian.NativeUI.Helpers.StructuredTooltipOperationOwner.Entry">
             <summary>Holds only lifetime ownership, never translated data.</summary>

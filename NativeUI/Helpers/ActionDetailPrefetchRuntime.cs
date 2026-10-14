@@ -140,16 +140,30 @@ public partial class Echoglossian
             return;
         }
 
+        this.TickActionDetailPrefetchQueue(id => this.PrefetchActionDetail(id, currentClassJobId));
+    }
+
+    /// <summary>Advances the captured queue only when ownership does not reject capacity.</summary>
+    /// <param name="capture">The Framework capture and admission callback.</param>
+    /// <returns>The captures attempted within this tick's existing budget.</returns>
+    internal int TickActionDetailPrefetchQueue(Func<uint, StructuredTooltipOperationAdmission> capture)
+    {
         var processedCount = 0;
         while (processedCount < ActionDetailPrefetchActionsPerTick &&
-               this.actionDetailPrefetchQueueIndex <
-               this.actionDetailPrefetchQueue.Count)
+               this.actionDetailPrefetchQueueIndex < this.actionDetailPrefetchQueue.Count)
         {
-            var actionId =
-                this.actionDetailPrefetchQueue[this.actionDetailPrefetchQueueIndex++];
-            this.PrefetchActionDetail(actionId, currentClassJobId);
+            var id = this.actionDetailPrefetchQueue[this.actionDetailPrefetchQueueIndex];
+            var admission = capture(id);
             processedCount++;
+            if (admission == StructuredTooltipOperationAdmission.RejectedCapacity)
+            {
+                break;
+            }
+
+            this.actionDetailPrefetchQueueIndex++;
         }
+
+        return processedCount;
     }
 
     /// <summary>
@@ -167,15 +181,15 @@ public partial class Echoglossian
     /// <summary>Captures a canonical sheet payload on the Framework before asynchronous work.</summary>
     /// <param name="actionId">The source row id.</param>
     /// <param name="currentClassJobId">The captured player class/job.</param>
-    private void PrefetchActionDetail(uint actionId, byte currentClassJobId)
+    private StructuredTooltipOperationAdmission PrefetchActionDetail(uint actionId, byte currentClassJobId)
     {
         if (!TryCapturePrefetchOperationScope(ResolveCurrentPrefetchSourceLanguage, this.configuration, out var source, out var scope) ||
             !TryBuildActionTooltipCanonicalPayload(actionId, currentClassJobId, out var payload))
         {
-            return;
+            return StructuredTooltipOperationAdmission.RejectedCapture;
         }
 
-        this.StartActionDetailOperation(payload, source, scope, GetGameVersion(), PersistencePriority.Background);
+        return this.StartActionDetailOperation(payload, source, scope, GetGameVersion(), PersistencePriority.Background);
     }
 
     /// <summary>Admits one managed snapshot while preserving terminal canonical ownership.</summary>
@@ -184,12 +198,12 @@ public partial class Echoglossian
     /// <param name="scope">The immutable translation policy.</param>
     /// <param name="gameVersion">The captured source version.</param>
     /// <param name="priority">The originating persistence lane.</param>
-    private void StartActionDetailOperation(ActionTooltipCanonicalPayload payload, SourceClientLanguage source, TranslationReuseScope scope, string? gameVersion, PersistencePriority priority)
+    private StructuredTooltipOperationAdmission StartActionDetailOperation(ActionTooltipCanonicalPayload payload, SourceClientLanguage source, TranslationReuseScope scope, string? gameVersion, PersistencePriority priority)
     {
         var writer = this.actionItemTooltipPersistenceWriter;
         if (writer == null || writer.ShutdownToken.IsCancellationRequested)
         {
-            return;
+            return StructuredTooltipOperationAdmission.RejectedShutdown;
         }
 
         var snapshot = payload.Serialize();
@@ -198,10 +212,10 @@ public partial class Echoglossian
         var translationService = TranslationService;
         var resolution = translationService.CaptureTranslatorResolution(scope.TranslationEngine!.Value, TranslationSurfaceGroup.Default);
         var broker = this.queuedTranslationBroker;
-        this.structuredTooltipOperationOwner.TryStart(key, () => CompleteActionDetailOperationAsync(
+        return this.structuredTooltipOperationOwner.TryStart(key, () => CompleteActionDetailOperationAsync(
             writer, broker, snapshot, probe, scope, priority,
             (text, origin, token) => translationService.TranslateAsync(text, source, scope.TargetLanguageCode,
-                TranslationSurfaceGroup.Default, resolution, token, origin)), writer.ShutdownToken);
+                TranslationSurfaceGroup.Default, resolution, token, origin)), writer.ShutdownToken).Status;
     }
 
     /// <summary>Completes captured managed work without consulting game state or mutating native UI.</summary>
