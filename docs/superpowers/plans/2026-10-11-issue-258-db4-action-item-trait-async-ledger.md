@@ -116,6 +116,16 @@ The exact DLL is built again after this documentation-only commit so its source 
 
 ## Delivery and authorization gate
 
+### PR review follow-up (2026-10-17)
+
+- `7178f1c`: completed write registrations are removed under the admission lock before accepting a new write; active writes still join. Three deterministic Action/Trait/Item real-SQLite regressions fail against the old code (Accepted versus Joined) and pass with the fix. The full writer batch passed 76 cases.
+- `a657c8e`: explicit operation-owner admission results preserve the actual prefetch cursor when capacity is exhausted. Retry uses the existing two-second tick; budgets remain 6/6/10, active joins and the 30-second terminal cooldown remain intact. Fifteen behavioral queue tests use the real owner and controlled time without sleeps. All callers were checked; visible Interactive requests retain their existing cooldown.
+- `3d11b81`: the updated local Dalamud DLLs require `IDalamudPluginInterface.Assembly` and introduce a conflicting `Rectangle` type. The vendored harness receives the loaded plugin type's assembly from the existing loader and explicitly retains Veldrid rectangles. The hosted startup test verifies assembly identity. This compatibility change is limited to the harness and its test.
+- Independent read-only reviews found no actionable issue in either review correction or the harness compatibility diff.
+- Validation with the updated local DLLs: solution and unit/Mock builds pass with zero errors; 1655 unit tests and 26 Mock tests pass with zero failures/skips. Existing analyzer/vendor/toolkit warnings remain.
+- The sync-DB audit still passes with 224 total findings, including the same 42 DB-4 findings; no baseline expansion. `git diff --check` passes.
+- The final Debug DLL is rebuilt after this documentation commit; its exact source commit and SHA-256 are recorded in the ignored handoff artifact and PR. Native tooltip capture/application and frame timing still require in-game testing; the Mock's UIModule limitation remains unchanged.
+
 - Push the delegated execution branch and open a PR against `v4-series`.
 - Attach the PR to the delegated task and report its URL.
 - Report the exact `bin\x64\Debug\win-x64\Echoglossian.dll`, source commit, and SHA-256.
