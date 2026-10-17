@@ -17,11 +17,20 @@ public partial class Echoglossian
   internal static void RestoreMutatedAddonHandlers(
       IEnumerable<(string AddonName, IAddonTranslationHandler Handler)> handlers)
   {
-    foreach (var (_, handler) in handlers)
+    foreach (var (addonName, handler) in handlers)
     {
       if (handler is IPluginUnloadAwareAddonHandler unloadAwareHandler)
       {
-        unloadAwareHandler.OnPluginUnload();
+        try
+        {
+          unloadAwareHandler.OnPluginUnload();
+        }
+        catch (Exception exception)
+        {
+          PluginRuntimeLog.Error(
+              "TranslationActivation",
+              $"Failed to restore addon handler '{addonName}': {exception}");
+        }
       }
     }
   }

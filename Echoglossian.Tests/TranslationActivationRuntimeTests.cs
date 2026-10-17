@@ -45,6 +45,27 @@ public sealed class TranslationActivationRuntimeTests
     }
 
     /// <summary>
+    /// Represents a mutation-aware handler that cannot restore its state.
+    /// </summary>
+    private sealed class ThrowingHandler :
+        IAddonTranslationHandler,
+        IPluginUnloadAwareAddonHandler
+    {
+        /// <inheritdoc/>
+        public Dictionary<AddonEvent, IAddonLifecycle.AddonEventDelegate>
+            GetEventHandlers()
+        {
+            return [];
+        }
+
+        /// <inheritdoc/>
+        public void OnPluginUnload()
+        {
+            throw new InvalidOperationException("Test restoration failure.");
+        }
+    }
+
+    /// <summary>
     /// Verifies disable restoration invokes only handlers that declare mutation
     /// ownership.
     /// </summary>
@@ -55,6 +76,25 @@ public sealed class TranslationActivationRuntimeTests
         var handlers = new (string AddonName, IAddonTranslationHandler Handler)[]
         {
             ("ReadOnly", new ReadOnlyHandler()),
+            ("Mutating", mutatingHandler),
+        };
+
+        global::Echoglossian.Echoglossian.RestoreMutatedAddonHandlers(handlers);
+
+        Assert.Equal(1, mutatingHandler.RestoreCount);
+    }
+
+    /// <summary>
+    /// Verifies one handler restoration failure does not prevent remaining
+    /// mutation-aware handlers from restoring their state.
+    /// </summary>
+    [Fact]
+    public void RestoreMutatedAddonHandlers_ContinuesAfterRestorationFailure()
+    {
+        var mutatingHandler = new MutatingHandler();
+        var handlers = new (string AddonName, IAddonTranslationHandler Handler)[]
+        {
+            ("Throwing", new ThrowingHandler()),
             ("Mutating", mutatingHandler),
         };
 
