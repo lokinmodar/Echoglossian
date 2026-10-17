@@ -176,7 +176,9 @@ public class PluginLoader : IPluginLoader
                .As(typeof(ILogger<>))
                .SingleInstance();
         builder.RegisterInstance(this);
-        builder.RegisterType<MockDalamudPluginInterface>().As<IDalamudPluginInterface>().SingleInstance();
+        builder.RegisterType<MockDalamudPluginInterface>()
+            .WithParameter("assembly", plugin.PluginType.Assembly)
+            .As<IDalamudPluginInterface>().SingleInstance();
 
         var container = builder.Build();
 

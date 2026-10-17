@@ -101,6 +101,9 @@ public class PluginStartupSmokeTests
     {
         using var started = await new TestBoot().StartPluginAsync();
 
+        global::Echoglossian.Echoglossian.PluginInterface.Assembly.Should()
+            .BeSameAs(typeof(EchoglossianAsyncPluginAdapter).Assembly);
+
         var snapshot = started.Plugin.StartupAudit.CaptureSnapshot();
 
         snapshot.HasStage(PluginStartupStage.CommandHandlersRegistered).Should().BeTrue();

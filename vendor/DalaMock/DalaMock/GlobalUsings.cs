@@ -144,6 +144,7 @@ global using Serilog.Events;
 global using StbiSharp;
 
 global using Veldrid;
+global using Rectangle = Veldrid.Rectangle;
 global using Veldrid.Sdl2;
 global using Veldrid.StartupUtilities;
 
