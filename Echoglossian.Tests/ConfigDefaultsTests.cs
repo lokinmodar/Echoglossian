@@ -24,6 +24,17 @@ public class ConfigDefaultsTests
     }
 
     /// <summary>
+    ///     Ensures the draggable global translation toggle remains opt-in.
+    /// </summary>
+    [Fact]
+    public void ShowTranslationToggleButton_DefaultsToFalse()
+    {
+        var config = new Config();
+
+        Assert.False(config.ShowTranslationToggleButton);
+    }
+
+    /// <summary>
     ///     Ensures the full ToastGui runtime path for supported toasts stays
     ///     opt-in by default.
     /// </summary>
