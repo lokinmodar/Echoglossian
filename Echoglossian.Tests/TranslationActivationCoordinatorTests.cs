@@ -156,6 +156,48 @@ public sealed class TranslationActivationCoordinatorTests
         Assert.Equal(TranslationActivationState.Disabled, coordinator.State);
     }
 
+    /// <summary>
+    /// Verifies toggle requests invert the persisted global state.
+    /// </summary>
+    /// <param name="initialState">The state before the request.</param>
+    /// <param name="expectedState">The state after the request.</param>
+    /// <param name="expectedResult">The expected transition result.</param>
+    [Theory]
+    [InlineData(
+        false,
+        true,
+        "Enabled")]
+    [InlineData(
+        true,
+        false,
+        "Disabled")]
+    public async Task Toggle_InvertsCurrentState(
+        bool initialState,
+        bool expectedState,
+        string expectedResult)
+    {
+        var config = new Config { Translate = initialState };
+        var coordinator = CreateCoordinator(config);
+
+        var outcome = await coordinator.RequestAsync(
+            TranslationActivationRequest.Toggle);
+
+        Assert.Equal(
+            Enum.Parse<TranslationActivationResult>(expectedResult),
+            outcome.Result);
+        Assert.Equal(expectedState, config.Translate);
+    }
+
+    /// <summary>
+    /// Creates a coordinator with direct defaults for sequencing tests.
+    /// </summary>
+    /// <param name="config">The configuration under test.</param>
+    /// <param name="getBlockReason">Optional activation guard delegate.</param>
+    /// <param name="persist">Optional persistence delegate.</param>
+    /// <param name="runOnFrameworkThread">Optional Framework dispatcher.</param>
+    /// <param name="disable">Optional runtime disable delegate.</param>
+    /// <param name="enable">Optional runtime enable delegate.</param>
+    /// <returns>The configured coordinator.</returns>
     private static TranslationActivationCoordinator CreateCoordinator(
         Config config,
         Func<TranslationActivationGuard.BlockReason>? getBlockReason = null,
