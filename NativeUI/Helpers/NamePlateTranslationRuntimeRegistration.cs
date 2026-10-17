@@ -36,6 +36,11 @@ public partial class Echoglossian
   /// </summary>
   private void RegisterNamePlateTranslationRuntime()
   {
+    if (!this.configuration.Translate)
+    {
+      return;
+    }
+
     NamePlateGuiInterface.OnNamePlateUpdate +=
         this.namePlateTranslationRuntime.HandleNamePlateUpdate;
   }

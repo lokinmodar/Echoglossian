@@ -66,7 +66,7 @@ internal static class ToastGuiSupportedToastPolicy
   /// </returns>
   public static bool UseSupportedToastGuiRuntime(Config config)
   {
-    return config.TranslateToast;
+    return config.Translate && config.TranslateToast;
   }
 
   /// <summary>

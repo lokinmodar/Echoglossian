@@ -1774,4 +1774,49 @@
   <data name="TooltipRegisterLoggingStartedFormat" xml:space="preserve">
     <value>Tooltip registration logging started for surface '{0}' for {1}. Check Echoglossian.log for register and hover-hit diagnostics.</value>
   </data>
+  <data name="TranslationCommandUsage" xml:space="preserve">
+    <value>Usage: /eglo translations on|off|toggle</value>
+  </data>
+  <data name="TranslationCommandEnabled" xml:space="preserve">
+    <value>Translations enabled.</value>
+  </data>
+  <data name="TranslationCommandDisabled" xml:space="preserve">
+    <value>Translations disabled.</value>
+  </data>
+  <data name="TranslationCommandAlreadyEnabled" xml:space="preserve">
+    <value>Translations are already enabled.</value>
+  </data>
+  <data name="TranslationCommandAlreadyDisabled" xml:space="preserve">
+    <value>Translations are already disabled.</value>
+  </data>
+  <data name="TranslationCommandTransitionInProgress" xml:space="preserve">
+    <value>A translation state change is already in progress.</value>
+  </data>
+  <data name="TranslationCommandBlockedUnsupportedLanguage" xml:space="preserve">
+    <value>Translations cannot be enabled for the selected language.</value>
+  </data>
+  <data name="TranslationCommandBlockedMissingAssets" xml:space="preserve">
+    <value>Translations cannot be enabled until the required font assets are available.</value>
+  </data>
+  <data name="TranslationCommandBlockedEngineConfiguration" xml:space="preserve">
+    <value>Configure the selected translation engine before enabling translations.</value>
+  </data>
+  <data name="TranslationCommandFailed" xml:space="preserve">
+    <value>The translation state change failed. Check Echoglossian.log for details.</value>
+  </data>
+  <data name="ShowTranslationToggleButton" xml:space="preserve">
+    <value>Show draggable translation toggle</value>
+  </data>
+  <data name="ShowTranslationToggleButtonTooltip" xml:space="preserve">
+    <value>Shows a transparent HUD button that can be dragged anywhere inside the active viewport.</value>
+  </data>
+  <data name="TranslationToggleEnabledTooltip" xml:space="preserve">
+    <value>Translations are enabled. Click to disable or drag to move this button.</value>
+  </data>
+  <data name="TranslationToggleDisabledTooltip" xml:space="preserve">
+    <value>Translations are disabled. Click to enable or drag to move this button.</value>
+  </data>
+  <data name="TranslationToggleTransitioningTooltip" xml:space="preserve">
+    <value>Translation state is changing. You can still drag this button.</value>
+  </data>
 </root>

@@ -131,6 +131,7 @@ public partial class Echoglossian : IDalamudPlugin
   private readonly IDalamudTextureWrap cutsceneChoiceImage;
   private readonly IDalamudTextureWrap logo;
   private readonly ConfigurationSaveCoordinator configurationSaveCoordinator;
+  private readonly TranslationActivationCoordinator translationActivationCoordinator;
   private QueuedTranslationBroker queuedTranslationBroker;
   private PersistenceCoordinator? persistenceCoordinator;
   private readonly QuestPlateRuntimeCache questPlateRuntimeCache = new();
@@ -418,6 +419,18 @@ public partial class Echoglossian : IDalamudPlugin
         UINewFontHandler,
         this.rtlTexturePresentationService,
         CaptureRichOriginalTextPresentation);
+    this.translationActivationCoordinator = new TranslationActivationCoordinator(
+        this.configuration,
+        () => TranslationActivationGuard.GetBlockReason(
+            this.configuration,
+            SelectedLanguage),
+        SaveConfig,
+        action => FrameworkInterface.RunOnFrameworkThread(action),
+        this.DisableTranslationRuntime,
+        this.EnableTranslationRuntime,
+        exception => PluginRuntimeLog.Error(
+            "TranslationActivation",
+            $"Translation activation transition failed: {exception}"));
     this.RegisterStructuredTooltipLifecycleHandlers();
     this.startupAudit.Mark(PluginStartupStage.RuntimeServicesBuilt);
 

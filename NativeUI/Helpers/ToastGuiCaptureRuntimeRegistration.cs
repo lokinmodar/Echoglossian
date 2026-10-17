@@ -31,6 +31,11 @@ public partial class Echoglossian
   /// </summary>
   private void RegisterToastGuiCaptureRuntime()
   {
+    if (!this.configuration.Translate)
+    {
+      return;
+    }
+
     ToastGuiInterface.Toast += this.toastGuiCaptureRuntime.HandleNormalToast;
     ToastGuiInterface.ErrorToast += this.toastGuiCaptureRuntime.HandleErrorToast;
   }

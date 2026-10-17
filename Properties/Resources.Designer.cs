@@ -4456,6 +4456,171 @@ namespace Echoglossian.Properties
         }
         
         /// <summary>
+        ///     Looks up a localized string similar to Translations are already disabled.
+        /// </summary>
+        public static string TranslationCommandAlreadyDisabled
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslationCommandAlreadyDisabled", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up a localized string similar to Translations are already enabled.
+        /// </summary>
+        public static string TranslationCommandAlreadyEnabled
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslationCommandAlreadyEnabled", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up a localized string for incomplete engine configuration.
+        /// </summary>
+        public static string TranslationCommandBlockedEngineConfiguration
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslationCommandBlockedEngineConfiguration", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up a localized string for missing required font assets.
+        /// </summary>
+        public static string TranslationCommandBlockedMissingAssets
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslationCommandBlockedMissingAssets", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up a localized string for an unsupported target language.
+        /// </summary>
+        public static string TranslationCommandBlockedUnsupportedLanguage
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslationCommandBlockedUnsupportedLanguage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up a localized string similar to Translations disabled.
+        /// </summary>
+        public static string TranslationCommandDisabled
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslationCommandDisabled", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up a localized string similar to Translations enabled.
+        /// </summary>
+        public static string TranslationCommandEnabled
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslationCommandEnabled", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up a localized string for an activation failure.
+        /// </summary>
+        public static string TranslationCommandFailed
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslationCommandFailed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up a localized string for a transition already in progress.
+        /// </summary>
+        public static string TranslationCommandTransitionInProgress
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslationCommandTransitionInProgress", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up the localized translation command usage string.
+        /// </summary>
+        public static string TranslationCommandUsage
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslationCommandUsage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up the localized draggable translation-toggle setting label.
+        /// </summary>
+        public static string ShowTranslationToggleButton
+        {
+            get
+            {
+                return ResourceManager.GetString("ShowTranslationToggleButton", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up the localized draggable translation-toggle setting tooltip.
+        /// </summary>
+        public static string ShowTranslationToggleButtonTooltip
+        {
+            get
+            {
+                return ResourceManager.GetString("ShowTranslationToggleButtonTooltip", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up the localized disabled translation-toggle tooltip.
+        /// </summary>
+        public static string TranslationToggleDisabledTooltip
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslationToggleDisabledTooltip", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up the localized enabled translation-toggle tooltip.
+        /// </summary>
+        public static string TranslationToggleEnabledTooltip
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslationToggleEnabledTooltip", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up the localized transitioning translation-toggle tooltip.
+        /// </summary>
+        public static string TranslationToggleTransitioningTooltip
+        {
+            get
+            {
+                return ResourceManager.GetString("TranslationToggleTransitioningTooltip", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///     Pesquisa uma cadeia de caracteres localizada semelhante a Translations are Disabled!.
         /// </summary>
         public static string TranslationDisabled

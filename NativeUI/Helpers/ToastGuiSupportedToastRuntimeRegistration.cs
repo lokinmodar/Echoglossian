@@ -49,6 +49,11 @@ public partial class Echoglossian
   /// </summary>
   private void RegisterToastGuiSupportedToastRuntime()
   {
+    if (!this.configuration.Translate)
+    {
+      return;
+    }
+
     ToastGuiInterface.Toast += this.toastGuiSupportedToastRuntime.HandleNormalToast;
     ToastGuiInterface.ErrorToast += this.toastGuiSupportedToastRuntime.HandleErrorToast;
   }

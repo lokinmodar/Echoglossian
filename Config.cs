@@ -817,6 +817,12 @@ public class Config : IPluginConfiguration
   /// <summary>Enables translation processing globally.</summary>
   [DefaultValue(false)] public bool Translate = false;
 
+  /// <summary>Shows the draggable global translation HUD toggle.</summary>
+  [DefaultValue(false)] public bool ShowTranslationToggleButton = false;
+
+  /// <summary>Position of the draggable global translation HUD toggle.</summary>
+  public Vector2 TranslationToggleButtonPosition = new(24f, 160f);
+
   /// <summary>
   ///     Allow re-translating content even if it was previously translated and
   ///     cached.

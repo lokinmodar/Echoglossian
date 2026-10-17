@@ -2538,6 +2538,12 @@
         <member name="F:Echoglossian.Config.Translate">
             <summary>Enables translation processing globally.</summary>
         </member>
+        <member name="F:Echoglossian.Config.ShowTranslationToggleButton">
+            <summary>Shows the draggable global translation HUD toggle.</summary>
+        </member>
+        <member name="F:Echoglossian.Config.TranslationToggleButtonPosition">
+            <summary>Position of the draggable global translation HUD toggle.</summary>
+        </member>
         <member name="F:Echoglossian.Config.TranslateAlreadyTranslatedTexts">
             <summary>
                 Allow re-translating content even if it was previously translated and
@@ -3022,6 +3028,9 @@
                 a full plugin reload.
             </summary>
             <summary>
+            Hosts Framework-thread runtime work for global translation activation.
+            </summary>
+            <summary>
                 Surfaces user-visible notifications for actionable runtime translation
                 failures without spamming the hot path.
             </summary>
@@ -3087,6 +3096,9 @@
             </summary>
             <summary>
             Font handling helpers for the Echoglossian plugin.
+            </summary>
+            <summary>
+            Draws the optional draggable global translation HUD toggle.
             </summary>
             <summary>
                 Manages the registration and configuration of translation overlays.
@@ -4140,6 +4152,36 @@
                 Clears live translation presentation state and runtime-only caches so
                 language or engine changes do not leave stale translated UI state on
                 screen.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.RestoreMutatedAddonHandlers(System.Collections.Generic.IEnumerable{System.ValueTuple{System.String,Echoglossian.NativeUI.Handlers.IAddonTranslationHandler}})">
+            <summary>
+            Restores only handlers that explicitly own mutation-aware cleanup.
+            </summary>
+            <param name="handlers">The currently registered addon handlers.</param>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DisableTranslationRuntime">
+            <summary>
+            Stops translation work and removes translated presentation while keeping
+            committed database and memory cache state intact.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.EnableTranslationRuntime">
+            <summary>
+            Restarts shared translation runtimes and lets configured visible handlers
+            consume committed cache entries before admitting missing work.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.ClearTranslationPresentationForDisable">
+            <summary>
+            Clears only translated presentation and transient operation state used by
+            the disabled runtime.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.SynchronizeTranslationActivationSignatures">
+            <summary>
+            Synchronizes refresh signatures after the coordinator has already applied
+            the global transition.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.ReportRuntimeTranslationFailure(System.Int32,Echoglossian.TranslationFailureClassification)">
@@ -8231,6 +8273,20 @@
             <param name="command">The command that triggered the execution.</param>
             <param name="arguments">Arguments associated with the command.</param>
         </member>
+        <member name="M:Echoglossian.Echoglossian.HandleTranslationActivationCommandAsync(Echoglossian.TranslationActivationRequest)">
+            <summary>
+            Executes one translation activation command and prints localized feedback.
+            </summary>
+            <param name="request">The requested activation change.</param>
+            <returns>A task that completes after command feedback is printed.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.GetTranslationActivationCommandFeedback(Echoglossian.TranslationActivationOutcome)">
+            <summary>
+            Resolves localized command feedback for a completed activation request.
+            </summary>
+            <param name="outcome">The completed activation outcome.</param>
+            <returns>The localized feedback text.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.EchoglossianConfigUi">
             <summary>
             Draws the Echoglossian configuration UI through the shared renderer.
@@ -8241,6 +8297,17 @@
             Disables every toast-translation category and saves the configuration.
             </summary>
             <returns><see langword="true" /> after the settings are disabled.</returns>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawTranslationToggleHud">
+            <summary>
+            Draws and handles the optional global translation HUD toggle.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.DrawTranslationToggleHudButton(System.Numerics.Vector2)">
+            <summary>
+            Draws the toggle button and handles one frame of pointer interaction.
+            </summary>
+            <param name="buttonSize">The square HUD button size.</param>
         </member>
         <member name="M:Echoglossian.Echoglossian.Translate(System.String,Echoglossian.SourceClientLanguage)">
             <summary>
@@ -14068,6 +14135,77 @@
             Thrown when the configured language identifier is not registered.
             </exception>
         </member>
+        <member name="T:Echoglossian.TranslationActivationCoordinator">
+            <summary>
+            Coordinates global translation activation through the Framework thread.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.TranslationActivationCoordinator.#ctor(Echoglossian.Config,System.Func{Echoglossian.TranslationActivationGuard.BlockReason},System.Action{Echoglossian.Config},System.Func{System.Action,System.Threading.Tasks.Task},System.Action,System.Action,System.Action{System.Exception})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Echoglossian.TranslationActivationCoordinator" /> class.
+            </summary>
+            <param name="configuration">The persistent configuration source of truth.</param>
+            <param name="getBlockReason">Resolves the current activation block reason.</param>
+            <param name="persistConfiguration">Persists the updated configuration.</param>
+            <param name="runOnFrameworkThread">Runs one complete transition on the Framework thread.</param>
+            <param name="disableRuntime">Stops admissions and restores translated presentation.</param>
+            <param name="enableRuntime">Reactivates and refreshes translated presentation.</param>
+            <param name="observeFailure">Reports an unexpected transition failure.</param>
+        </member>
+        <member name="P:Echoglossian.TranslationActivationCoordinator.State">
+            <summary>
+            Gets the current global activation state.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.TranslationActivationCoordinator.RequestAsync(Echoglossian.TranslationActivationRequest)">
+            <summary>
+            Requests a global translation activation change.
+            </summary>
+            <param name="request">The requested state change.</param>
+            <returns>The completed transition outcome.</returns>
+        </member>
+        <member name="M:Echoglossian.TranslationActivationCoordinator.ApplyTransition(System.Boolean)">
+            <summary>
+            Applies one state change after dispatch to the Framework thread.
+            </summary>
+            <param name="targetEnabled">Whether translation should be enabled.</param>
+            <returns>The completed transition outcome.</returns>
+        </member>
+        <member name="T:Echoglossian.TranslationActivationRequest">
+            <summary>
+            Describes one requested global translation activation change.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.TranslationActivationState">
+            <summary>
+            Describes the currently visible translation activation state.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.TranslationActivationResult">
+            <summary>
+            Describes the result of one global translation activation request.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.TranslationActivationOutcome">
+            <summary>
+            Carries the result and optional activation block reason for one request.
+            </summary>
+            <param name="Result">The completed request result.</param>
+            <param name="BlockReason">The activation block reason, when applicable.</param>
+        </member>
+        <member name="M:Echoglossian.TranslationActivationOutcome.#ctor(Echoglossian.TranslationActivationResult,Echoglossian.TranslationActivationGuard.BlockReason)">
+            <summary>
+            Carries the result and optional activation block reason for one request.
+            </summary>
+            <param name="Result">The completed request result.</param>
+            <param name="BlockReason">The activation block reason, when applicable.</param>
+        </member>
+        <member name="P:Echoglossian.TranslationActivationOutcome.Result">
+            <summary>The completed request result.</summary>
+        </member>
+        <member name="P:Echoglossian.TranslationActivationOutcome.BlockReason">
+            <summary>The activation block reason, when applicable.</summary>
+        </member>
         <member name="T:Echoglossian.TranslationActivationGuard">
             <summary>
             Determines whether translation activation must stay blocked for the current
@@ -14425,6 +14563,23 @@
                 <see langword="true" /> when the stored values are compatible with
                 this scope; otherwise <see langword="false" />.
             </returns>
+        </member>
+        <member name="T:Echoglossian.TranslationToggleCommandParser">
+            <summary>
+            Parses the global translation subcommand accepted by <c>/eglo</c>.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.TranslationToggleCommandParser.Parse(System.String)">
+            <summary>
+            Parses command arguments without changing runtime state.
+            </summary>
+            <param name="arguments">The raw command arguments.</param>
+            <returns>The parsed command action.</returns>
+        </member>
+        <member name="T:Echoglossian.TranslationToggleCommand">
+            <summary>
+            Describes one parsed <c>/eglo</c> command action.
+            </summary>
         </member>
         <member name="T:Echoglossian.ImageGeneration.CachedTextureEntry">
             <summary>
@@ -36420,6 +36575,11 @@
             Gets the host-specific language runtime update operation.
             </summary>
         </member>
+        <member name="P:Echoglossian.PluginUI.PluginConfigWindowContext.TranslationActivationCoordinator">
+            <summary>
+            Gets the runtime activation coordinator when hosted by the live plugin.
+            </summary>
+        </member>
         <member name="M:Echoglossian.PluginUI.PluginConfigWindowContext.ApplyLiveLanguageRuntimeChanges(Echoglossian.Config,Echoglossian.LanguagesHandling.LanguageInfo)">
             <summary>
             Applies the existing live asset and font refresh behavior.
@@ -36446,11 +36606,11 @@
             <param name="isOpen">The window open state.</param>
             <returns><see langword="true" /> when the configuration changed.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.DrawTranslationStatusHeader(Echoglossian.Config)">
+        <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.DrawTranslationStatusHeader(Echoglossian.PluginUI.PluginConfigWindowContext)">
             <summary>
             Draws the compact translation status line outside the tab content.
             </summary>
-            <param name="config">The configuration being edited.</param>
+            <param name="context">The configuration-window context.</param>
         </member>
         <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.DrawTranslationSetupTab(Echoglossian.PluginUI.PluginConfigWindowContext,System.Collections.Generic.Dictionary{System.Int32,Echoglossian.LanguagesHandling.LanguageInfo})">
             <summary>
@@ -36480,13 +36640,12 @@
             <param name="languages">The available languages.</param>
             <returns><see langword="true" /> when the configuration changed.</returns>
         </member>
-        <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.DrawTranslationActivationSection(Echoglossian.Config,System.Boolean)">
+        <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.DrawTranslationActivationSection(Echoglossian.PluginUI.PluginConfigWindowContext)">
             <summary>
             Draws translation activation and blocks it while dependencies are not
             ready.
             </summary>
-            <param name="config">The configuration being edited.</param>
-            <param name="runtimeActionsAvailable">Whether asset management actions are available.</param>
+            <param name="context">The configuration-window context.</param>
             <returns><see langword="true" /> when the configuration changed.</returns>
         </member>
         <member name="M:Echoglossian.PluginUI.PluginConfigWindowRenderer.AssignIfChanged``1(``0@,``0)">
@@ -37025,6 +37184,62 @@
             plugin runtime asset or notification state.
             </summary>
             <param name="config">The preview-owned configuration being displayed.</param>
+        </member>
+        <member name="T:Echoglossian.PluginUI.TranslationToggleHudInteraction">
+            <summary>
+            Tracks drag versus click interaction for the translation HUD toggle.
+            </summary>
+        </member>
+        <member name="M:Echoglossian.PluginUI.TranslationToggleHudInteraction.Begin(System.Numerics.Vector2,System.Numerics.Vector2)">
+            <summary>
+            Starts one pointer interaction.
+            </summary>
+            <param name="mousePosition">The pointer position at press time.</param>
+            <param name="windowPosition">The HUD position at press time.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.TranslationToggleHudInteraction.Update(System.Numerics.Vector2,System.Boolean,System.Single)">
+            <summary>
+            Updates the active pointer interaction.
+            </summary>
+            <param name="mousePosition">The current pointer position.</param>
+            <param name="released">Whether the pointer was released this frame.</param>
+            <param name="dragThreshold">The minimum movement treated as a drag.</param>
+            <returns>The current interaction result.</returns>
+        </member>
+        <member name="M:Echoglossian.PluginUI.TranslationToggleHudInteraction.ClampToViewport(System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2)">
+            <summary>
+            Clamps a HUD position to the active viewport work area.
+            </summary>
+            <param name="position">The requested HUD position.</param>
+            <param name="size">The HUD size.</param>
+            <param name="viewportPosition">The viewport work-area origin.</param>
+            <param name="viewportSize">The viewport work-area size.</param>
+            <returns>The clamped HUD position.</returns>
+        </member>
+        <member name="T:Echoglossian.PluginUI.TranslationToggleHudInteractionAction">
+            <summary>
+            Describes the current translation HUD interaction action.
+            </summary>
+        </member>
+        <member name="T:Echoglossian.PluginUI.TranslationToggleHudInteractionResult">
+            <summary>
+            Carries a translation HUD interaction action and resulting position.
+            </summary>
+            <param name="Action">The current interaction action.</param>
+            <param name="Position">The resulting HUD position.</param>
+        </member>
+        <member name="M:Echoglossian.PluginUI.TranslationToggleHudInteractionResult.#ctor(Echoglossian.PluginUI.TranslationToggleHudInteractionAction,System.Numerics.Vector2)">
+            <summary>
+            Carries a translation HUD interaction action and resulting position.
+            </summary>
+            <param name="Action">The current interaction action.</param>
+            <param name="Position">The resulting HUD position.</param>
+        </member>
+        <member name="P:Echoglossian.PluginUI.TranslationToggleHudInteractionResult.Action">
+            <summary>The current interaction action.</summary>
+        </member>
+        <member name="P:Echoglossian.PluginUI.TranslationToggleHudInteractionResult.Position">
+            <summary>The resulting HUD position.</summary>
         </member>
         <member name="T:Echoglossian.Helpers.FieldValidationHelper">
             <summary>
@@ -39130,6 +39345,81 @@
         <member name="P:Echoglossian.Properties.Resources.TranslationBlockedByMissingAssetsStatusText">
             <summary>
                 Pesquisa uma cadeia de caracteres localizada semelhante a Waiting for required font assets.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationCommandAlreadyDisabled">
+            <summary>
+                Looks up a localized string similar to Translations are already disabled.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationCommandAlreadyEnabled">
+            <summary>
+                Looks up a localized string similar to Translations are already enabled.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationCommandBlockedEngineConfiguration">
+            <summary>
+                Looks up a localized string for incomplete engine configuration.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationCommandBlockedMissingAssets">
+            <summary>
+                Looks up a localized string for missing required font assets.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationCommandBlockedUnsupportedLanguage">
+            <summary>
+                Looks up a localized string for an unsupported target language.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationCommandDisabled">
+            <summary>
+                Looks up a localized string similar to Translations disabled.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationCommandEnabled">
+            <summary>
+                Looks up a localized string similar to Translations enabled.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationCommandFailed">
+            <summary>
+                Looks up a localized string for an activation failure.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationCommandTransitionInProgress">
+            <summary>
+                Looks up a localized string for a transition already in progress.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationCommandUsage">
+            <summary>
+                Looks up the localized translation command usage string.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ShowTranslationToggleButton">
+            <summary>
+                Looks up the localized draggable translation-toggle setting label.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.ShowTranslationToggleButtonTooltip">
+            <summary>
+                Looks up the localized draggable translation-toggle setting tooltip.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationToggleDisabledTooltip">
+            <summary>
+                Looks up the localized disabled translation-toggle tooltip.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationToggleEnabledTooltip">
+            <summary>
+                Looks up the localized enabled translation-toggle tooltip.
+            </summary>
+        </member>
+        <member name="P:Echoglossian.Properties.Resources.TranslationToggleTransitioningTooltip">
+            <summary>
+                Looks up the localized transitioning translation-toggle tooltip.
             </summary>
         </member>
         <member name="P:Echoglossian.Properties.Resources.TranslationDisabled">

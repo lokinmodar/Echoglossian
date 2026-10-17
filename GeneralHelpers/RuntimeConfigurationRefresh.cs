@@ -348,13 +348,7 @@ public partial class Echoglossian
       return;
     }
 
-    foreach (var (_, handler) in this.registeredAddonHandlers)
-    {
-      if (handler is IPluginUnloadAwareAddonHandler unloadAwareHandler)
-      {
-        unloadAwareHandler.OnPluginUnload();
-      }
-    }
+    RestoreMutatedAddonHandlers(this.registeredAddonHandlers);
 
     this.translationRefreshRestoreApplied = true;
   }
@@ -368,13 +362,7 @@ public partial class Echoglossian
     {
       if (!this.translationRefreshRestoreApplied)
       {
-        foreach (var (_, handler) in this.registeredAddonHandlers)
-        {
-          if (handler is IPluginUnloadAwareAddonHandler unloadAwareHandler)
-          {
-            unloadAwareHandler.OnPluginUnload();
-          }
-        }
+        RestoreMutatedAddonHandlers(this.registeredAddonHandlers);
       }
 
       AddonHandlerRegistrar.UnregisterMany(
