@@ -73,32 +73,35 @@ public static class TraitCacheManager
     /// <param name="newRecord">The row to cache.</param>
     public static void Update(Trait newRecord)
     {
-        if (newRecord == null || newRecord.TraitId == 0)
+        lock (Cache)
         {
-            return;
+            if (newRecord == null || newRecord.TraitId == 0)
+            {
+                return;
+            }
+
+            if (!Cache.TryGetValue(newRecord.TraitId, out var rows))
+            {
+                rows = [];
+                Cache[newRecord.TraitId] = rows;
+            }
+
+            var matchingRows = rows
+                .Where(row => HasSameCacheIdentity(row, newRecord))
+                .ToList();
+            var preferredRecord = matchingRows
+                .Append(newRecord)
+                .OrderByDescending(GetTranslationCompletenessScore)
+                .ThenByDescending(static row => row.UpdatedDate)
+                .First();
+
+            rows.RemoveAll(row => HasSameCacheIdentity(row, newRecord));
+            rows.Add(preferredRecord);
+            TextLookupCache.Clear();
+            ReverseTextLookupCache.Clear();
+            OriginalTextLookupCache.Clear();
+            Interlocked.Increment(ref revision);
         }
-
-        if (!Cache.TryGetValue(newRecord.TraitId, out var rows))
-        {
-            rows = [];
-            Cache[newRecord.TraitId] = rows;
-        }
-
-        var matchingRows = rows
-            .Where(row => HasSameCacheIdentity(row, newRecord))
-            .ToList();
-        var preferredRecord = matchingRows
-            .Append(newRecord)
-            .OrderByDescending(GetTranslationCompletenessScore)
-            .ThenByDescending(static row => row.UpdatedDate)
-            .First();
-
-        rows.RemoveAll(row => HasSameCacheIdentity(row, newRecord));
-        rows.Add(preferredRecord);
-        TextLookupCache.Clear();
-        ReverseTextLookupCache.Clear();
-        OriginalTextLookupCache.Clear();
-        Interlocked.Increment(ref revision);
     }
 
     /// <summary>
@@ -115,32 +118,35 @@ public static class TraitCacheManager
         string? gameVersion,
         string sourceContentHash)
     {
-        if (traitId == 0 ||
-            string.IsNullOrWhiteSpace(sourceContentHash))
+        lock (Cache)
         {
-            return null;
-        }
+            if (traitId == 0 ||
+                string.IsNullOrWhiteSpace(sourceContentHash))
+            {
+                return null;
+            }
 
-        if (!Cache.TryGetValue(traitId, out var rows) || rows.Count == 0)
-        {
-            return null;
-        }
+            if (!Cache.TryGetValue(traitId, out var rows) || rows.Count == 0)
+            {
+                return null;
+            }
 
-        return rows
-            .Where(row =>
-                scope.Matches(
-                    row.OriginalLang,
-                    row.TranslationLang,
-                    row.TranslationEngine) &&
-                GameVersionLookupHelper.MatchesStoredVersion(
-                    row.GameVersion,
-                    gameVersion) &&
-                row.SourceContentHash == sourceContentHash)
-            .OrderByDescending(row => ComputeCanonicalMatchScore(
-                row,
-                gameVersion))
-            .ThenByDescending(row => row.UpdatedDate)
-            .FirstOrDefault();
+            return rows
+                .Where(row =>
+                    scope.Matches(
+                        row.OriginalLang,
+                        row.TranslationLang,
+                        row.TranslationEngine) &&
+                    GameVersionLookupHelper.MatchesStoredVersion(
+                        row.GameVersion,
+                        gameVersion) &&
+                    row.SourceContentHash == sourceContentHash)
+                .OrderByDescending(row => ComputeCanonicalMatchScore(
+                    row,
+                    gameVersion))
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
+        }
     }
 
     /// <summary>
@@ -158,33 +164,36 @@ public static class TraitCacheManager
         string? requestedGameVersion,
         string sourceContentHash)
     {
-        if (traitId == 0 ||
-            string.IsNullOrWhiteSpace(requestedGameVersion) ||
-            string.IsNullOrWhiteSpace(sourceContentHash))
+        lock (Cache)
         {
-            return null;
-        }
+            if (traitId == 0 ||
+                string.IsNullOrWhiteSpace(requestedGameVersion) ||
+                string.IsNullOrWhiteSpace(sourceContentHash))
+            {
+                return null;
+            }
 
-        if (!Cache.TryGetValue(traitId, out var rows) || rows.Count == 0)
-        {
-            return null;
-        }
+            if (!Cache.TryGetValue(traitId, out var rows) || rows.Count == 0)
+            {
+                return null;
+            }
 
-        return rows
-            .Where(row =>
-                scope.Matches(
-                    row.OriginalLang,
-                    row.TranslationLang,
-                    row.TranslationEngine) &&
-                row.SourceContentHash == sourceContentHash &&
-                !string.IsNullOrWhiteSpace(row.GameVersion) &&
-                !string.Equals(
-                    row.GameVersion,
-                    requestedGameVersion,
-                    StringComparison.Ordinal))
-            .OrderByDescending(static row => HasAnyTranslatedContent(row))
-            .ThenByDescending(row => row.UpdatedDate)
-            .FirstOrDefault();
+            return rows
+                .Where(row =>
+                    scope.Matches(
+                        row.OriginalLang,
+                        row.TranslationLang,
+                        row.TranslationEngine) &&
+                    row.SourceContentHash == sourceContentHash &&
+                    !string.IsNullOrWhiteSpace(row.GameVersion) &&
+                    !string.Equals(
+                        row.GameVersion,
+                        requestedGameVersion,
+                        StringComparison.Ordinal))
+                .OrderByDescending(static row => HasAnyTranslatedContent(row))
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
+        }
     }
 
     /// <summary>
@@ -206,32 +215,35 @@ public static class TraitCacheManager
         uint classJobId,
         uint classJobCategoryId)
     {
-        if (traitId == 0)
+        lock (Cache)
         {
-            return null;
-        }
+            if (traitId == 0)
+            {
+                return null;
+            }
 
-        if (!Cache.TryGetValue(traitId, out var rows) || rows.Count == 0)
-        {
-            return null;
-        }
+            if (!Cache.TryGetValue(traitId, out var rows) || rows.Count == 0)
+            {
+                return null;
+            }
 
-        return rows
-            .Where(row =>
-                scope.Matches(
-                    row.OriginalLang,
-                    row.TranslationLang,
-                    row.TranslationEngine) &&
-                GameVersionLookupHelper.MatchesStoredVersion(
-                    row.GameVersion,
-                    gameVersion))
-            .OrderByDescending(row => ComputeIdentityMatchScore(
-                row,
-                gameVersion,
-                classJobId,
-                classJobCategoryId))
-            .ThenByDescending(row => row.UpdatedDate)
-            .FirstOrDefault();
+            return rows
+                .Where(row =>
+                    scope.Matches(
+                        row.OriginalLang,
+                        row.TranslationLang,
+                        row.TranslationEngine) &&
+                    GameVersionLookupHelper.MatchesStoredVersion(
+                        row.GameVersion,
+                        gameVersion))
+                .OrderByDescending(row => ComputeIdentityMatchScore(
+                    row,
+                    gameVersion,
+                    classJobId,
+                    classJobCategoryId))
+                .ThenByDescending(row => row.UpdatedDate)
+                .FirstOrDefault();
+        }
     }
 
     /// <summary>
@@ -252,32 +264,35 @@ public static class TraitCacheManager
         string originalText,
         out string translatedText)
     {
-        translatedText = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(originalText))
+        lock (Cache)
         {
+            translatedText = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(originalText))
+            {
+                return false;
+            }
+
+            if (TryFindTranslatedTextInScope(
+                    scope,
+                    gameVersion,
+                    originalText,
+                    out translatedText))
+            {
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(gameVersion))
+            {
+                return TryFindTranslatedTextInScope(
+                    scope,
+                    version: null,
+                    originalText,
+                    out translatedText);
+            }
+
             return false;
         }
-
-        if (TryFindTranslatedTextInScope(
-                scope,
-                gameVersion,
-                originalText,
-                out translatedText))
-        {
-            return true;
-        }
-
-        if (!string.IsNullOrWhiteSpace(gameVersion))
-        {
-            return TryFindTranslatedTextInScope(
-                scope,
-                version: null,
-                originalText,
-                out translatedText);
-        }
-
-        return false;
     }
 
     /// <summary>
@@ -298,32 +313,35 @@ public static class TraitCacheManager
         string translatedText,
         out string originalText)
     {
-        originalText = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(translatedText))
+        lock (Cache)
         {
+            originalText = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(translatedText))
+            {
+                return false;
+            }
+
+            if (TryFindOriginalTextInScope(
+                    scope,
+                    gameVersion,
+                    translatedText,
+                    out originalText))
+            {
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(gameVersion))
+            {
+                return TryFindOriginalTextInScope(
+                    scope,
+                    version: null,
+                    translatedText,
+                    out originalText);
+            }
+
             return false;
         }
-
-        if (TryFindOriginalTextInScope(
-                scope,
-                gameVersion,
-                translatedText,
-                out originalText))
-        {
-            return true;
-        }
-
-        if (!string.IsNullOrWhiteSpace(gameVersion))
-        {
-            return TryFindOriginalTextInScope(
-                scope,
-                version: null,
-                translatedText,
-                out originalText);
-        }
-
-        return false;
     }
 
     /// <summary>
@@ -342,28 +360,31 @@ public static class TraitCacheManager
         string? gameVersion,
         string originalText)
     {
-        if (string.IsNullOrWhiteSpace(originalText))
+        lock (Cache)
         {
+            if (string.IsNullOrWhiteSpace(originalText))
+            {
+                return false;
+            }
+
+            if (TryContainsOriginalTextInScope(
+                    scope,
+                    gameVersion,
+                    originalText))
+            {
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(gameVersion))
+            {
+                return TryContainsOriginalTextInScope(
+                    scope,
+                    version: null,
+                    originalText);
+            }
+
             return false;
         }
-
-        if (TryContainsOriginalTextInScope(
-                scope,
-                gameVersion,
-                originalText))
-        {
-            return true;
-        }
-
-        if (!string.IsNullOrWhiteSpace(gameVersion))
-        {
-            return TryContainsOriginalTextInScope(
-                scope,
-                version: null,
-                originalText);
-        }
-
-        return false;
     }
 
     /// <summary>
@@ -377,16 +398,19 @@ public static class TraitCacheManager
         TranslationReuseScope scope,
         string? gameVersion)
     {
-        var preferredSnapshot = GetExactTextLookupSnapshot(
-            scope,
-            gameVersion);
-        return string.IsNullOrWhiteSpace(gameVersion)
-            ? preferredSnapshot
-            : CanonicalTextLookupSnapshot.Combine(
-                preferredSnapshot,
-                GetExactTextLookupSnapshot(
-                    scope,
-                    version: null));
+        lock (Cache)
+        {
+            var preferredSnapshot = GetExactTextLookupSnapshot(
+                scope,
+                gameVersion);
+            return string.IsNullOrWhiteSpace(gameVersion)
+                ? preferredSnapshot
+                : CanonicalTextLookupSnapshot.Combine(
+                    preferredSnapshot,
+                    GetExactTextLookupSnapshot(
+                        scope,
+                        version: null));
+        }
     }
 
     /// <summary>
@@ -394,12 +418,15 @@ public static class TraitCacheManager
     /// </summary>
     public static void Clear()
     {
-        Cache.Clear();
-        OriginalTextLookupCache.Clear();
-        TextLookupCache.Clear();
-        ReverseTextLookupCache.Clear();
-        Interlocked.Increment(ref revision);
-        PluginRuntimeLog.Debug("TraitCacheManager", "Cleared trait cache.");
+        lock (Cache)
+        {
+            Cache.Clear();
+            OriginalTextLookupCache.Clear();
+            TextLookupCache.Clear();
+            ReverseTextLookupCache.Clear();
+            Interlocked.Increment(ref revision);
+            PluginRuntimeLog.Debug("TraitCacheManager", "Cleared trait cache.");
+        }
     }
 
     /// <summary>

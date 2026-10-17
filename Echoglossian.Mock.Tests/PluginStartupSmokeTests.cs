@@ -6,6 +6,7 @@
 using Echoglossian.PluginRuntime.Startup;
 using Echoglossian.Cache;
 using Echoglossian.DBHelpers;
+using Echoglossian.Persistence;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
 using Echoglossian.Mock.Hosting;
@@ -100,6 +101,9 @@ public class PluginStartupSmokeTests
     {
         using var started = await new TestBoot().StartPluginAsync();
 
+        global::Echoglossian.Echoglossian.PluginInterface.Assembly.Should()
+            .BeSameAs(typeof(EchoglossianAsyncPluginAdapter).Assembly);
+
         var snapshot = started.Plugin.StartupAudit.CaptureSnapshot();
 
         snapshot.HasStage(PluginStartupStage.CommandHandlersRegistered).Should().BeTrue();
@@ -177,6 +181,33 @@ public class PluginStartupSmokeTests
                 stateRoot.Delete(recursive: true);
             }
         }
+    }
+
+    /// <summary>Verifies the hosted plugin owns and cancels the DB-4 writer before disposal completes.</summary>
+    [Fact]
+    public async Task Dispose_cancels_tooltip_writer_and_rejects_new_writes()
+    {
+        using var started = await new TestBoot().StartPluginAsync();
+        var writer = (ActionItemTooltipPersistenceWriter)typeof(global::Echoglossian.Echoglossian)
+            .GetField("actionItemTooltipPersistenceWriter", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(started.Plugin)!;
+        writer.Should().NotBeNull();
+        writer.ShutdownToken.IsCancellationRequested.Should().BeFalse();
+
+        started.Dispose();
+
+        writer.ShutdownToken.IsCancellationRequested.Should().BeTrue();
+        var row = new ActionTooltip
+        {
+            ActionId = 1,
+            OriginalLang = "en",
+            TranslationLang = "pt",
+            TranslationEngine = 0,
+            GameVersion = "7.3",
+            SourceContentHash = "hosted-lifetime-probe",
+        };
+        writer.TryPersist(row, out var completion).Should().Be(PersistenceAdmissionStatus.RejectedShutdown);
+        (await completion).Status.Should().Be(PersistenceCompletionStatus.Rejected);
     }
 
     [Fact]

@@ -17,6 +17,7 @@ public class MockDalamudPluginInterface : IDalamudPluginInterface, IDisposable
     public MockDalamudPluginInterface(
         IUiBuilder uiBuilder,
         PluginLoadSettings pluginLoadSettings,
+        Assembly assembly,
         IPluginManifest pluginManifest,
         IComponentContext componentContext,
         MockDalamudVersionInfo mockDalamudVersionInfo,
@@ -32,6 +33,7 @@ public class MockDalamudPluginInterface : IDalamudPluginInterface, IDisposable
         this.ConfigFile = pluginLoadSettings.ConfigFile;
         this.ConfigDirectory = pluginLoadSettings.ConfigDir;
         this.pluginLoadReason = pluginLoadSettings.PluginLoadReason;
+        this.Assembly = assembly;
         this.AssemblyLocation = new FileInfo((pluginLoadSettings.AssemblyLocation ?? Environment.ProcessPath)!);
         this.pluginConfiguration = new PluginConfiguration(pluginLoadSettings.ConfigDir.FullName);
         this.pluginManifest = pluginManifest;
@@ -190,6 +192,9 @@ public class MockDalamudPluginInterface : IDalamudPluginInterface, IDisposable
     public FileInfo AssemblyLocation { get; }
 
     /// <inheritdoc/>
+    public Assembly Assembly { get; }
+
+    /// <inheritdoc/>
     public ICallGateProvider<TRet> GetIpcProvider<TRet>(string name)
     {
         return new MockCallGateProvider<TRet>(name);
@@ -311,7 +316,7 @@ public class MockDalamudPluginInterface : IDalamudPluginInterface, IDisposable
     /// <inheritdoc/>
     public IPluginConfiguration? GetPluginConfig()
     {
-        foreach (var type in Assembly.GetCallingAssembly().GetTypes())
+        foreach (var type in System.Reflection.Assembly.GetCallingAssembly().GetTypes())
         {
             if (type.IsAssignableTo(typeof(IPluginConfiguration)))
             {

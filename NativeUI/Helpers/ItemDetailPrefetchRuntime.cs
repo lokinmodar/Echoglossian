@@ -7,6 +7,9 @@ using System.Globalization;
 using Dalamud.Game.Gui;
 using Dalamud.Utility;
 using DetailKind = Dalamud.Game.Gui.DetailKind;
+using Echoglossian.DBHelpers;
+using Echoglossian.Persistence;
+using Echoglossian.Translators;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using DeepDungeonItemSheet = Lumina.Excel.Sheets.DeepDungeonItem;
@@ -19,7 +22,7 @@ namespace Echoglossian;
 ///     Provides DB-first background prefetch for canonical ItemDetail
 ///     payloads.
 /// </summary>
-public unsafe partial class Echoglossian
+public partial class Echoglossian
 {
     private const int ItemDetailPrefetchItemsPerTick = 10;
 
@@ -100,16 +103,30 @@ public unsafe partial class Echoglossian
             return;
         }
 
+        this.TickItemDetailPrefetchQueue(this.PrefetchItemDetail);
+    }
+
+    /// <summary>Advances the captured queue only when ownership does not reject capacity.</summary>
+    /// <param name="capture">The Framework capture and admission callback.</param>
+    /// <returns>The captures attempted within this tick's existing budget.</returns>
+    internal int TickItemDetailPrefetchQueue(Func<uint, StructuredTooltipOperationAdmission> capture)
+    {
         var processedCount = 0;
         while (processedCount < ItemDetailPrefetchItemsPerTick &&
-               this.itemDetailPrefetchQueueIndex <
-               this.itemDetailPrefetchQueue.Count)
+               this.itemDetailPrefetchQueueIndex < this.itemDetailPrefetchQueue.Count)
         {
-            var itemId =
-                this.itemDetailPrefetchQueue[this.itemDetailPrefetchQueueIndex++];
-            this.PrefetchItemDetail(itemId);
+            var id = this.itemDetailPrefetchQueue[this.itemDetailPrefetchQueueIndex];
+            var admission = capture(id);
             processedCount++;
+            if (admission == StructuredTooltipOperationAdmission.RejectedCapacity)
+            {
+                break;
+            }
+
+            this.itemDetailPrefetchQueueIndex++;
         }
+
+        return processedCount;
     }
 
     /// <summary>
@@ -147,238 +164,107 @@ public unsafe partial class Echoglossian
                 this.configuration.TranslateActionMenuWindow);
     }
 
-    /// <summary>
-    ///     Prefetches one canonical item-tooltip payload and any missing translations.
-    /// </summary>
-    /// <param name="itemId">The item row identifier.</param>
-    private void PrefetchItemDetail(uint itemId)
+
+    /// <summary>Captures a canonical sheet payload on the Framework before asynchronous work.</summary>
+    /// <param name="itemId">The source row id.</param>
+    private StructuredTooltipOperationAdmission PrefetchItemDetail(uint itemId)
     {
-        if (!RuntimeLanguageHelper.TryResolveCurrentSourceLanguage(
-                out var sourceLanguage))
+        if (!TryCapturePrefetchOperationScope(ResolveCurrentPrefetchSourceLanguage, this.configuration, out var source, out var scope) ||
+            !TryBuildItemTooltipCanonicalPayload(itemId, out var payload))
         {
-            return;
+            return StructuredTooltipOperationAdmission.RejectedCapture;
         }
 
-        if (!TryBuildItemTooltipCanonicalPayload(itemId, out var originalPayload))
-        {
-            return;
-        }
-
-        var originalRow = ItemTooltipPersistenceHelper.CreateCanonicalRow(
-            sourceLanguage.PersistenceCode,
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
-            GetGameVersion(),
-            originalPayload);
-        var existingRow = this.FindItemTooltip(originalRow) ?? originalRow;
-        this.InsertItemTooltip(originalRow);
-
-        this.PrefetchItemDetailName(
-            originalPayload,
-            existingRow,
-            sourceLanguage);
-        this.PrefetchItemDetailDescription(
-            originalPayload,
-            existingRow,
-            sourceLanguage);
+        return this.StartItemDetailOperation(payload, source, scope, GetGameVersion(), PersistencePriority.Background);
     }
 
-    /// <summary>
-    ///     Prefetches the translated item name when it is not yet persisted.
-    /// </summary>
-    /// <param name="originalPayload">The canonical original payload.</param>
-    /// <param name="existingRow">The currently persisted row, if any.</param>
-    /// <param name="sourceLanguage">The resolved source language.</param>
-    private void PrefetchItemDetailName(
-        ItemTooltipCanonicalPayload originalPayload,
-        ItemTooltip existingRow,
-        SourceClientLanguage sourceLanguage)
+    /// <summary>Admits one managed snapshot while preserving terminal canonical ownership.</summary>
+    /// <param name="payload">The Framework-captured source payload.</param>
+    /// <param name="source">The captured provider source.</param>
+    /// <param name="scope">The immutable translation policy.</param>
+    /// <param name="gameVersion">The captured source version.</param>
+    /// <param name="priority">The originating persistence lane.</param>
+    private StructuredTooltipOperationAdmission StartItemDetailOperation(ItemTooltipCanonicalPayload payload, SourceClientLanguage source, TranslationReuseScope scope, string? gameVersion, PersistencePriority priority)
     {
-        if (string.IsNullOrWhiteSpace(originalPayload.Name) ||
-            !string.IsNullOrWhiteSpace(existingRow.TranslatedItemName))
+        var writer = this.actionItemTooltipPersistenceWriter;
+        if (writer == null || writer.ShutdownToken.IsCancellationRequested)
         {
-            return;
+            return StructuredTooltipOperationAdmission.RejectedShutdown;
         }
 
-        var translationKey =
-            BuildItemDetailNameTranslationKey(originalPayload);
-        if (this.TryGetQueuedTranslation(
-                translationKey,
-                out var cachedTranslatedName))
-        {
-            this.ApplyItemDetailTranslation(
-                originalPayload.ItemId,
-                sourceLanguage,
-                translatedName: cachedTranslatedName);
-            return;
-        }
-
-        this.QueueTranslation(
-            translationKey,
-            () => TranslationService.Translate(
-                originalPayload.Name,
-                sourceLanguage,
-                LangDict[LanguageInt].Code,
-                originContext: BuildItemDetailOriginContext(
-                    originalPayload,
-                    "Name")),
-            translatedName => this.ApplyItemDetailTranslation(
-                originalPayload.ItemId,
-                sourceLanguage,
-                translatedName: translatedName));
+        var snapshot = payload.Serialize();
+        var probe = ItemTooltipPersistenceHelper.CreateCanonicalRow(scope.SourceLanguageCode, scope.TargetLanguageCode, scope.TranslationEngine, gameVersion, payload);
+        var key = ActionItemTooltipPersistenceWriter.BuildIdentity("ItemTooltip", payload.ItemId, scope, gameVersion, probe.SourceContentHash);
+        var translationService = TranslationService;
+        var resolution = translationService.CaptureTranslatorResolution(scope.TranslationEngine!.Value, TranslationSurfaceGroup.Default);
+        var broker = this.queuedTranslationBroker;
+        return this.structuredTooltipOperationOwner.TryStart(key, () => CompleteItemDetailOperationAsync(
+            writer, broker, snapshot, probe, scope, priority,
+            (text, origin, token) => translationService.TranslateAsync(text, source, scope.TargetLanguageCode,
+                TranslationSurfaceGroup.Default, resolution, token, origin)), writer.ShutdownToken).Status;
     }
 
-    /// <summary>
-    ///     Prefetches the translated item description when it is not yet persisted.
-    /// </summary>
-    /// <param name="originalPayload">The canonical original payload.</param>
-    /// <param name="existingRow">The currently persisted row, if any.</param>
-    /// <param name="sourceLanguage">The resolved source language.</param>
-    private void PrefetchItemDetailDescription(
-        ItemTooltipCanonicalPayload originalPayload,
-        ItemTooltip existingRow,
-        SourceClientLanguage sourceLanguage)
+    /// <summary>Completes captured managed work without consulting game state or mutating native UI.</summary>
+    /// <param name="writer">The process-lifetime persistence adapter.</param>
+    /// <param name="broker">The existing shared translation broker.</param>
+    /// <param name="snapshot">The immutable serialized source payload.</param>
+    /// <param name="probe">The operation-owned canonical identity.</param>
+    /// <param name="scope">The captured translation policy.</param>
+    /// <param name="priority">The originating persistence lane.</param>
+    /// <param name="translate">The captured translator operation.</param>
+    internal static async Task CompleteItemDetailOperationAsync(
+        ActionItemTooltipPersistenceWriter writer, QueuedTranslationBroker broker, string snapshot,
+        ItemTooltip probe, TranslationReuseScope scope, PersistencePriority priority,
+        Func<string, string, CancellationToken, Task<string>> translate)
     {
-        if (string.IsNullOrWhiteSpace(originalPayload.Description) ||
-            StructuredTooltipTranslationValidation
-                .GetMeaningfulTranslationOrNull(
-                    originalPayload.Description,
-                    existingRow.TranslatedItemDescription) != null)
+        var token = writer.ShutdownToken;
+        writer.TryFind(probe, scope, out var read, priority);
+        var result = await read.WaitAsync(token).ConfigureAwait(false);
+        if (result.Status is not (PersistenceCompletionStatus.Succeeded or PersistenceCompletionStatus.Unchanged))
         {
             return;
         }
 
-        var translationKey =
-            BuildItemDetailDescriptionTranslationKey(originalPayload);
-        if (this.TryGetQueuedTranslation(
-                translationKey,
-                out var cachedTranslatedDescription))
-        {
-            this.ApplyItemDetailTranslation(
-                originalPayload.ItemId,
-                sourceLanguage,
-                translatedDescription: cachedTranslatedDescription);
-            return;
-        }
-
-        this.QueueTranslation(
-            translationKey,
-            () => TranslationService.Translate(
-                originalPayload.Description,
-                sourceLanguage,
-                LangDict[LanguageInt].Code,
-                originContext: BuildItemDetailOriginContext(
-                    originalPayload,
-                    "Description")),
-            translatedDescription => this.ApplyItemDetailTranslation(
-                originalPayload.ItemId,
-                sourceLanguage,
-                translatedDescription: translatedDescription));
-    }
-
-    /// <summary>
-    ///     Applies one resolved item-tooltip translation into canonical storage.
-    /// </summary>
-    /// <param name="itemId">The item row identifier.</param>
-    /// <param name="sourceLanguage">The resolved source language.</param>
-    /// <param name="translatedName">The translated name, if any.</param>
-    /// <param name="translatedDescription">The translated description, if any.</param>
-    private void ApplyItemDetailTranslation(
-        uint itemId,
-        SourceClientLanguage sourceLanguage,
-        string? translatedName = null,
-        string? translatedDescription = null)
-    {
-        if (!TryBuildItemTooltipCanonicalPayload(itemId, out var originalPayload))
+        var original = ItemTooltipCanonicalPayload.Deserialize(snapshot)!;
+        var translated = ItemTooltipCanonicalPayload.Deserialize(snapshot)!;
+        translated.TranslatedName = string.IsNullOrWhiteSpace(original.Description)
+            ? StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original.Name, result.Value?.TranslatedItemName)
+            : result.Value?.TranslatedItemName;
+        translated.TranslatedDescription = StructuredTooltipTranslationValidation.GetMeaningfulTranslationOrNull(original.Description, result.Value?.TranslatedItemDescription);
+        if (translated.HasCompleteTranslation)
         {
             return;
         }
 
-        var existingProbe = ItemTooltipPersistenceHelper.CreateCanonicalRow(
-            sourceLanguage.PersistenceCode,
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
-            GetGameVersion(),
-            originalPayload);
-        var existingRow = this.FindItemTooltip(existingProbe);
-        var translatedPayload = existingRow == null
-            ? originalPayload
-            : ItemTooltipCanonicalPayload.Deserialize(
-                    existingRow.CanonicalPayloadAsText) ??
-                originalPayload;
-
-        translatedPayload.ItemId = originalPayload.ItemId;
-        translatedPayload.IconId = originalPayload.IconId;
-        translatedPayload.ItemActionId = originalPayload.ItemActionId;
-        translatedPayload.ItemUiCategoryId = originalPayload.ItemUiCategoryId;
-        translatedPayload.ClassJobCategoryId =
-            originalPayload.ClassJobCategoryId;
-        translatedPayload.Name = originalPayload.Name;
-        translatedPayload.Description = originalPayload.Description;
-        translatedPayload.TranslatedName =
-            !string.IsNullOrWhiteSpace(translatedName)
-                ? translatedName
-                : translatedPayload.TranslatedName;
-        translatedPayload.TranslatedDescription =
-            !string.IsNullOrWhiteSpace(translatedDescription)
-                ? translatedDescription
-                : translatedPayload.TranslatedDescription;
-        translatedPayload.TranslatedName =
-            StructuredTooltipTranslationValidation
-                .GetMeaningfulTranslationOrNull(
-                    originalPayload.Name,
-                    translatedPayload.TranslatedName);
-        translatedPayload.TranslatedDescription =
-            StructuredTooltipTranslationValidation
-                .GetMeaningfulTranslationOrNull(
-                    originalPayload.Description,
-                    translatedPayload.TranslatedDescription);
-        this.TryPopulatePendingItemDetailTranslations(
-            originalPayload,
-            translatedPayload);
-        if (!translatedPayload.HasCompleteTranslation)
+        // Preserve original-row registration, but let the coordinator suppress unchanged writes.
+        writer.TryPersist(probe, out var registration, priority);
+        var registered = await registration.WaitAsync(token).ConfigureAwait(false);
+        if (registered.Status is not (PersistenceCompletionStatus.Succeeded or PersistenceCompletionStatus.Unchanged))
         {
             return;
         }
 
-        var translatedRow = ItemTooltipPersistenceHelper.CreateCanonicalRow(
-            sourceLanguage.PersistenceCode,
-            LangDict[LanguageInt].Code,
-            this.configuration.ChosenTransEngine,
-            GetGameVersion(),
-            originalPayload,
-            translatedPayload);
-        this.InsertItemTooltip(translatedRow);
-    }
-
-    /// <summary>
-    ///     Tries to enrich one item-detail payload with any queued counterpart
-    ///     translation so canonical persistence only happens when the payload is complete.
-    /// </summary>
-    /// <param name="originalPayload">The canonical original payload.</param>
-    /// <param name="translatedPayload">The partially translated payload.</param>
-    private void TryPopulatePendingItemDetailTranslations(
-        ItemTooltipCanonicalPayload originalPayload,
-        ItemTooltipCanonicalPayload translatedPayload)
-    {
-        if (string.IsNullOrWhiteSpace(translatedPayload.TranslatedName) &&
-            !string.IsNullOrWhiteSpace(originalPayload.Name) &&
-            this.TryGetQueuedTranslation(
-                BuildItemDetailNameTranslationKey(originalPayload),
-                out var cachedTranslatedName))
+        var name = ResolveStructuredTooltipFieldAsync(
+            broker,
+            BuildTranslationReuseScopedKey($"ItemDetailPrefetch|{original.ItemId}|Name|{original.Name}", scope),
+            original.Name, translated.TranslatedName, $"ItemTooltip/{original.ItemId}/Name", translate, token,
+            preserveSourceEquivalent: !string.IsNullOrWhiteSpace(original.Description));
+        var description = ResolveStructuredTooltipFieldAsync(
+            broker,
+            BuildTranslationReuseScopedKey($"ItemDetailPrefetch|{original.ItemId}|Description|{original.Description}", scope),
+            original.Description, translated.TranslatedDescription, $"ItemTooltip/{original.ItemId}/Description", translate, token);
+        await Task.WhenAll(name, description).ConfigureAwait(false);
+        translated.TranslatedName = await name.ConfigureAwait(false);
+        translated.TranslatedDescription = await description.ConfigureAwait(false);
+        if (!translated.HasCompleteTranslation)
         {
-            translatedPayload.TranslatedName = cachedTranslatedName;
+            return;
         }
 
-        if (string.IsNullOrWhiteSpace(translatedPayload.TranslatedDescription) &&
-            !string.IsNullOrWhiteSpace(originalPayload.Description) &&
-            this.TryGetQueuedTranslation(
-                BuildItemDetailDescriptionTranslationKey(originalPayload),
-                out var cachedTranslatedDescription))
-        {
-            translatedPayload.TranslatedDescription =
-                cachedTranslatedDescription;
-        }
+        var row = ItemTooltipPersistenceHelper.CreateCanonicalRow(scope.SourceLanguageCode, scope.TargetLanguageCode,
+            scope.TranslationEngine, probe.GameVersion, original, translated);
+        writer.TryPersist(row, out var write, priority);
+        await write.WaitAsync(token).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -422,7 +308,7 @@ public unsafe partial class Echoglossian
     /// </summary>
     /// <param name="itemIds">The collected item ids.</param>
     /// <returns>True when item ids were collected successfully.</returns>
-    private static bool TryCollectTrackedItemIds(out List<uint> itemIds)
+    private static unsafe bool TryCollectTrackedItemIds(out List<uint> itemIds)
     {
         itemIds = [];
 
