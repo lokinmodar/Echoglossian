@@ -19,6 +19,18 @@ config toggle and display mode.
 
 GitHub issue: [#217](https://github.com/lokinmodar/Echoglossian/issues/217)
 
+## Relationship to issue 286
+
+Issue [#286](https://github.com/lokinmodar/Echoglossian/issues/286) tracks a
+native LTR glyph fallback that uses Echoglossian's bundled fonts. That design
+preserves the original Unicode text instead of removing diacritics and is the
+preferred long-term result for eligible LTR native replacement paths.
+
+Keep the behavior in this spec until issue #286 passes in-game validation.
+After that validation, reevaluate whether this normalizer remains necessary
+for LTR native and swap modes. Do not change overlay, texture-backed, or RTL
+behavior as part of that reevaluation.
+
 ## Problem
 
 Current repo facts:
