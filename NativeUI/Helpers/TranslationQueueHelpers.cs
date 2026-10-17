@@ -19,6 +19,12 @@ public partial class Echoglossian
       string key,
       out string translatedText)
   {
+    if (!this.configuration.Translate)
+    {
+      translatedText = string.Empty;
+      return false;
+    }
+
     return this.queuedTranslationBroker.TryGetCached(key, out translatedText);
   }
 
@@ -35,6 +41,11 @@ public partial class Echoglossian
       Func<Task<string>> resolver,
       Action<string>? onResolved = null)
   {
+    if (!this.configuration.Translate)
+    {
+      return false;
+    }
+
     return this.queuedTranslationBroker.Queue(
         key,
         resolver,
@@ -59,6 +70,11 @@ public partial class Echoglossian
       Action<string>? onResolved,
       string? surfaceIdentity)
   {
+    if (!this.configuration.Translate)
+    {
+      return false;
+    }
+
     return this.queuedTranslationBroker.Queue(
         key,
         resolver,

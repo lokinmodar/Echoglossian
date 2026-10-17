@@ -29,6 +29,18 @@ public static class GeneralTab
             ref config.ShowInCutscenes);
         ImGui.Spacing();
 
+        changed |= ImGui.Checkbox(
+            Resources.ShowTranslationToggleButton,
+            ref config.ShowTranslationToggleButton);
+        ImGui.SameLine();
+        ImGui.Text(Resources.HoverTooltipIndicator);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(Resources.ShowTranslationToggleButtonTooltip);
+        }
+
+        ImGui.Spacing();
+
         if (ImGui.Checkbox(
                 Resources.ConfigTab9CheckboxClipboardText,
                 ref config.CopyTranslationToClipboard))

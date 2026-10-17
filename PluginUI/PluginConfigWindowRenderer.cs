@@ -43,7 +43,7 @@ public sealed class PluginConfigWindowRenderer
             $"{Resources.ConfigWindowTitle} - Plugin Version: {context.PluginVersion}",
             ref isOpen);
 
-        this.DrawTranslationStatusHeader(context.Configuration);
+        this.DrawTranslationStatusHeader(context);
         ImGui.Spacing();
         ImGui.BeginGroup();
 
@@ -117,9 +117,19 @@ public sealed class PluginConfigWindowRenderer
     /// <summary>
     /// Draws the compact translation status line outside the tab content.
     /// </summary>
-    /// <param name="config">The configuration being edited.</param>
-    private void DrawTranslationStatusHeader(Config config)
+    /// <param name="context">The configuration-window context.</param>
+    private void DrawTranslationStatusHeader(PluginConfigWindowContext context)
     {
+        var config = context.Configuration;
+        if (context.TranslationActivationCoordinator?.State ==
+            TranslationActivationState.Transitioning)
+        {
+            ImGui.TextColored(
+                new Vector4(1f, 0.65f, 0f, 1f),
+                Resources.TranslationToggleTransitioningTooltip);
+            return;
+        }
+
         var blockReason = TranslationActivationGuard.GetBlockReason(
             config,
             Echoglossian.SelectedLanguage);
@@ -202,8 +212,7 @@ public sealed class PluginConfigWindowRenderer
         this.DrawTranslationSetupSectionBreak();
         this.DrawTranslationSetupSectionHeader(Resources.EnableTranslation);
         changed |= this.DrawTranslationActivationSection(
-            context.Configuration,
-            context.RuntimeActionsAvailable);
+            context);
 
         this.DrawTranslationSetupSectionBreak();
         this.DrawTranslationSetupSectionHeader(Resources.ConfigTabGeneralName);
@@ -303,13 +312,12 @@ public sealed class PluginConfigWindowRenderer
     /// Draws translation activation and blocks it while dependencies are not
     /// ready.
     /// </summary>
-    /// <param name="config">The configuration being edited.</param>
-    /// <param name="runtimeActionsAvailable">Whether asset management actions are available.</param>
+    /// <param name="context">The configuration-window context.</param>
     /// <returns><see langword="true" /> when the configuration changed.</returns>
     private bool DrawTranslationActivationSection(
-        Config config,
-        bool runtimeActionsAvailable)
+        PluginConfigWindowContext context)
     {
+        var config = context.Configuration;
         var changed = false;
 
         var blockReason = TranslationActivationGuard.GetBlockReason(
@@ -326,24 +334,52 @@ public sealed class PluginConfigWindowRenderer
 
         if (translationShouldBeBlocked)
         {
-            changed |= this.AssignIfChanged(ref config.Translate, false);
+            if (config.Translate &&
+                context.TranslationActivationCoordinator is not null)
+            {
+                _ = context.TranslationActivationCoordinator.RequestAsync(
+                    TranslationActivationRequest.Disable);
+            }
+            else
+            {
+                changed |= this.AssignIfChanged(ref config.Translate, false);
+            }
         }
 
         if (!config.UnsupportedLanguage)
         {
+            var activationTransitioning =
+                context.TranslationActivationCoordinator?.State ==
+                TranslationActivationState.Transitioning;
             if (translationBlockedByMissingAssets ||
-                translationBlockedByEngineConfiguration)
+                translationBlockedByEngineConfiguration ||
+                activationTransitioning)
             {
                 ImGui.BeginDisabled();
             }
 
-            if (ImGui.Checkbox(Resources.EnableTranslation, ref config.Translate))
+            var requestedTranslationState = config.Translate;
+            if (ImGui.Checkbox(
+                    Resources.EnableTranslation,
+                    ref requestedTranslationState))
             {
-                changed = true;
+                if (context.TranslationActivationCoordinator is not null)
+                {
+                    _ = context.TranslationActivationCoordinator.RequestAsync(
+                        requestedTranslationState
+                            ? TranslationActivationRequest.Enable
+                            : TranslationActivationRequest.Disable);
+                }
+                else
+                {
+                    config.Translate = requestedTranslationState;
+                    changed = true;
+                }
             }
 
             if (translationBlockedByMissingAssets ||
-                translationBlockedByEngineConfiguration)
+                translationBlockedByEngineConfiguration ||
+                activationTransitioning)
             {
                 ImGui.EndDisabled();
             }
@@ -367,7 +403,7 @@ public sealed class PluginConfigWindowRenderer
                 Resources.TranslationBlockedByMissingAssetsStatusText);
             changed |= PluginAssetRequirementUiHelper.DrawInlineWarning(
                 config,
-                runtimeActionsAvailable);
+                context.RuntimeActionsAvailable);
         }
         else if (translationBlockedByEngineConfiguration)
         {

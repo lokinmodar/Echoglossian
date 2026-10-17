@@ -83,7 +83,9 @@ internal sealed class QuestToastRuntime
       ref QuestToastOptions options,
       ref bool isHandled)
   {
-    if (!this.config.TranslateToast || !this.config.TranslateQuestToast)
+    if (!this.config.Translate ||
+        !this.config.TranslateToast ||
+        !this.config.TranslateQuestToast)
     {
       return;
     }
@@ -337,7 +339,8 @@ internal sealed class QuestToastRuntime
   {
     lock (this.stateGate)
     {
-      return requestId == this.activeRequestId &&
+      return this.config.Translate &&
+             requestId == this.activeRequestId &&
              string.Equals(
                  this.currentOriginalText,
                  originalText,
@@ -376,7 +379,8 @@ internal sealed class QuestToastRuntime
   /// </returns>
   private bool ShouldUseOverlay()
   {
-    return this.config.TranslateToast &&
+    return this.config.Translate &&
+           this.config.TranslateToast &&
            this.config.TranslateQuestToast &&
            TranslationDisplayModeHelper.UsesOverlayPresentation(
                this.GetCurrentDisplayMode(),
@@ -393,7 +397,8 @@ internal sealed class QuestToastRuntime
   /// </returns>
   private bool ShouldSwapTexts()
   {
-    return this.config.TranslateToast &&
+    return this.config.Translate &&
+           this.config.TranslateToast &&
            this.config.TranslateQuestToast &&
            TranslationDisplayModeHelper.ShowsOriginalOverlayText(
                this.GetCurrentDisplayMode(),
@@ -410,7 +415,8 @@ internal sealed class QuestToastRuntime
   /// </returns>
   private bool ShouldApplyNativeText()
   {
-    return this.config.TranslateToast &&
+    return this.config.Translate &&
+           this.config.TranslateToast &&
            this.config.TranslateQuestToast &&
            TranslationDisplayModeHelper.WritesNativeTranslation(
                this.GetCurrentDisplayMode(),

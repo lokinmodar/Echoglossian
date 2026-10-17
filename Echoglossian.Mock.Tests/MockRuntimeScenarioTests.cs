@@ -37,6 +37,7 @@ public sealed class MockRuntimeScenarioTests
         using var fixture = PreviewOwnedHostedSessionFixture.Create(
             config: new global::Echoglossian.Config
             {
+                Translate = true,
                 TranslateJournalAccept = true,
             });
 

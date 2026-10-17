@@ -1345,7 +1345,8 @@ public partial class Echoglossian
           Func<string, TranslationReuseScope, bool, Task> onCompleted)
   {
     var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-    if (!TranslationService.IsKnownCapturedSourceLanguage(sourceLanguage) ||
+    if (!this.configuration.Translate ||
+        !TranslationService.IsKnownCapturedSourceLanguage(sourceLanguage) ||
         !RuntimeLanguageHelper.LanguagesMatch(
             sourceLanguage.PersistenceCode,
             scope.SourceLanguageCode) ||
