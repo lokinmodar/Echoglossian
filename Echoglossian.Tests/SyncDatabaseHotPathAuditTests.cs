@@ -14,6 +14,89 @@ namespace Echoglossian.Tests;
 /// </summary>
 public sealed class SyncDatabaseHotPathAuditTests
 {
+    /// <summary>Attributes structured persistence inside the shared base to its owning migration domain.</summary>
+    /// <param name="fileName">The shared base or safe async partial file.</param>
+    /// <param name="method">The structured persistence operation.</param>
+    [Theory]
+    [InlineData("DbFirstGameWindowAddonHandler.cs", "FindStringArrayData")]
+    [InlineData("DbFirstGameWindowAddonHandler.cs", "InsertStringArrayData")]
+    [InlineData("DbFirstGameWindowAddonHandler.Translation.cs", "FindStringArrayData")]
+    [InlineData("DbFirstGameWindowAddonHandler.Translation.cs", "InsertStringArrayData")]
+    public void AuditScript_SharedBaseStructuredPersistence_BelongsToDb6(string fileName, string method)
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            $"NativeUI/AddonHandlers/Common/{fileName}",
+            $"public void Read() {{ StringArrayDataPersistenceHelper.{method}(dir, row); GameWindowPersistenceHelper.InsertGameWindow(dir, row); }}");
+        var result = this.RunAudit(fixture, updateBaseline: true);
+        using var document = JsonDocument.Parse(File.ReadAllText(fixture.BaselinePath));
+        var findings = document.RootElement.GetProperty("allowedFindings").EnumerateArray().ToArray();
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal(2, findings.Length);
+        Assert.Equal("DB-6", Assert.Single(findings, finding => finding.GetProperty("evidence").GetString()!
+            .StartsWith("StringArrayDataPersistenceHelper", StringComparison.Ordinal)).GetProperty("stage").GetString());
+        Assert.Equal("DB-5", Assert.Single(findings, finding => finding.GetProperty("evidence").GetString()!
+            .StartsWith("GameWindowPersistenceHelper", StringComparison.Ordinal)).GetProperty("stage").GetString());
+    }
+
+    /// <summary>
+    ///     Ensures awaited collection results lose database provenance while later query aliases remain audited.
+    /// </summary>
+    /// <param name="materialization">The asynchronous collection materialization.</param>
+    [Theory]
+    [InlineData("ToListAsync()")]
+    [InlineData("ToArrayAsync()")]
+    [InlineData("ToDictionaryAsync(row => row.Id)")]
+    [InlineData("ToHashSetAsync()")]
+    public void AuditScript_AwaitedCollection_IsMemoryButLaterQueryRemainsDebt(string materialization)
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "DBHelpers/AsyncCollectionFixture.cs",
+            "public async Task Read(EchoglossianDbContext context) { " +
+            $"var rows = await context.Rows.{materialization}.ConfigureAwait(false); " +
+            "_ = rows.FirstOrDefault(); _ = rows.ToList(); " +
+            "var query = context.Rows.Where(row => row.Id > 0); _ = query.FirstOrDefault(); }");
+
+        var result = this.RunAudit(fixture, updateBaseline: true);
+        using var document = JsonDocument.Parse(File.ReadAllText(fixture.BaselinePath));
+        var queries = document.RootElement.GetProperty("allowedFindings").EnumerateArray()
+            .Where(finding => finding.GetProperty("category").GetString() == "sync-ef-query")
+            .ToArray();
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("FirstOrDefault( [occurrence 1]", Assert.Single(queries).GetProperty("evidence").GetString());
+    }
+
+    /// <summary>
+    ///     Ensures EF local-view operations are memory-only without exempting real queries in the same statement.
+    /// </summary>
+    [Fact]
+    public void AuditScript_LocalView_IsMemoryButLaterDatabaseReceiversRemainDebt()
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "DBHelpers/LocalCollectionFixture.cs",
+            "public void Read(EchoglossianDbContext context) { " +
+            "var localRows = context.Rows.Local; _ = localRows.ToList(); " +
+            "_ = context.Rows.Local.FirstOrDefault(); " +
+            "foreach (var row in context.Rows.Local) {} " +
+            "_ = context.Rows.Local.FirstOrDefault() ?? context.Rows.FirstOrDefault(); " +
+            "var query = context.Rows.Where(row => row.Id > 0); _ = query.ToList(); }");
+
+        var result = this.RunAudit(fixture, updateBaseline: true);
+        using var document = JsonDocument.Parse(File.ReadAllText(fixture.BaselinePath));
+        var queries = document.RootElement.GetProperty("allowedFindings").EnumerateArray()
+            .Where(finding => finding.GetProperty("category").GetString() == "sync-ef-query")
+            .ToArray();
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal(2, queries.Length);
+        Assert.Contains(queries, finding => finding.GetProperty("evidence").GetString() == "FirstOrDefault( [occurrence 1]");
+        Assert.Contains(queries, finding => finding.GetProperty("evidence").GetString() == "ToList( [occurrence 1]");
+    }
+
     /// <summary>
     /// Ensures async helper calls are excluded while synchronous calls remain findings.
     /// </summary>
