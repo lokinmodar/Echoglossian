@@ -79,69 +79,6 @@
       "evidence": ".Wait( [occurrence 4]"
     },
     {
-      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 1]",
-      "category": "blocking-wait",
-      "stage": "DB-5",
-      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
-      "evidence": ".Result [occurrence 1]"
-    },
-    {
-      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 2]",
-      "category": "blocking-wait",
-      "stage": "DB-5",
-      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
-      "evidence": ".Result [occurrence 2]"
-    },
-    {
-      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 3]",
-      "category": "blocking-wait",
-      "stage": "DB-5",
-      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
-      "evidence": ".Result [occurrence 3]"
-    },
-    {
-      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 4]",
-      "category": "blocking-wait",
-      "stage": "DB-5",
-      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
-      "evidence": ".Result [occurrence 4]"
-    },
-    {
-      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 5]",
-      "category": "blocking-wait",
-      "stage": "DB-5",
-      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
-      "evidence": ".Result [occurrence 5]"
-    },
-    {
-      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 6]",
-      "category": "blocking-wait",
-      "stage": "DB-5",
-      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
-      "evidence": ".Result [occurrence 6]"
-    },
-    {
-      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 7]",
-      "category": "blocking-wait",
-      "stage": "DB-5",
-      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
-      "evidence": ".Result [occurrence 7]"
-    },
-    {
-      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 8]",
-      "category": "blocking-wait",
-      "stage": "DB-5",
-      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
-      "evidence": ".Result [occurrence 8]"
-    },
-    {
-      "id": "blocking-wait|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|.Result [occurrence 9]",
-      "category": "blocking-wait",
-      "stage": "DB-5",
-      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
-      "evidence": ".Result [occurrence 9]"
-    },
-    {
       "id": "blocking-wait|NativeUI/AddonHandlers/Common/TooltipHandler.cs|.Result [occurrence 1]",
       "category": "blocking-wait",
       "stage": "DB-4",
@@ -377,13 +314,6 @@
       "category": "direct-db-context",
       "stage": "DB-4",
       "path": "Cache/ActionTooltipCacheManager.cs",
-      "evidence": "new EchoglossianDbContext( [occurrence 1]"
-    },
-    {
-      "id": "direct-db-context|Cache/GameWindowCacheManager.cs|new EchoglossianDbContext( [occurrence 1]",
-      "category": "direct-db-context",
-      "stage": "DB-5",
-      "path": "Cache/GameWindowCacheManager.cs",
       "evidence": "new EchoglossianDbContext( [occurrence 1]"
     },
     {
@@ -765,13 +695,6 @@
       "evidence": "new EchoglossianDbContext( [occurrence 9]"
     },
     {
-      "id": "direct-db-context|DBHelpers/GameWindowPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 1]",
-      "category": "direct-db-context",
-      "stage": "DB-5",
-      "path": "DBHelpers/GameWindowPersistenceHelper.cs",
-      "evidence": "new EchoglossianDbContext( [occurrence 1]"
-    },
-    {
       "id": "direct-db-context|DBHelpers/ItemTooltipPersistenceHelper.cs|new EchoglossianDbContext( [occurrence 1]",
       "category": "direct-db-context",
       "stage": "DB-4",
@@ -912,13 +835,6 @@
       "evidence": "TraitPersistenceHelper.InsertTrait( [occurrence 1]"
     },
     {
-      "id": "persistence-helper-call|DBHelpers/DbOperations.cs|GameWindowPersistenceHelper.InsertGameWindow( [occurrence 1]",
-      "category": "persistence-helper-call",
-      "stage": "DB-7",
-      "path": "DBHelpers/DbOperations.cs",
-      "evidence": "GameWindowPersistenceHelper.InsertGameWindow( [occurrence 1]"
-    },
-    {
       "id": "persistence-helper-call|DBHelpers/ReferenceTextDbOperations.cs|ReferenceTextPersistenceHelper.FindReferenceText( [occurrence 1]",
       "category": "persistence-helper-call",
       "stage": "DB-2",
@@ -933,25 +849,18 @@
       "evidence": "ReferenceTextPersistenceHelper.InsertReferenceText( [occurrence 1]"
     },
     {
-      "id": "persistence-helper-call|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|GameWindowPersistenceHelper.InsertGameWindow( [occurrence 1]",
-      "category": "persistence-helper-call",
-      "stage": "DB-5",
-      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
-      "evidence": "GameWindowPersistenceHelper.InsertGameWindow( [occurrence 1]"
-    },
-    {
-      "id": "persistence-helper-call|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|StringArrayDataPersistenceHelper .InsertStringArrayData( [occurrence 1]",
-      "category": "persistence-helper-call",
-      "stage": "DB-5",
-      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
-      "evidence": "StringArrayDataPersistenceHelper .InsertStringArrayData( [occurrence 1]"
-    },
-    {
       "id": "persistence-helper-call|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs|StringArrayDataPersistenceHelper.FindStringArrayData( [occurrence 1]",
       "category": "persistence-helper-call",
-      "stage": "DB-5",
+      "stage": "DB-6",
       "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.cs",
       "evidence": "StringArrayDataPersistenceHelper.FindStringArrayData( [occurrence 1]"
+    },
+    {
+      "id": "persistence-helper-call|NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.Translation.cs|StringArrayDataPersistenceHelper.InsertStringArrayData( [occurrence 1]",
+      "category": "persistence-helper-call",
+      "stage": "DB-6",
+      "path": "NativeUI/AddonHandlers/Common/DbFirstGameWindowAddonHandler.Translation.cs",
+      "evidence": "StringArrayDataPersistenceHelper.InsertStringArrayData( [occurrence 1]"
     },
     {
       "id": "persistence-helper-call|NativeUI/AddonHandlers/Quest/MapSurfaceStringArrayHandler.cs|StringArrayDataPersistenceHelper.FindStringArrayData( [occurrence 1]",
@@ -1014,13 +923,6 @@
       "category": "sync-ef-query",
       "stage": "DB-4",
       "path": "Cache/ActionTooltipCacheManager.cs",
-      "evidence": "ToList( [occurrence 1]"
-    },
-    {
-      "id": "sync-ef-query|Cache/GameWindowCacheManager.cs|ToList( [occurrence 1]",
-      "category": "sync-ef-query",
-      "stage": "DB-5",
-      "path": "Cache/GameWindowCacheManager.cs",
       "evidence": "ToList( [occurrence 1]"
     },
     {
@@ -1227,13 +1129,6 @@
       "evidence": "FirstOrDefault( [occurrence 9]"
     },
     {
-      "id": "sync-ef-query|DBHelpers/DbOperations.cs|SingleOrDefault( [occurrence 1]",
-      "category": "sync-ef-query",
-      "stage": "DB-7",
-      "path": "DBHelpers/DbOperations.cs",
-      "evidence": "SingleOrDefault( [occurrence 1]"
-    },
-    {
       "id": "sync-ef-query|DBHelpers/DbOperations.cs|ToList( [occurrence 1]",
       "category": "sync-ef-query",
       "stage": "DB-7",
@@ -1267,13 +1162,6 @@
       "stage": "DB-7",
       "path": "DBHelpers/DbOperations.cs",
       "evidence": "ToList( [occurrence 5]"
-    },
-    {
-      "id": "sync-ef-query|DBHelpers/GameWindowPersistenceHelper.cs|FirstOrDefault( [occurrence 1]",
-      "category": "sync-ef-query",
-      "stage": "DB-5",
-      "path": "DBHelpers/GameWindowPersistenceHelper.cs",
-      "evidence": "FirstOrDefault( [occurrence 1]"
     },
     {
       "id": "sync-ef-query|DBHelpers/ItemTooltipPersistenceHelper.cs|ToList( [occurrence 1]",
@@ -1456,20 +1344,6 @@
       "stage": "DB-7",
       "path": "DBHelpers/DbOperations.cs",
       "evidence": "SaveChanges( [occurrence 9]"
-    },
-    {
-      "id": "sync-ef-save|DBHelpers/GameWindowPersistenceHelper.cs|SaveChanges( [occurrence 1]",
-      "category": "sync-ef-save",
-      "stage": "DB-5",
-      "path": "DBHelpers/GameWindowPersistenceHelper.cs",
-      "evidence": "SaveChanges( [occurrence 1]"
-    },
-    {
-      "id": "sync-ef-save|DBHelpers/GameWindowPersistenceHelper.cs|SaveChanges( [occurrence 2]",
-      "category": "sync-ef-save",
-      "stage": "DB-5",
-      "path": "DBHelpers/GameWindowPersistenceHelper.cs",
-      "evidence": "SaveChanges( [occurrence 2]"
     },
     {
       "id": "sync-ef-save|DBHelpers/ItemTooltipPersistenceHelper.cs|SaveChanges( [occurrence 1]",

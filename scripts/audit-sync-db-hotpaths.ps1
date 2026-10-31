@@ -44,7 +44,16 @@ if ([string]::IsNullOrWhiteSpace($ReportPath)) {
 }
 
 function Get-MigrationStage {
-    param([Parameter(Mandatory)][string]$RelativePath)
+    param(
+        [Parameter(Mandatory)][string]$RelativePath,
+        [string]$Category,
+        [string]$Evidence)
+
+    if ($Category -eq 'persistence-helper-call' -and
+        $RelativePath -match '(^|/)DbFirstGameWindowAddonHandler(?:\.[^/]+)?\.cs$' -and
+        $Evidence -match '^StringArrayDataPersistenceHelper\s*\.') {
+        return 'DB-6'
+    }
 
     switch -Regex ($RelativePath) {
         'ReferenceText|MainCommand' { return 'DB-2' }
@@ -136,7 +145,7 @@ function New-Finding {
     return [pscustomobject][ordered]@{
         id = $id
         category = $Category
-        stage = Get-MigrationStage -RelativePath $RelativePath
+        stage = Get-MigrationStage -RelativePath $RelativePath -Category $Category -Evidence $Evidence
         path = $RelativePath
         evidence = $normalizedEvidence
         line = $Line
@@ -270,6 +279,9 @@ function Add-DatabaseQueryMatchesForContent {
         '\s+(?<name>[A-Za-z_]\w*)\s*=\s*(?<value>.+)$')
     $foreachPattern = [regex]::new(
         '(?s)\bforeach\s*\([^;{}]*?\bin\b(?<source>[^;{}]*?)\)')
+    $asyncMaterializationPattern = [regex]::new(
+        '(?s)^\s*await\b.*\.\s*' +
+        '(?:ToListAsync|ToArrayAsync|ToDictionaryAsync|ToHashSetAsync)\s*\(')
     $occurrences = @{}
     $statementStart = 0
     while ($statementStart -lt $Content.Length) {
@@ -286,6 +298,9 @@ function Add-DatabaseQueryMatchesForContent {
         })
         $databaseSourcePattern = [regex]::new(
             '\b(?:' + ($escapedDatabaseSourceNames -join '|') + ')\b')
+        $localViewPattern = [regex]::new(
+            $databaseSourcePattern.ToString() +
+            '(?:\s*\.\s*[A-Za-z_]\w*)*\s*\.\s*Local\b')
         $queryMatches = @($Pattern.Matches($statement))
         $querySegmentStart = 0
         foreach ($match in $queryMatches) {
@@ -293,7 +308,8 @@ function Add-DatabaseQueryMatchesForContent {
                 $querySegmentStart,
                 $match.Index - $querySegmentStart)
             $querySegmentStart = $match.Index + $match.Length
-            if ($databaseSourcePattern.IsMatch($queryPrefix)) {
+            if ($databaseSourcePattern.IsMatch(
+                    $localViewPattern.Replace($queryPrefix, ''))) {
                 $matchEvidence = ConvertTo-NormalizedEvidence -Evidence $match.Value
                 $occurrence = 1
                 if ($occurrences.ContainsKey($matchEvidence)) {
@@ -316,7 +332,8 @@ function Add-DatabaseQueryMatchesForContent {
         $foreachMatches = @($foreachPattern.Matches($statement))
         foreach ($match in $foreachMatches) {
             $foreachSource = $match.Groups['source'].Value
-            if (-not $databaseSourcePattern.IsMatch($foreachSource) -or
+            if (-not $databaseSourcePattern.IsMatch(
+                    $localViewPattern.Replace($foreachSource, '')) -or
                 $Pattern.IsMatch($foreachSource)) {
                 continue
             }
@@ -342,8 +359,14 @@ function Add-DatabaseQueryMatchesForContent {
         if ($queryMatches.Count -eq 0 -and $foreachMatches.Count -eq 0) {
             $queryAliasMatch = $queryAliasPattern.Match($statement)
             if ($queryAliasMatch.Success -and
-                $databaseSourcePattern.IsMatch(
+                $asyncMaterializationPattern.IsMatch(
                     $queryAliasMatch.Groups['value'].Value)) {
+                $databaseSourceNames.Remove(
+                    $queryAliasMatch.Groups['name'].Value) | Out-Null
+            }
+            elseif ($queryAliasMatch.Success -and
+                $databaseSourcePattern.IsMatch($localViewPattern.Replace(
+                    $queryAliasMatch.Groups['value'].Value, ''))) {
                 $databaseSourceNames.Add(
                     $queryAliasMatch.Groups['name'].Value) | Out-Null
             }

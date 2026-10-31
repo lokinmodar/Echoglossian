@@ -3556,12 +3556,11 @@ public partial class Echoglossian
   /// </summary>
   /// <param name="gameWindow">The GameWindow entity to insert or update.</param>
   /// <returns>Status message indicating result.</returns>
-  public static string InsertGameWindow(GameWindow gameWindow)
+  public static async Task<string> InsertGameWindowAsync(GameWindow gameWindow)
   {
-    return GameWindowPersistenceHelper.InsertGameWindow(
-        ConfigDirectory,
-        gameWindow,
-        GameWindowCacheManager.Update);
+    return await PersistGameWindowAsync(gameWindow).ConfigureAwait(false)
+        ? "Record persisted."
+        : "Persistence failed.";
   }
 
   /// <summary>
@@ -3672,7 +3671,7 @@ public partial class Echoglossian
   {
     if (entity is GameWindow gameWindow)
     {
-      return InsertGameWindow(gameWindow) ?? "Plugin not available";
+      return await InsertGameWindowAsync(gameWindow).ConfigureAwait(false);
     }
 
     using var context = new EchoglossianDbContext(
