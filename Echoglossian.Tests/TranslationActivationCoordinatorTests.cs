@@ -124,11 +124,26 @@ public sealed class TranslationActivationCoordinatorTests
             TranslationActivationRequest.Toggle);
         Assert.Equal(
             TranslationActivationResult.TransitionInProgress,
-            secondOutcome.Result);
+            secondOutcome.Status);
 
         release.SetResult(true);
         var firstOutcome = await firstRequest;
-        Assert.Equal(TranslationActivationResult.Enabled, firstOutcome.Result);
+        Assert.Equal(TranslationActivationResult.Enabled, firstOutcome.Status);
+    }
+
+    /// <summary>
+    /// Verifies that automatic constraint enforcement remains visible through
+    /// the coordinator state when it changes the persistent source of truth.
+    /// </summary>
+    [Fact]
+    public void State_WhenConfigurationChangesExternally_ReflectsSourceOfTruth()
+    {
+        var config = new Config { Translate = true };
+        var coordinator = CreateCoordinator(config);
+
+        config.Translate = false;
+
+        Assert.Equal(TranslationActivationState.Disabled, coordinator.State);
     }
 
     /// <summary>

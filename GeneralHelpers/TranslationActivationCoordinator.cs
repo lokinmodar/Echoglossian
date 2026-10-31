@@ -18,7 +18,6 @@ internal sealed class TranslationActivationCoordinator
   private readonly Action enableRuntime;
   private readonly Action<Exception> observeFailure;
   private int transitionInProgress;
-  private TranslationActivationState state;
 
   /// <summary>
   /// Initializes a new instance of the <see cref="TranslationActivationCoordinator" /> class.
@@ -46,15 +45,17 @@ internal sealed class TranslationActivationCoordinator
     this.disableRuntime = disableRuntime;
     this.enableRuntime = enableRuntime;
     this.observeFailure = observeFailure;
-    this.state = configuration.Translate
-        ? TranslationActivationState.Enabled
-        : TranslationActivationState.Disabled;
   }
 
   /// <summary>
   /// Gets the current global activation state.
   /// </summary>
-  public TranslationActivationState State => this.state;
+  public TranslationActivationState State =>
+      Volatile.Read(ref this.transitionInProgress) != 0
+          ? TranslationActivationState.Transitioning
+          : this.configuration.Translate
+              ? TranslationActivationState.Enabled
+              : TranslationActivationState.Disabled;
 
   /// <summary>
   /// Requests a global translation activation change.
@@ -90,7 +91,6 @@ internal sealed class TranslationActivationCoordinator
             TranslationActivationGuard.BlockReason.None);
       }
 
-      this.state = TranslationActivationState.Transitioning;
       var outcome = new TranslationActivationOutcome(
           TranslationActivationResult.Failed,
           TranslationActivationGuard.BlockReason.None);
@@ -107,9 +107,6 @@ internal sealed class TranslationActivationCoordinator
     }
     finally
     {
-      this.state = this.configuration.Translate
-          ? TranslationActivationState.Enabled
-          : TranslationActivationState.Disabled;
       Interlocked.Exchange(ref this.transitionInProgress, 0);
     }
   }

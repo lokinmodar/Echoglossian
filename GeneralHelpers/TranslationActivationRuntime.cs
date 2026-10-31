@@ -58,6 +58,7 @@ public partial class Echoglossian
     this.UnregisterToastGuiCaptureRuntime();
     this.UnregisterNamePlateTranslationRuntime();
     this.namePlateTranslationRuntime.Dispose();
+    NamePlateGuiInterface.RequestRedraw();
     this.RefreshAddonHandlerRegistrations();
     this.SynchronizeTranslationActivationSignatures();
   }
