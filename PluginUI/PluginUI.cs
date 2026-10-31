@@ -25,6 +25,7 @@ public partial class Echoglossian
     {
       PushGeneralFont = () =>
           this.uiFontRuntime.Push(PluginUI.Runtime.UiFontKind.General),
+      TranslationActivationCoordinator = this.translationActivationCoordinator,
     };
 
     this.configWindowRenderer.Draw(context, ref this.config);

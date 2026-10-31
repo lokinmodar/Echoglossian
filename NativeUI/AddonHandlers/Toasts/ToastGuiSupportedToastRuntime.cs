@@ -651,7 +651,8 @@ internal sealed class ToastGuiSupportedToastRuntime
   {
     lock (this.stateGate)
     {
-      return requestId == this.activeNormalRequestId &&
+      return this.config.Translate &&
+             requestId == this.activeNormalRequestId &&
              string.Equals(
                  this.currentNormalOriginalText,
                  originalText,
@@ -675,7 +676,8 @@ internal sealed class ToastGuiSupportedToastRuntime
   {
     lock (this.stateGate)
     {
-      return requestId == this.activeErrorRequestId &&
+      return this.config.Translate &&
+             requestId == this.activeErrorRequestId &&
              string.Equals(
                  this.currentErrorOriginalText,
                  originalText,
@@ -693,7 +695,8 @@ internal sealed class ToastGuiSupportedToastRuntime
   /// </returns>
   private bool ShouldUseNormalOverlay()
   {
-    return TranslationDisplayModeHelper.UsesOverlayPresentation(
+    return this.config.Translate &&
+           TranslationDisplayModeHelper.UsesOverlayPresentation(
         this.GetCurrentNormalToastDisplayMode(),
         this.config.OverlayOnlyLanguage);
   }
@@ -708,7 +711,8 @@ internal sealed class ToastGuiSupportedToastRuntime
   /// </returns>
   private bool ShouldApplyNativeNormalText()
   {
-    return TranslationDisplayModeHelper.WritesNativeTranslation(
+    return this.config.Translate &&
+           TranslationDisplayModeHelper.WritesNativeTranslation(
         this.GetCurrentNormalToastDisplayMode(),
         this.config.OverlayOnlyLanguage);
   }
@@ -723,7 +727,8 @@ internal sealed class ToastGuiSupportedToastRuntime
   /// </returns>
   private bool ShouldSwapNormalTexts()
   {
-    return TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+    return this.config.Translate &&
+           TranslationDisplayModeHelper.ShowsOriginalOverlayText(
         this.GetCurrentNormalToastDisplayMode(),
         this.config.OverlayOnlyLanguage);
   }
@@ -749,7 +754,8 @@ internal sealed class ToastGuiSupportedToastRuntime
   /// </returns>
   private bool ShouldUseErrorOverlay()
   {
-    return TranslationDisplayModeHelper.UsesOverlayPresentation(
+    return this.config.Translate &&
+           TranslationDisplayModeHelper.UsesOverlayPresentation(
         this.config.ErrorToastTranslationDisplayMode,
         this.config.OverlayOnlyLanguage);
   }
@@ -764,7 +770,8 @@ internal sealed class ToastGuiSupportedToastRuntime
   /// </returns>
   private bool ShouldApplyNativeErrorText()
   {
-    return TranslationDisplayModeHelper.WritesNativeTranslation(
+    return this.config.Translate &&
+           TranslationDisplayModeHelper.WritesNativeTranslation(
         this.config.ErrorToastTranslationDisplayMode,
         this.config.OverlayOnlyLanguage);
   }
@@ -779,7 +786,8 @@ internal sealed class ToastGuiSupportedToastRuntime
   /// </returns>
   private bool ShouldSwapErrorTexts()
   {
-    return TranslationDisplayModeHelper.ShowsOriginalOverlayText(
+    return this.config.Translate &&
+           TranslationDisplayModeHelper.ShowsOriginalOverlayText(
         this.config.ErrorToastTranslationDisplayMode,
         this.config.OverlayOnlyLanguage);
   }

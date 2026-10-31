@@ -43,6 +43,11 @@ public partial class Echoglossian
   /// </summary>
   private void RegisterQuestToastRuntime()
   {
+    if (!this.configuration.Translate)
+    {
+      return;
+    }
+
     ToastGuiInterface.QuestToast += this.questToastRuntime.HandleQuestToast;
   }
 

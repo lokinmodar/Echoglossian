@@ -43,6 +43,7 @@ public class ToastGuiSupportedToastPolicyTests
     {
         var config = new Config
         {
+            Translate = true,
             TranslateToast = true,
             TranslateWideTextToast = true,
         };
@@ -62,6 +63,7 @@ public class ToastGuiSupportedToastPolicyTests
     {
         var config = new Config
         {
+            Translate = true,
             TranslateToast = true,
             TranslateWideTextToast = false,
             TranslateAreaToast = false,
@@ -101,6 +103,7 @@ public class ToastGuiSupportedToastPolicyTests
     {
         var config = new Config
         {
+            Translate = true,
             TranslateToast = true,
             TranslateErrorToast = true,
         };
@@ -119,6 +122,7 @@ public class ToastGuiSupportedToastPolicyTests
     {
         var config = new Config
         {
+            Translate = true,
             TranslateToast = true,
             TranslateErrorToast = true,
             UseToastGuiCaptureForSupportedToasts = true,
@@ -139,6 +143,7 @@ public class ToastGuiSupportedToastPolicyTests
     {
         var config = new Config
         {
+            Translate = true,
             TranslateToast = true,
             TranslateWideTextToast = true,
             TranslateErrorToast = true,

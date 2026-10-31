@@ -135,6 +135,41 @@ public sealed class NamePlateNativePresentationContractTests
     }
 
     /// <summary>
+    /// Verifies that disabling translation redraws native NamePlate fields
+    /// after the plugin unregisters its translation handler.
+    /// </summary>
+    [Fact]
+    public void TranslationActivationRuntime_requests_nameplate_redraw_when_disabling()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root.FullName,
+            "GeneralHelpers",
+            "TranslationActivationRuntime.cs"));
+        var disableStart = source.IndexOf(
+            "private void DisableTranslationRuntime()",
+            StringComparison.Ordinal);
+        var disableEnd = source.IndexOf(
+            "private void EnableTranslationRuntime()",
+            disableStart,
+            StringComparison.Ordinal);
+
+        Assert.True(disableStart >= 0);
+        Assert.True(disableEnd > disableStart);
+
+        var disableSource = source[disableStart..disableEnd];
+        var unregisterIndex = disableSource.IndexOf(
+            "this.UnregisterNamePlateTranslationRuntime();",
+            StringComparison.Ordinal);
+        var redrawIndex = disableSource.IndexOf(
+            "NamePlateGuiInterface.RequestRedraw();",
+            StringComparison.Ordinal);
+
+        Assert.True(unregisterIndex >= 0);
+        Assert.True(redrawIndex > unregisterIndex);
+    }
+
+    /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>
     /// <returns>The repository root directory.</returns>

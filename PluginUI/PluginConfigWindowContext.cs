@@ -51,6 +51,15 @@ public sealed record PluginConfigWindowContext(
         ApplyLiveLanguageRuntimeChanges;
 
     /// <summary>
+    /// Gets the runtime activation coordinator when hosted by the live plugin.
+    /// </summary>
+    internal TranslationActivationCoordinator? TranslationActivationCoordinator
+    {
+        get;
+        init;
+    }
+
+    /// <summary>
     /// Applies the existing live asset and font refresh behavior.
     /// </summary>
     /// <param name="config">The active plugin configuration.</param>

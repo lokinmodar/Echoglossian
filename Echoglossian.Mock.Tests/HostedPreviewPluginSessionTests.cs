@@ -7,6 +7,7 @@ using Echoglossian.Mock.Hosting;
 using Echoglossian.NativeUI.AddonHandlers.Quest;
 using Echoglossian.NativeUI.AddonHandlers.SelectionDialogs;
 using Echoglossian.NativeUI.Handlers;
+using DalaMock.Core.Mocks.DalamudServices;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
@@ -139,6 +140,7 @@ public sealed class HostedPreviewPluginSessionTests
         using var fixture = PreviewOwnedHostedSessionFixture.Create(
             config: new global::Echoglossian.Config
             {
+                Translate = true,
                 TranslateJournalAccept = true,
                 TranslateJournalResult = true,
                 TranslateRecommendList = true,
@@ -177,6 +179,7 @@ public sealed class HostedPreviewPluginSessionTests
         using var fixture = PreviewOwnedHostedSessionFixture.Create(
             config: new global::Echoglossian.Config
             {
+                Translate = true,
                 TranslateYesNoScreen = true,
                 TranslateSelectOk = true,
                 TranslateSelectString = true,
@@ -199,6 +202,67 @@ public sealed class HostedPreviewPluginSessionTests
         registeredHandlers.Should().Contain(entry =>
             entry.AddonName == "SelectIconString" &&
             entry.Handler is SelectIconStringHandler);
+    }
+
+    /// <summary>
+    /// Verifies that the production slash command disables translation and
+    /// unregisters native addon lifecycle handlers in a hosted session.
+    /// </summary>
+    /// <returns>A task that completes after the command transition is observed.</returns>
+    [Fact]
+    public async Task ProcessCommand_translations_off_disables_and_unregisters_handlers()
+    {
+        using var fixture = PreviewOwnedHostedSessionFixture.Create(
+            config: new global::Echoglossian.Config
+            {
+                Translate = true,
+                TranslateJournalAccept = true,
+            });
+
+        await using var session = await HostedPreviewPluginSessionFactory.StartAsync(
+            fixture.Options);
+
+        GetRegisteredAddonHandlers(session.Plugin).Should().Contain(entry =>
+            entry.AddonName == "JournalAccept" &&
+            entry.Handler is JournalAcceptHandler);
+
+        var commandManager = global::Echoglossian.Echoglossian.CommandManager
+            .Should()
+            .BeOfType<MockCommandManager>()
+            .Subject;
+        commandManager.ProcessCommand("/eglo translations off").Should().BeTrue();
+        global::Echoglossian.Echoglossian.FrameworkInterface
+            .Should()
+            .BeOfType<MockFramework>()
+            .Subject
+            .FireUpdate();
+
+        SpinWait.SpinUntil(
+                () => GetTranslationActivationCoordinator(session.Plugin).State !=
+                      global::Echoglossian.TranslationActivationState.Transitioning,
+                TimeSpan.FromSeconds(5))
+            .Should()
+            .BeTrue();
+        GetActiveConfiguration(session.Plugin).Translate.Should().BeFalse();
+        GetRegisteredAddonHandlers(session.Plugin).Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Gets the production activation coordinator from the hosted plugin.
+    /// </summary>
+    /// <param name="plugin">The hosted production plugin.</param>
+    /// <returns>The active translation activation coordinator.</returns>
+    private static global::Echoglossian.TranslationActivationCoordinator
+        GetTranslationActivationCoordinator(global::Echoglossian.Echoglossian plugin)
+    {
+        var coordinatorField = typeof(global::Echoglossian.Echoglossian).GetField(
+            "translationActivationCoordinator",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        coordinatorField.Should().NotBeNull();
+        return coordinatorField!.GetValue(plugin)
+            .Should()
+            .BeAssignableTo<global::Echoglossian.TranslationActivationCoordinator>()
+            .Subject;
     }
 
     private static IReadOnlyList<(string AddonName, IAddonTranslationHandler Handler)>

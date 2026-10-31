@@ -86,6 +86,8 @@ public partial class Echoglossian
       this.EchoglossianConfigUi();
     }
 
+    this.DrawTranslationToggleHud();
+
     if (AssetsManager.RequiresDownloadedAssets(SelectedLanguage) &&
         !AssetsManager.PluginAssetsDownloaded)
     {
@@ -252,6 +254,72 @@ public partial class Echoglossian
   /// <param name="arguments">Arguments associated with the command.</param>
   private void Command(string command, string arguments)
   {
-    this.config = true;
+    var parsedCommand = TranslationToggleCommandParser.Parse(arguments);
+    switch (parsedCommand)
+    {
+      case TranslationToggleCommand.OpenConfiguration:
+        this.config = true;
+        return;
+      case TranslationToggleCommand.Enable:
+        _ = this.HandleTranslationActivationCommandAsync(
+            TranslationActivationRequest.Enable);
+        return;
+      case TranslationToggleCommand.Disable:
+        _ = this.HandleTranslationActivationCommandAsync(
+            TranslationActivationRequest.Disable);
+        return;
+      case TranslationToggleCommand.Toggle:
+        _ = this.HandleTranslationActivationCommandAsync(
+            TranslationActivationRequest.Toggle);
+        return;
+      default:
+        ChatGuiInterface.Print(Resources.TranslationCommandUsage);
+        return;
+    }
+  }
+
+  /// <summary>
+  /// Executes one translation activation command and prints localized feedback.
+  /// </summary>
+  /// <param name="request">The requested activation change.</param>
+  /// <returns>A task that completes after command feedback is printed.</returns>
+  private async Task HandleTranslationActivationCommandAsync(
+      TranslationActivationRequest request)
+  {
+    var outcome = await this.translationActivationCoordinator.RequestAsync(request)
+        .ConfigureAwait(false);
+    await FrameworkInterface.RunOnFrameworkThread(
+        () => ChatGuiInterface.Print(
+            GetTranslationActivationCommandFeedback(outcome))).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  /// Resolves localized command feedback for a completed activation request.
+  /// </summary>
+  /// <param name="outcome">The completed activation outcome.</param>
+  /// <returns>The localized feedback text.</returns>
+  private static string GetTranslationActivationCommandFeedback(
+      TranslationActivationOutcome outcome)
+  {
+    return outcome.Status switch
+    {
+      TranslationActivationResult.Enabled => Resources.TranslationCommandEnabled,
+      TranslationActivationResult.Disabled => Resources.TranslationCommandDisabled,
+      TranslationActivationResult.AlreadyEnabled =>
+          Resources.TranslationCommandAlreadyEnabled,
+      TranslationActivationResult.AlreadyDisabled =>
+          Resources.TranslationCommandAlreadyDisabled,
+      TranslationActivationResult.TransitionInProgress =>
+          Resources.TranslationCommandTransitionInProgress,
+      TranslationActivationResult.Blocked => outcome.BlockReason switch
+      {
+        TranslationActivationGuard.BlockReason.UnsupportedLanguage =>
+            Resources.TranslationCommandBlockedUnsupportedLanguage,
+        TranslationActivationGuard.BlockReason.MissingRequiredAssets =>
+            Resources.TranslationCommandBlockedMissingAssets,
+        _ => Resources.TranslationCommandBlockedEngineConfiguration,
+      },
+      _ => Resources.TranslationCommandFailed,
+    };
   }
 }

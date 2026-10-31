@@ -20,6 +20,11 @@ public partial class Echoglossian
         [
         ];
 
+    if (!this.configuration.Translate)
+    {
+      return;
+    }
+
     if (this.configuration.TranslateOperationGuideWindow)
     {
       this.registeredAddonHandlers.Add(
