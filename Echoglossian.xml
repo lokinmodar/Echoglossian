@@ -14190,18 +14190,18 @@
             <summary>
             Carries the result and optional activation block reason for one request.
             </summary>
-            <param name="Result">The completed request result.</param>
+            <param name="Status">The completed request status.</param>
             <param name="BlockReason">The activation block reason, when applicable.</param>
         </member>
         <member name="M:Echoglossian.TranslationActivationOutcome.#ctor(Echoglossian.TranslationActivationResult,Echoglossian.TranslationActivationGuard.BlockReason)">
             <summary>
             Carries the result and optional activation block reason for one request.
             </summary>
-            <param name="Result">The completed request result.</param>
+            <param name="Status">The completed request status.</param>
             <param name="BlockReason">The activation block reason, when applicable.</param>
         </member>
-        <member name="P:Echoglossian.TranslationActivationOutcome.Result">
-            <summary>The completed request result.</summary>
+        <member name="P:Echoglossian.TranslationActivationOutcome.Status">
+            <summary>The completed request status.</summary>
         </member>
         <member name="P:Echoglossian.TranslationActivationOutcome.BlockReason">
             <summary>The activation block reason, when applicable.</summary>

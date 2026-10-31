@@ -28,7 +28,7 @@ public sealed class TranslationActivationCoordinatorTests
         var outcome = await coordinator.RequestAsync(
             TranslationActivationRequest.Disable);
 
-        Assert.Equal(TranslationActivationResult.Disabled, outcome.Result);
+        Assert.Equal(TranslationActivationResult.Disabled, outcome.Status);
         Assert.False(config.Translate);
         Assert.Equal(
             new[] { "persist:False", "disable" },
@@ -57,7 +57,7 @@ public sealed class TranslationActivationCoordinatorTests
         var outcome = await coordinator.RequestAsync(
             TranslationActivationRequest.Enable);
 
-        Assert.Equal(TranslationActivationResult.Enabled, outcome.Result);
+        Assert.Equal(TranslationActivationResult.Enabled, outcome.Status);
         Assert.True(config.Translate);
         Assert.Equal(
             new[] { "validate", "persist:True", "enable" },
@@ -84,7 +84,7 @@ public sealed class TranslationActivationCoordinatorTests
         var outcome = await coordinator.RequestAsync(
             TranslationActivationRequest.Enable);
 
-        Assert.Equal(TranslationActivationResult.Blocked, outcome.Result);
+        Assert.Equal(TranslationActivationResult.Blocked, outcome.Status);
         Assert.Equal(
             TranslationActivationGuard.BlockReason.EngineConfigurationIncomplete,
             outcome.BlockReason);
@@ -149,7 +149,7 @@ public sealed class TranslationActivationCoordinatorTests
         var outcome = await coordinator.RequestAsync(
             TranslationActivationRequest.Enable);
 
-        Assert.Equal(TranslationActivationResult.Failed, outcome.Result);
+        Assert.Equal(TranslationActivationResult.Failed, outcome.Status);
         Assert.False(config.Translate);
         Assert.Equal(new[] { true, false }, persistedStates);
         Assert.Equal(1, disableCount);
@@ -184,7 +184,7 @@ public sealed class TranslationActivationCoordinatorTests
 
         Assert.Equal(
             Enum.Parse<TranslationActivationResult>(expectedResult),
-            outcome.Result);
+            outcome.Status);
         Assert.Equal(expectedState, config.Translate);
     }
 

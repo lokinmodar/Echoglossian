@@ -202,8 +202,8 @@ internal enum TranslationActivationResult
 /// <summary>
 /// Carries the result and optional activation block reason for one request.
 /// </summary>
-/// <param name="Result">The completed request result.</param>
+/// <param name="Status">The completed request status.</param>
 /// <param name="BlockReason">The activation block reason, when applicable.</param>
 internal sealed record TranslationActivationOutcome(
-    TranslationActivationResult Result,
+    TranslationActivationResult Status,
     TranslationActivationGuard.BlockReason BlockReason);

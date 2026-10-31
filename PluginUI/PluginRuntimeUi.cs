@@ -301,7 +301,7 @@ public partial class Echoglossian
   private static string GetTranslationActivationCommandFeedback(
       TranslationActivationOutcome outcome)
   {
-    return outcome.Result switch
+    return outcome.Status switch
     {
       TranslationActivationResult.Enabled => Resources.TranslationCommandEnabled,
       TranslationActivationResult.Disabled => Resources.TranslationCommandDisabled,
