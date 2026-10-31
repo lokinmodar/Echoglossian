@@ -3,7 +3,6 @@
 // Licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License license.
 // </copyright>
 
-using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
 
 using System.Linq;
@@ -17,7 +16,10 @@ public static class GameWindowCacheManager
 {
   private const string CharacterWindowNamePrefix = "Character";
 
+  private static readonly object CacheGate = new();
+
   private static bool isPreloaded;
+  private static long generation;
   private static long revision;
 
   private static readonly Dictionary<string, GameWindow> ExactCache =
@@ -36,7 +38,7 @@ public static class GameWindowCacheManager
   ///     Gets a value indicating whether the cache has been preloaded from the
   ///     database for the current runtime session.
   /// </summary>
-  public static bool IsPreloaded => isPreloaded;
+  public static bool IsPreloaded => Volatile.Read(ref isPreloaded);
 
   /// <summary>
   ///     Gets the monotonically increasing revision of the canonical cache.
@@ -45,31 +47,36 @@ public static class GameWindowCacheManager
   public static long Revision => Interlocked.Read(ref revision);
 
   /// <summary>
-  ///     Loads all GameWindow records from the database into memory.
+  ///     Gets the cache session used to reject late worker publication after reset.
   /// </summary>
-  /// <param name="configDir">The plugin's configuration directory path.</param>
-  public static void Preload(string configDir)
+  internal static long Generation => Interlocked.Read(ref generation);
+
+  /// <summary>
+  ///     Publishes successfully loaded rows without replacing newer committed entries.
+  /// </summary>
+  /// <param name="rows">The committed database snapshot.</param>
+  /// <param name="expectedGeneration">The cache session captured before the read.</param>
+  internal static void PublishPreloaded(IReadOnlyList<GameWindow> rows, long expectedGeneration)
   {
-    PluginRuntimeLog.Debug(
-        "GameWindowCacheManager",
-        "Preloading GameWindow entries from DB...");
-
-    try
+    lock (CacheGate)
     {
-      using var context = new EchoglossianDbContext(configDir);
-      var all = context.GameWindow
-          .AsNoTracking()
-          .OrderBy(record => record.Id)
-          .ToList();
-
-      Cache.Clear();
-      ExactCache.Clear();
-      ScopeCache.Clear();
-      Interlocked.Increment(ref revision);
-
-      foreach (var record in all)
+      if (generation != expectedGeneration)
       {
-        if (string.IsNullOrWhiteSpace(record.WindowAddonName))
+        return;
+      }
+
+      var committedKeys = ExactCache.Keys.ToHashSet(StringComparer.Ordinal);
+      foreach (var record in rows)
+      {
+        if (string.IsNullOrWhiteSpace(record.WindowAddonName) ||
+            committedKeys.Contains(BuildExactKey(
+                record.WindowAddonName,
+                record.OriginalWindowStringsLang,
+                record.TranslationLang,
+                record.TranslationEngine,
+                record.GameVersion,
+                record.OriginalWindowStrings ?? string.Empty,
+                record.ClassJobId)))
         {
           continue;
         }
@@ -78,16 +85,23 @@ public static class GameWindowCacheManager
       }
 
       isPreloaded = true;
-      PluginRuntimeLog.Debug(
-          "GameWindowCacheManager",
-          $"Loaded {all.Count} records into {Cache.Count} addon buckets.");
+      Interlocked.Increment(ref revision);
     }
-    catch (Exception ex)
+  }
+
+  /// <summary>
+  ///     Publishes one committed row only while its originating cache session remains active.
+  /// </summary>
+  /// <param name="record">The committed database row.</param>
+  /// <param name="expectedGeneration">The cache session captured before the operation.</param>
+  internal static void Update(GameWindow record, long expectedGeneration)
+  {
+    lock (CacheGate)
     {
-      isPreloaded = false;
-      PluginRuntimeLog.Error(
-          "GameWindowCacheManager",
-          $"Failed to preload cache: {ex}");
+      if (generation == expectedGeneration)
+      {
+        Update(record);
+      }
     }
   }
 
@@ -98,29 +112,32 @@ public static class GameWindowCacheManager
   /// <param name="newRecord">The new <see cref="GameWindow"/> record to add.</param>
   public static void Update(GameWindow newRecord)
   {
-    if (newRecord == null || string.IsNullOrWhiteSpace(newRecord.WindowAddonName))
+    lock (CacheGate)
     {
-      PluginRuntimeLog.Warning(
-          "GameWindowCacheManager.Update",
-          "Attempted to update cache with null or invalid record.");
-      return;
-    }
+      if (newRecord == null || string.IsNullOrWhiteSpace(newRecord.WindowAddonName))
+      {
+        PluginRuntimeLog.Warning(
+            "GameWindowCacheManager.Update",
+            "Attempted to update cache with null or invalid record.");
+        return;
+      }
 
-    var existing = TryFindExistingCacheRow(newRecord);
+      var existing = TryFindExistingCacheRow(newRecord);
 
-    if (existing != null)
-    {
-      RemoveIndexedRecord(existing);
+      if (existing != null)
+      {
+        RemoveIndexedRecord(existing);
+        PluginRuntimeLog.Debug(
+            "GameWindowCacheManager.Update",
+            "Replacing duplicate GameWindow in cache.");
+      }
+
+      IndexRecord(newRecord);
+      Interlocked.Increment(ref revision);
       PluginRuntimeLog.Debug(
           "GameWindowCacheManager.Update",
-          "Replacing duplicate GameWindow in cache.");
+          $"Cached GameWindow for addon: {newRecord.WindowAddonName} (now {GetAddonBucket(newRecord.WindowAddonName).Count} entries).");
     }
-
-    IndexRecord(newRecord);
-    Interlocked.Increment(ref revision);
-    PluginRuntimeLog.Debug(
-        "GameWindowCacheManager.Update",
-        $"Cached GameWindow for addon: {newRecord.WindowAddonName} (now {GetAddonBucket(newRecord.WindowAddonName).Count} entries).");
   }
 
   /// <summary>
@@ -128,14 +145,18 @@ public static class GameWindowCacheManager
   /// </summary>
   public static void Clear()
   {
-    Cache.Clear();
-    ExactCache.Clear();
-    ScopeCache.Clear();
-    isPreloaded = false;
-    Interlocked.Increment(ref revision);
-    PluginRuntimeLog.Debug(
-        "GameWindowCacheManager",
-        "Cleared GameWindow cache.");
+    lock (CacheGate)
+    {
+      Cache.Clear();
+      ExactCache.Clear();
+      ScopeCache.Clear();
+      isPreloaded = false;
+      Interlocked.Increment(ref generation);
+      Interlocked.Increment(ref revision);
+      PluginRuntimeLog.Debug(
+          "GameWindowCacheManager",
+          "Cleared GameWindow cache.");
+    }
   }
 
   /// <summary>
@@ -156,62 +177,65 @@ public static class GameWindowCacheManager
       string originalJson,
       uint? classJobId = null)
   {
-    if (string.IsNullOrWhiteSpace(addonName) ||
-        string.IsNullOrWhiteSpace(scope.SourceLanguageCode) ||
-        string.IsNullOrWhiteSpace(scope.TargetLanguageCode))
+    lock (CacheGate)
     {
-      PluginRuntimeLog.Warning(
-          "GameWindowCacheManager.TryFindMatch",
-          "Invalid parameters.");
+      if (string.IsNullOrWhiteSpace(addonName) ||
+          string.IsNullOrWhiteSpace(scope.SourceLanguageCode) ||
+          string.IsNullOrWhiteSpace(scope.TargetLanguageCode))
+      {
+        PluginRuntimeLog.Warning(
+            "GameWindowCacheManager.TryFindMatch",
+            "Invalid parameters.");
+        return null;
+      }
+
+      var exactMatch = TryGetExactMatch(
+          addonName,
+          scope,
+          version,
+          originalJson,
+          classJobId);
+      if (exactMatch != null)
+      {
+        return exactMatch;
+      }
+
+      if (!string.IsNullOrWhiteSpace(version) &&
+          TryGetExactMatch(
+              addonName,
+              scope,
+              version: null,
+              originalJson,
+              classJobId) is { } versionAgnosticMatch)
+      {
+        return versionAgnosticMatch;
+      }
+
+      if (classJobId.HasValue &&
+          TryGetExactMatch(
+              addonName,
+              scope,
+              version,
+              originalJson,
+              classJobId: null) is { } legacyExactMatch)
+      {
+        return legacyExactMatch;
+      }
+
+      if (classJobId.HasValue &&
+          !string.IsNullOrWhiteSpace(version) &&
+          TryGetExactMatch(
+              addonName,
+              scope,
+              version: null,
+              originalJson,
+              classJobId: null) is { } legacyVersionAgnosticMatch)
+      {
+        return legacyVersionAgnosticMatch;
+      }
+
       return null;
     }
-
-    var exactMatch = TryGetExactMatch(
-        addonName,
-        scope,
-        version,
-        originalJson,
-        classJobId);
-    if (exactMatch != null)
-    {
-      return exactMatch;
-    }
-
-    if (!string.IsNullOrWhiteSpace(version) &&
-        TryGetExactMatch(
-            addonName,
-            scope,
-            version: null,
-            originalJson,
-            classJobId) is { } versionAgnosticMatch)
-    {
-      return versionAgnosticMatch;
-    }
-
-    if (classJobId.HasValue &&
-        TryGetExactMatch(
-            addonName,
-            scope,
-            version,
-            originalJson,
-            classJobId: null) is { } legacyExactMatch)
-    {
-      return legacyExactMatch;
-    }
-
-    if (classJobId.HasValue &&
-        !string.IsNullOrWhiteSpace(version) &&
-        TryGetExactMatch(
-            addonName,
-            scope,
-            version: null,
-            originalJson,
-            classJobId: null) is { } legacyVersionAgnosticMatch)
-    {
-      return legacyVersionAgnosticMatch;
-    }
-
-    return null;
   }
 
   /// <summary>
@@ -237,113 +261,116 @@ public static class GameWindowCacheManager
       uint? classJobId = null,
       bool includeHistoricalVersions = false)
   {
-    if (string.IsNullOrWhiteSpace(addonName) ||
-        string.IsNullOrWhiteSpace(scope.SourceLanguageCode) ||
-        string.IsNullOrWhiteSpace(scope.TargetLanguageCode))
+    lock (CacheGate)
     {
-      return [];
-    }
-
-    if (includeHistoricalVersions)
-    {
-      if (!Cache.TryGetValue(addonName, out var addonRows))
+      if (string.IsNullOrWhiteSpace(addonName) ||
+          string.IsNullOrWhiteSpace(scope.SourceLanguageCode) ||
+          string.IsNullOrWhiteSpace(scope.TargetLanguageCode))
       {
         return [];
       }
 
-      return addonRows
-          .Where(row =>
-              scope.Matches(
-                  row.OriginalWindowStringsLang,
-                  row.TranslationLang,
-                  row.TranslationEngine) &&
-              (row.ClassJobId == classJobId ||
-               (classJobId.HasValue && row.ClassJobId == null)))
-          .ToList();
-    }
+      if (includeHistoricalVersions)
+      {
+        if (!Cache.TryGetValue(addonName, out var addonRows))
+        {
+          return [];
+        }
 
-    var exactRows = GetScopedRows(
-        addonName,
-        scope,
-        version,
-        classJobId);
+        return addonRows
+            .Where(row =>
+                scope.Matches(
+                    row.OriginalWindowStringsLang,
+                    row.TranslationLang,
+                    row.TranslationEngine) &&
+                (row.ClassJobId == classJobId ||
+                 (classJobId.HasValue && row.ClassJobId == null)))
+            .ToList();
+      }
 
-    List<GameWindow>? legacyRows = null;
-    if (classJobId.HasValue)
-    {
-      legacyRows = GetScopedRows(
+      var exactRows = GetScopedRows(
           addonName,
           scope,
           version,
-          classJobId: null);
-    }
+          classJobId);
 
-    if (string.IsNullOrWhiteSpace(version))
-    {
-      if (IsCharacterWindow(addonName))
+      List<GameWindow>? legacyRows = null;
+      if (classJobId.HasValue)
       {
-        return GetPreferredCharacterCandidates(exactRows, legacyRows);
+        legacyRows = GetScopedRows(
+            addonName,
+            scope,
+            version,
+            classJobId: null);
       }
 
-      return MergeCandidateLists(exactRows, legacyRows);
-    }
+      if (string.IsNullOrWhiteSpace(version))
+      {
+        if (IsCharacterWindow(addonName))
+        {
+          return GetPreferredCharacterCandidates(exactRows, legacyRows);
+        }
 
-    var versionAgnosticRows = GetScopedRows(
-        addonName,
-        scope,
-        version: null,
-        classJobId);
+        return MergeCandidateLists(exactRows, legacyRows);
+      }
 
-    List<GameWindow>? legacyVersionAgnosticRows = null;
-    if (classJobId.HasValue)
-    {
-      legacyVersionAgnosticRows = GetScopedRows(
+      var versionAgnosticRows = GetScopedRows(
           addonName,
           scope,
           version: null,
-          classJobId: null);
-    }
+          classJobId);
 
-    if (exactRows == null || exactRows.Count == 0)
-    {
+      List<GameWindow>? legacyVersionAgnosticRows = null;
+      if (classJobId.HasValue)
+      {
+        legacyVersionAgnosticRows = GetScopedRows(
+            addonName,
+            scope,
+            version: null,
+            classJobId: null);
+      }
+
+      if (exactRows == null || exactRows.Count == 0)
+      {
+        if (IsCharacterWindow(addonName))
+        {
+          return GetPreferredCharacterCandidates(
+              versionAgnosticRows,
+              legacyRows,
+              legacyVersionAgnosticRows);
+        }
+
+        return MergeCandidateLists(versionAgnosticRows, legacyRows, legacyVersionAgnosticRows);
+      }
+
+      if (versionAgnosticRows == null || versionAgnosticRows.Count == 0)
+      {
+        if (IsCharacterWindow(addonName))
+        {
+          return GetPreferredCharacterCandidates(
+              exactRows,
+              legacyRows,
+              legacyVersionAgnosticRows);
+        }
+
+        return MergeCandidateLists(exactRows, legacyRows, legacyVersionAgnosticRows);
+      }
+
       if (IsCharacterWindow(addonName))
       {
         return GetPreferredCharacterCandidates(
+            exactRows,
             versionAgnosticRows,
             legacyRows,
             legacyVersionAgnosticRows);
       }
 
-      return MergeCandidateLists(versionAgnosticRows, legacyRows, legacyVersionAgnosticRows);
-    }
-
-    if (versionAgnosticRows == null || versionAgnosticRows.Count == 0)
-    {
-      if (IsCharacterWindow(addonName))
-      {
-        return GetPreferredCharacterCandidates(
-            exactRows,
-            legacyRows,
-            legacyVersionAgnosticRows);
-      }
-
-      return MergeCandidateLists(exactRows, legacyRows, legacyVersionAgnosticRows);
-    }
-
-    if (IsCharacterWindow(addonName))
-    {
-      return GetPreferredCharacterCandidates(
+      return MergeCandidateLists(
           exactRows,
           versionAgnosticRows,
           legacyRows,
           legacyVersionAgnosticRows);
     }
-
-    return MergeCandidateLists(
-        exactRows,
-        versionAgnosticRows,
-        legacyRows,
-        legacyVersionAgnosticRows);
   }
 
   /// <summary>

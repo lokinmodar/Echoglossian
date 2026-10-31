@@ -433,11 +433,24 @@
                 Runtime-local lookup snapshots must rebuild when this changes.
             </summary>
         </member>
-        <member name="M:Echoglossian.Cache.GameWindowCacheManager.Preload(System.String)">
+        <member name="P:Echoglossian.Cache.GameWindowCacheManager.Generation">
             <summary>
-                Loads all GameWindow records from the database into memory.
+                Gets the cache session used to reject late worker publication after reset.
             </summary>
-            <param name="configDir">The plugin's configuration directory path.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.PublishPreloaded(System.Collections.Generic.IReadOnlyList{Echoglossian.EFCoreSqlite.Models.GameWindow},System.Int64)">
+            <summary>
+                Publishes successfully loaded rows without replacing newer committed entries.
+            </summary>
+            <param name="rows">The committed database snapshot.</param>
+            <param name="expectedGeneration">The cache session captured before the read.</param>
+        </member>
+        <member name="M:Echoglossian.Cache.GameWindowCacheManager.Update(Echoglossian.EFCoreSqlite.Models.GameWindow,System.Int64)">
+            <summary>
+                Publishes one committed row only while its originating cache session remains active.
+            </summary>
+            <param name="record">The committed database row.</param>
+            <param name="expectedGeneration">The cache session captured before the operation.</param>
         </member>
         <member name="M:Echoglossian.Cache.GameWindowCacheManager.Update(Echoglossian.EFCoreSqlite.Models.GameWindow)">
             <summary>
@@ -3005,6 +3018,7 @@
             <summary>
              Defines operations for managing and retrieving translation data
             </summary>
+            <summary>Routes GameWindow runtime writes through the process-lifetime coordinator.</summary>
             <summary>
                 Provides shared DB and cache operations for canonical reference-text
                 rows retained for synchronous setup compatibility. Runtime prefetch
@@ -3052,10 +3066,6 @@
                 ItemDetail addons, including trait-aware ActionDetail handling.
             </summary>
             <summary>
-                Hosts debug-only automatic addon-probe watches that start on login for
-                selected addons with early hidden-state value.
-            </summary>
-            <summary>
                 Provides DB-first background prefetch for canonical ItemDetail
                 payloads.
             </summary>
@@ -3065,11 +3075,6 @@
             </summary>
             <summary>
                 Handles bootstrap and teardown for the NamePlateGui translation runtime.
-            </summary>
-            <summary>
-                Handles the quest probe command used to inspect the complete quest data
-                shape from Lumina, the live quest progress resolver, and the current
-                QuestPlate database rows.
             </summary>
             <summary>
                 Handles bootstrap and teardown of the quest-toast runtime that hangs off
@@ -3087,9 +3092,6 @@
             <summary>
                 Handles bootstrap and teardown for the alternate callback-owned
                 ToastGui route that owns supported normal and error toasts.
-            </summary>
-            <summary>
-            Handles the temporary tooltip-registration diagnostic command.
             </summary>
             <summary>
                 Provides DB-first background prefetch for canonical trait payloads.
@@ -3796,7 +3798,7 @@
             <param name="target">The existing popup row.</param>
             <param name="source">The incoming popup row.</param>
         </member>
-        <member name="M:Echoglossian.Echoglossian.InsertGameWindow(Echoglossian.EFCoreSqlite.Models.GameWindow)">
+        <member name="M:Echoglossian.Echoglossian.InsertGameWindowAsync(Echoglossian.EFCoreSqlite.Models.GameWindow)">
             <summary>
             Inserts or updates a GameWindow record in the database, ensuring uniqueness
             per AddonName + Lang + Engine + Version + OriginalWindowStrings.
@@ -3941,6 +3943,15 @@
             <param name="translationEngine"></param>
             <returns>Returns a formatted <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" />.</returns>
         </member>
+        <member name="P:Echoglossian.Echoglossian.GameWindowWriter">
+            <summary>Gets the active runtime adapter without creating another persistence owner.</summary>
+        </member>
+        <member name="M:Echoglossian.Echoglossian.PersistGameWindowAsync(Echoglossian.EFCoreSqlite.Models.GameWindow,System.Func{System.Action,System.Boolean})">
+            <summary>Admits a completed payload without waiting on the callback thread.</summary>
+            <param name="row">The captured payload.</param>
+            <param name="admitIfCurrent">The optional atomic operation-ownership guard.</param>
+            <returns>The committed persistence status.</returns>
+        </member>
         <member name="M:Echoglossian.Echoglossian.FindReferenceText``1(``0,Echoglossian.Cache.ReferenceTextCacheStore{``0},System.Func{Echoglossian.EFCoreSqlite.EchoglossianDbContext,Microsoft.EntityFrameworkCore.DbSet{``0}})">
             <summary>
                 Finds one canonical reference-text row using cache-first lookup.
@@ -4005,11 +4016,6 @@
         <member name="F:Echoglossian.Echoglossian.translatorMetricsWindow">
             <summary>
             Holds the translator debugger and metrics window instance.
-            </summary>
-        </member>
-        <member name="F:Echoglossian.Echoglossian.addonProbeWatch">
-            <summary>
-            Holds the currently active addon structure probe watch, if any.
             </summary>
         </member>
         <member name="F:Echoglossian.Echoglossian.Sanitizer">
@@ -4230,11 +4236,6 @@
         <member name="F:Echoglossian.Echoglossian.NumericLikePattern">
             <summary>
                 Regex used to help filtering out numeric-like strings.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ListCultureInfos">
-            <summary>
-                Lists all available culture information and writes it to a file.
             </summary>
         </member>
         <member name="M:Echoglossian.Echoglossian.MovePathUp(System.String,System.Int32)">
@@ -6328,109 +6329,6 @@
             <param name="cancellationToken">The handler-owned cancellation token.</param>
             <returns>The resolved hints for the current dialogue request.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.TickAddonProbeInfrastructure">
-            <summary>
-                Ticks manual and automatic addon-probe watches, including the
-                debug-only login bootstrap for the default watch set.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetActiveAddonProbeWatchCount">
-            <summary>
-                Gets how many addon-probe watches are currently active across manual
-                and managed watch sets.
-            </summary>
-            <returns>The active probe-watch count.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.StopAllAddonProbeWatches(System.Boolean)">
-            <summary>
-                Stops every active addon-probe watch known to the plugin.
-            </summary>
-            <param name="suppressAutoUntilLogout">
-                Whether the current login session should suppress the default
-                automatic watch set after the stop completes.
-            </param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TickManualAddonProbeWatch">
-            <summary>
-                Ticks the currently active manual addon-probe watch, if any.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TickManagedAddonProbeWatches">
-            <summary>
-                Ticks every managed addon-probe watch and prunes the disposed ones.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TickAutoAddonProbeWatches">
-            <summary>
-                Starts the default automatic addon-probe watch set when the player
-                logs in, then resets the gate on logout.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.StartDefaultAutoAddonProbeWatches">
-            <summary>
-                Starts the default automatic watch set used to capture early
-                structural state for pooled dialogue addons.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.StartManagedAddonProbeWatch(System.String,System.Int32,System.TimeSpan,System.String)">
-            <summary>
-                Starts one managed addon-probe watch and tracks it for later stop or
-                pruning.
-            </summary>
-            <param name="addonName">The addon name to watch.</param>
-            <param name="index">The addon instance index.</param>
-            <param name="duration">How long the watch should stay alive.</param>
-            <param name="reason">The debug log reason attached to the startup.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.StopManualAddonProbeWatch">
-            <summary>
-                Stops the current manual addon-probe watch, if any.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.StopManagedAddonProbeWatches">
-            <summary>
-                Stops every managed automatic addon-probe watch.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloAddonProbeCommand(System.String,System.String)">
-            <summary>
-            Dumps a recursive probe of the requested addon to the log so we can
-            inspect its live node tree, component roots, and likely overlay anchors.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.ParseAddonProbeArguments(System.String)">
-            <summary>
-            Parses the addon probe command arguments into an addon name, optional index,
-            and optional watch duration.
-            </summary>
-            <param name="args">The raw command arguments.</param>
-            <returns>The addon name, index, and duration to probe.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryParseAddonProbeDuration(System.String,System.TimeSpan@)">
-            <summary>
-            Parses one addon-probe duration token such as "90s" or "15m".
-            </summary>
-            <param name="token">The raw duration token.</param>
-            <param name="duration">Receives the parsed duration.</param>
-            <returns><see langword="true"/> when the token parsed successfully.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LooksLikeAddonProbeDuration(System.String)">
-            <summary>
-            Determines whether a token looks like an addon-probe duration even when the
-            value is outside the accepted range.
-            </summary>
-            <param name="token">The token to inspect.</param>
-            <returns><see langword="true"/> when the token resembles a duration.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.FormatAddonProbeDuration(System.TimeSpan)">
-            <summary>
-            Formats one addon-probe watch duration for chat feedback.
-            </summary>
-            <param name="duration">The duration to format.</param>
-            <returns>The human-readable duration string.</returns>
-        </member>
         <member name="M:Echoglossian.Echoglossian.ParseUi">
             <summary>
                 Parses the UI elements from the Addon sheet in the game data.
@@ -6875,102 +6773,6 @@
             </summary>
             <param name="questPlate">The managed QuestPlate lookup payload.</param>
             <returns>A committed cloned projection when present; otherwise null.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloQuestProbeCommand(System.String,System.String)">
-            <summary>
-                Handles the quest probe command.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.TryResolveQuestProbeTarget(System.String,System.String@,System.String@,Lumina.Excel.Sheets.Quest@)">
-            <summary>
-                Tries to resolve the quest probe target from either a quest id or a
-                quest name.
-            </summary>
-            <param name="input">The command argument.</param>
-            <param name="questIdText">The resolved quest id as text.</param>
-            <param name="questName">The resolved quest name.</param>
-            <param name="questRow">The resolved Lumina quest row.</param>
-            <returns>True when the quest could be resolved.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestProbe(System.String,System.String,Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs the quest data structure for inspection.
-            </summary>
-            <param name="questIdText">The quest id as text.</param>
-            <param name="questName">The quest name.</param>
-            <param name="questRow">The resolved Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestRow(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs the raw Lumina quest row properties.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestTextSheet(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Logs all rows from the quest text sheet, not just the live todo
-                entries, so we can inspect the full structure of the quest sheet.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestPlateRows(System.String,System.String)">
-            <summary>
-                Logs the QuestPlate rows currently stored for the quest.
-            </summary>
-            <param name="questIdText">The quest id text.</param>
-            <param name="questName">The quest name.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.LogQuestProgressSnapshot(Echoglossian.QuestProgressSnapshot)">
-            <summary>
-                Logs the resolved live quest progression snapshot.
-            </summary>
-            <param name="questProgressSnapshot">The resolved quest progress snapshot.</param>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestName(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves a human-readable quest name from a quest row.
-            </summary>
-            <param name="questRow">The quest row.</param>
-            <returns>The resolved quest name, if available.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.EvaluateQuestProbeText(Lumina.Text.ReadOnly.ReadOnlySeString)">
-            <summary>
-                Converts quest text to a readable string for probe output.
-            </summary>
-            <param name="text">The quest text.</param>
-            <returns>The evaluated text string.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.FormatProbeValue(System.Object)">
-            <summary>
-                Formats a probe value for log output.
-            </summary>
-            <param name="value">The value to format.</param>
-            <returns>A human-readable value string.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.BuildQuestTextSheetName(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Builds the raw quest sheet name used by the game files.
-            </summary>
-            <param name="questRow">The resolved Lumina quest row.</param>
-            <returns>The quest text sheet name, if it can be derived.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestRowIdText(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves the quest row id as text through reflection so the probe
-                stays compatible with generated sheet shapes.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-            <returns>The quest row id as text, or an empty string if unavailable.</returns>
-        </member>
-        <member name="M:Echoglossian.Echoglossian.GetQuestSheetIdText(Lumina.Excel.Sheets.Quest)">
-            <summary>
-                Resolves the quest sheet identifier used to mount the quest text
-                sheet path.
-            </summary>
-            <param name="questRow">The Lumina quest row.</param>
-            <returns>The quest sheet identifier as text, or an empty string if unavailable.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.CreateQuestToastRuntime">
             <summary>
@@ -8013,14 +7815,6 @@
                 normal and error-toast callbacks.
             </summary>
         </member>
-        <member name="M:Echoglossian.Echoglossian.OnEgloTooltipRegisterLoggingCommand(System.String,System.String)">
-            <summary>
-            Starts or stops temporary logging for hover-tooltip registrations and
-            hover-hit transitions.
-            </summary>
-            <param name="command">Command name.</param>
-            <param name="args">Command arguments.</param>
-        </member>
         <member name="M:Echoglossian.Echoglossian.TickTraitDetailPrefetch">
             <summary>
                 Ticks the trait prefetch runtime so current class/job traits are translated
@@ -8646,6 +8440,46 @@
             <param name="key">The claimed canonical identity.</param>
             <param name="completion">The terminal coordinator completion.</param>
         </member>
+        <member name="T:Echoglossian.DBHelpers.GameWindowPersistenceWriter">
+            <summary>Adapts managed GameWindow persistence to the shared bounded coordinator.</summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.GameWindowPersistenceWriter.#ctor(Echoglossian.Persistence.IPersistenceCoordinator)">
+            <summary>Initializes the process-lifetime adapter.</summary>
+            <param name="coordinator">The shared coordinator.</param>
+        </member>
+        <member name="P:Echoglossian.DBHelpers.GameWindowPersistenceWriter.ShutdownToken">
+            <summary>Gets cancellation for this plugin lifetime.</summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.GameWindowPersistenceWriter.DisablePublication">
+            <summary>Prevents late publication and retires the owning runtime.</summary>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.GameWindowPersistenceWriter.BuildIdentity(Echoglossian.EFCoreSqlite.Models.GameWindow,Echoglossian.TranslationReuseScope)">
+            <summary>Builds a collision-safe identity with the captured reuse semantics.</summary>
+            <param name="row">The managed payload identity.</param>
+            <param name="scope">The captured translation reuse policy.</param>
+            <returns>The normalized operation identity.</returns>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.GameWindowPersistenceWriter.PreloadAsync">
+            <summary>Retries startup preload off the game thread until committed data is available or shutdown begins.</summary>
+            <returns>A task completed after successful preload or owner shutdown.</returns>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.GameWindowPersistenceWriter.TryLoadAll(System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceReadResult{System.Collections.Generic.List{Echoglossian.EFCoreSqlite.Models.GameWindow}}}@,Echoglossian.Persistence.PersistencePriority)">
+            <summary>Loads the initial committed projection without blocking startup callbacks.</summary>
+            <param name="completion">The terminal read completion.</param>
+            <param name="priority">The originating admission lane.</param>
+            <returns>The bounded coordinator admission outcome.</returns>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.GameWindowPersistenceWriter.TryPersist(Echoglossian.EFCoreSqlite.Models.GameWindow,System.Threading.Tasks.Task{Echoglossian.Persistence.PersistenceWriteResult}@,Echoglossian.Persistence.PersistencePriority)">
+            <summary>Coalesces pending writes and publishes detached values only after successful commit.</summary>
+            <param name="row">The caller-owned payload to snapshot.</param>
+            <param name="completion">The terminal write completion.</param>
+            <param name="priority">The originating admission lane.</param>
+            <returns>The bounded coordinator admission outcome.</returns>
+        </member>
+        <member name="M:Echoglossian.DBHelpers.GameWindowPersistenceWriter.Publish(System.Action)">
+            <summary>Serializes cache publication with the owning runtime shutdown gate.</summary>
+            <param name="publish">The managed projection update.</param>
+        </member>
         <member name="T:Echoglossian.DBHelpers.LlmCapabilityObservationWriter">
             <summary>Schedules capability observations through the exclusive runtime writer.</summary>
         </member>
@@ -9042,7 +8876,7 @@
                 Persists <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> rows without requiring the full plugin runtime.
             </summary>
         </member>
-        <member name="M:Echoglossian.GameWindowPersistenceHelper.InsertGameWindow(System.String,Echoglossian.EFCoreSqlite.Models.GameWindow,System.Action{Echoglossian.EFCoreSqlite.Models.GameWindow})">
+        <member name="M:Echoglossian.GameWindowPersistenceHelper.InsertGameWindowAsync(System.String,Echoglossian.EFCoreSqlite.Models.GameWindow,System.Action{Echoglossian.EFCoreSqlite.Models.GameWindow})">
             <summary>
                 Inserts or updates a <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> row using the DB-first
                 lookup semantics for addon, optional class/job scope, language,
@@ -9055,23 +8889,26 @@
             </param>
             <returns>A status message describing the result.</returns>
         </member>
-        <member name="M:Echoglossian.GameWindowPersistenceHelper.TryFindExistingRow(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.GameWindow)">
+        <member name="M:Echoglossian.GameWindowPersistenceHelper.UpsertAsync(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.GameWindow,System.Threading.CancellationToken)">
             <summary>
                 Tries to find one existing row that should be updated instead of
                 inserting a new row.
             </summary>
             <param name="context">The database context.</param>
             <param name="gameWindow">The candidate row.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
+            <param name="cancellationToken">The worker cancellation token.</param>
+            <returns>The tracked persisted values and whether a mutation is needed.</returns>
         </member>
-        <member name="M:Echoglossian.GameWindowPersistenceHelper.TryFindExistingExactPayloadRow(Echoglossian.EFCoreSqlite.EchoglossianDbContext,Echoglossian.EFCoreSqlite.Models.GameWindow)">
-            <summary>
-                Tries to find one exact persisted payload row using the default
-                addon semantics.
-            </summary>
-            <param name="context">The database context.</param>
-            <param name="gameWindow">The candidate row.</param>
-            <returns>The matching row, or <see langword="null" />.</returns>
+        <member name="M:Echoglossian.GameWindowPersistenceHelper.Clone(Echoglossian.EFCoreSqlite.Models.GameWindow)">
+            <summary>Copies managed persisted values without sharing mutable cache state.</summary>
+            <param name="row">The row to copy.</param>
+            <returns>A detached row.</returns>
+        </member>
+        <member name="M:Echoglossian.GameWindowPersistenceHelper.MatchesIdentity(Echoglossian.EFCoreSqlite.Models.GameWindow,Echoglossian.EFCoreSqlite.Models.GameWindow)">
+            <summary>Matches both committed rows and pending inserts using the stored lookup semantics.</summary>
+            <param name="row">The existing candidate.</param>
+            <param name="requested">The requested persisted identity.</param>
+            <returns>Whether the candidate can be reused for this request.</returns>
         </member>
         <member name="T:Echoglossian.ItemTooltipPersistenceHelper">
             <summary>
@@ -16949,6 +16786,9 @@
                 Provides a DB-first runtime for addon-local surfaces backed by
                 <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> rows.
             </summary>
+            <summary>
+                Completes translation and persistence outside the native UI unsafe context.
+            </summary>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ClearSessionCaches">
             <summary>
@@ -17695,7 +17535,7 @@
                 The class/job identifier to persist with the row.
             </param>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.PersistResolvedGenericGameWindowPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.PersistResolvedGenericGameWindowPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32},System.Func{System.Action,System.Boolean})">
             <summary>
                 Persists one resolved original/translated payload pair as a
                 canonical <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> row.
@@ -17706,6 +17546,8 @@
             <param name="classJobId">
                 The class/job identifier to persist with the row.
             </param>
+            <param name="admitIfCurrent">The atomic operation ownership guard for write admission.</param>
+            <returns>The persistence completion status.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.CreatePersistedGameWindow(System.String,Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,System.Nullable{System.UInt32})">
             <summary>
@@ -17719,30 +17561,6 @@
             <param name="gameVersion">The captured game version.</param>
             <param name="classJobId">The captured class/job discriminator.</param>
             <returns>The row ready for persistence.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.PersistResolvedGameWindowPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32})">
-            <summary>
-                Persists a resolved payload only while the captured operation still
-                owns the active complete reuse scope.
-            </summary>
-            <param name="scope">The immutable operation scope.</param>
-            <param name="sourceOperation">The operation token captured before work began.</param>
-            <param name="originalPayload">The original payload.</param>
-            <param name="translatedPayload">The translated payload.</param>
-            <param name="classJobId">The captured class/job discriminator.</param>
-            <returns>True when the operation persisted its row.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TranslateAndPersistGameWindowPayloadAsync(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
-            <summary>
-                Translates and persists one non-structured
-                <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> payload.
-            </summary>
-            <param name="sourceLanguage">The operation-captured source identity.</param>
-            <param name="originalPayload">The original payload to translate.</param>
-            <returns>
-                A task whose result is <see langword="true" /> when translation
-                completed successfully; otherwise <see langword="false" />.
-            </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryRecoverGameWindowOriginalPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload@)">
             <summary>
@@ -17803,24 +17621,6 @@
                 <see langword="true" /> when one unique compatible candidate was
                 found.
             </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TranslateAndPersistStructuredPayloadAsync(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
-            <summary>
-                Translates and persists one structured payload while keeping the
-                provider and persistence source identities separate.
-            </summary>
-            <param name="sourceLanguage">The operation-captured source identity.</param>
-            <param name="originalPayload">The canonical original payload.</param>
-            <returns>The persisted row, or no value when translation is incomplete.</returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.QueueTranslationIfNeeded(Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
-            <summary>
-                Queues background translation and DB save when needed.
-            </summary>
-            <param name="sourceLanguage">The operation-captured source identity.</param>
-            <param name="payload">The original payload.</param>
-            <param name="payloadKey">The stable payload key.</param>
-            <param name="sourceOperation">The source-owned operation token.</param>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.RequestRefresh(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation)">
             <summary>
@@ -18042,6 +17842,47 @@
                 <see langword="true" /> when the candidate matches the runtime
                 language pair and carries a meaningful translated state.
             </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.PersistResolvedGameWindowPayloadAsync(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32})">
+            <summary>
+                Waits for a committed payload while preserving atomic operation ownership at admission.
+            </summary>
+            <param name="scope">The immutable operation scope.</param>
+            <param name="sourceOperation">The captured operation ownership.</param>
+            <param name="originalPayload">The original payload.</param>
+            <param name="translatedPayload">The translated payload.</param>
+            <param name="classJobId">The captured class/job discriminator.</param>
+            <returns>Whether the dedicated store or coordinator persisted the payload.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TranslateAndPersistGameWindowPayloadAsync(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Translates and persists one non-structured
+                <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" /> payload.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="originalPayload">The original payload to translate.</param>
+            <returns>
+                A task whose result is <see langword="true" /> when translation
+                completed successfully; otherwise <see langword="false" />.
+            </returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TranslateAndPersistStructuredPayloadAsync(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
+            <summary>
+                Translates and persists one structured payload while keeping the
+                provider and persistence source identities separate.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="originalPayload">The canonical original payload.</param>
+            <returns>The persisted row, or no value when translation is incomplete.</returns>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.QueueTranslationIfNeeded(Echoglossian.SourceClientLanguage,Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.NativeUI.Helpers.StringArrayStructuredPayload)">
+            <summary>
+                Queues background translation and DB save when needed.
+            </summary>
+            <param name="sourceLanguage">The operation-captured source identity.</param>
+            <param name="payload">The original payload.</param>
+            <param name="payloadKey">The stable payload key.</param>
+            <param name="sourceOperation">The source-owned operation token.</param>
         </member>
         <member name="T:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstTextNodeKeyAllocator">
             <summary>
@@ -29160,46 +29001,6 @@
             <param name="addonName">The name of the add-on whose logging event listeners are to be removed. Cannot be null or empty.</param>
             <param name="events">Optional lifecycle event set to unlog. Defaults to the full event set.</param>
         </member>
-        <member name="T:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy">
-            <summary>
-                Encapsulates the login-session gating rules for debug-only automatic
-                addon-probe watches.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy.ShouldStartForCurrentLogin(System.Boolean,System.Boolean,System.Boolean,System.Int32)">
-            <summary>
-                Determines whether the current login session should start the default
-                automatic addon-probe watch set.
-            </summary>
-            <param name="isLoggedIn">Whether the client is currently logged in.</param>
-            <param name="hasStartedForCurrentLogin">
-                Whether the current login session already started its automatic probe
-                set.
-            </param>
-            <param name="isSuppressedUntilLogout">
-                Whether the user explicitly suppressed the automatic probe set until
-                the next logout.
-            </param>
-            <param name="activeManagedWatchCount">
-                How many managed automatic probe watches are currently alive.
-            </param>
-            <returns>
-                <see langword="true" /> when the automatic probe set should start.
-            </returns>
-        </member>
-        <member name="M:Echoglossian.NativeUI.Helpers.AddonProbeAutoWatchPolicy.ShouldResetForLogout(System.Boolean,System.Boolean)">
-            <summary>
-                Determines whether the automatic login-session gate should reset
-                because the player logged out.
-            </summary>
-            <param name="wasLoggedIn">
-                Whether the client was logged in on the previous tick.
-            </param>
-            <param name="isLoggedIn">Whether the client is logged in now.</param>
-            <returns>
-                <see langword="true" /> when the automatic probe gate should reset.
-            </returns>
-        </member>
         <member name="T:Echoglossian.NativeUI.Helpers.AddonStructureProbe">
             <summary>
             Provides a generic recursive addon probe for live UI inspection.
@@ -36847,7 +36648,7 @@
                 Draws the full Overlay tab with vertical sub-tabs.
             </summary>
         </member>
-        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.GetToastGuiRouteStateText(Echoglossian.NativeUI.AddonHandlers.Toasts.ToastGuiRouteState)">
+        <member name="M:Echoglossian.PluginUI.Tabs.OverlayTab.DrawToastTypePage(Echoglossian.Config,System.String,System.Boolean@,Echoglossian.JournalTranslationDisplayMode@,System.Single@,System.Single@,System.Numerics.Vector2@,System.Numerics.Vector3@,System.Single@,System.Int64@)">
             <summary>
                 Maps one effective toast route state to the localized UI label used
                 in the toast general page.
@@ -45573,109 +45374,6 @@
             <param name="maxDistance">The distance at which the overlay becomes hidden.</param>
             <param name="minScale">The minimum scale reached at the maximum distance.</param>
             <returns>The resolved distance-aware presentation state.</returns>
-        </member>
-        <member name="T:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics">
-            <summary>
-            Emits temporary, deduplicated diagnostics for texture-backed overlay render
-            passes while complex-script overlay regressions are under investigation.
-            </summary>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.LogTextureUnavailable(Echoglossian.Config,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest,Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest,Echoglossian.UIOverlays.TextPresentation.TextureRenderAttemptOutcome,System.ValueTuple{System.Int32,System.Int64,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32})">
-            <summary>
-            Logs one texture-backed overlay render pass that did not reach a drawn
-            state because the backing texture was unavailable.
-            </summary>
-            <param name="configuration">The active plugin configuration.</param>
-            <param name="surfaceId">The overlay surface identifier.</param>
-            <param name="request">The active overlay render request.</param>
-            <param name="textRequest">The resolved text-layout request.</param>
-            <param name="outcome">The texture-render decision.</param>
-            <param name="stats">The current RTL texture backend stats.</param>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.LogTextureDrawn(Echoglossian.Config,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlaySurfaceId,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlayRenderRequest,Echoglossian.UIOverlays.TextPresentation.TextLayoutRequest,System.Numerics.Vector2,System.Numerics.Vector2,System.Numerics.Vector2)">
-            <summary>
-            Logs one successful texture-backed overlay draw.
-            </summary>
-            <param name="configuration">The active plugin configuration.</param>
-            <param name="surfaceId">The overlay surface identifier.</param>
-            <param name="request">The active overlay render request.</param>
-            <param name="textRequest">The resolved text-layout request.</param>
-            <param name="renderedPosition">The actual rendered window position.</param>
-            <param name="renderedSize">The actual rendered window size.</param>
-            <param name="bodySize">The measured body-text size.</param>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.ShouldLog(Echoglossian.Config)">
-            <summary>
-            Determines whether texture-overlay diagnostics should run for the current
-            language mode.
-            </summary>
-            <param name="configuration">The active plugin configuration.</param>
-            <returns><see langword="true" /> when diagnostics should log.</returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.ShouldEmit(System.String,System.String)">
-            <summary>
-            Determines whether a deduplicated diagnostic line should be emitted.
-            </summary>
-            <param name="key">The stable diagnostic event key.</param>
-            <param name="signature">The event-state signature.</param>
-            <returns><see langword="true" /> when the line should be emitted.</returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.BuildPreviewKey(System.String)">
-            <summary>
-            Builds the preview key used for deduplication.
-            </summary>
-            <param name="text">The source text.</param>
-            <returns>The stable preview key.</returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.BuildPreview(System.String)">
-            <summary>
-            Builds a short preview for diagnostic log lines.
-            </summary>
-            <param name="text">The source text.</param>
-            <returns>The shortened preview text.</returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.RoundVector(System.Numerics.Vector2,System.Single)">
-            <summary>
-            Rounds a vector to a coarse step size for deduplication.
-            </summary>
-            <param name="value">The source vector.</param>
-            <param name="step">The coarse rounding step.</param>
-            <returns>The rounded vector.</returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.RoundToStep(System.Single,System.Single)">
-            <summary>
-            Rounds a scalar to the requested step size.
-            </summary>
-            <param name="value">The source value.</param>
-            <param name="step">The rounding step.</param>
-            <returns>The rounded scalar.</returns>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.FormatVector(System.Numerics.Vector2)">
-            <summary>
-            Formats a vector for diagnostic log output.
-            </summary>
-            <param name="value">The vector value.</param>
-            <returns>The formatted vector.</returns>
-        </member>
-        <member name="T:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.EmissionState">
-            <summary>
-            Captures the last emitted signature and time for one diagnostic key.
-            </summary>
-            <param name="Signature">The emitted diagnostic-state signature.</param>
-            <param name="EmittedAtUtc">The time the signature was emitted.</param>
-        </member>
-        <member name="M:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.EmissionState.#ctor(System.String,System.DateTime)">
-            <summary>
-            Captures the last emitted signature and time for one diagnostic key.
-            </summary>
-            <param name="Signature">The emitted diagnostic-state signature.</param>
-            <param name="EmittedAtUtc">The time the signature was emitted.</param>
-        </member>
-        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.EmissionState.Signature">
-            <summary>The emitted diagnostic-state signature.</summary>
-        </member>
-        <member name="P:Echoglossian.UIOverlays.TranslationOverlay.OverlayTextureRenderDiagnostics.EmissionState.EmittedAtUtc">
-            <summary>The time the signature was emitted.</summary>
         </member>
         <member name="P:Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay.RenderScale">
             <summary>

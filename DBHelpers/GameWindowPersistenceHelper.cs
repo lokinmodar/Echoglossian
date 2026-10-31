@@ -5,6 +5,8 @@
 
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.EFCoreSqlite.Models;
+using Echoglossian.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace Echoglossian;
 
@@ -24,12 +26,12 @@ public static class GameWindowPersistenceHelper
     ///     Optional callback invoked with the updated entity after the DB write succeeds.
     /// </param>
     /// <returns>A status message describing the result.</returns>
-    public static string InsertGameWindow(
+    public static async Task<string> InsertGameWindowAsync(
         string configDirectory,
         GameWindow gameWindow,
         Action<GameWindow>? onPersisted = null)
     {
-        using var context = new EchoglossianDbContext(configDirectory);
+        await using var context = await new EchoglossianDbContextRuntimeFactory(configDirectory).CreateDbContextAsync().ConfigureAwait(false);
 
         try
         {
@@ -40,30 +42,15 @@ public static class GameWindowPersistenceHelper
                 return "Invalid data.";
             }
 
-            var existing = TryFindExistingRow(context, gameWindow);
-
-            if (existing != null)
+            var result = await UpsertAsync(context, gameWindow, CancellationToken.None).ConfigureAwait(false);
+            var inserted = context.Entry(result.Row).State == EntityState.Added;
+            if (result.Changed)
             {
-                existing.OriginalWindowStringsLang = gameWindow.OriginalWindowStringsLang;
-                existing.OriginalWindowStrings = gameWindow.OriginalWindowStrings;
-                existing.TranslatedWindowStrings = gameWindow.TranslatedWindowStrings;
-                existing.UpdatedDate = DateTime.UtcNow;
-
-                context.GameWindow.Update(existing);
-                context.SaveChanges();
-                onPersisted?.Invoke(existing);
-
-                return "Record updated.";
+                await context.SaveChangesAsync().ConfigureAwait(false);
             }
 
-            gameWindow.CreatedDate = DateTime.UtcNow;
-            gameWindow.UpdatedDate = DateTime.UtcNow;
-
-            context.GameWindow.Add(gameWindow);
-            context.SaveChanges();
-            onPersisted?.Invoke(gameWindow);
-
-            return "New record inserted.";
+            onPersisted?.Invoke(Clone(result.Row));
+            return inserted ? "New record inserted." : "Record updated.";
         }
         catch (Exception ex)
         {
@@ -77,41 +64,71 @@ public static class GameWindowPersistenceHelper
     /// </summary>
     /// <param name="context">The database context.</param>
     /// <param name="gameWindow">The candidate row.</param>
-    /// <returns>The matching row, or <see langword="null" />.</returns>
-    private static GameWindow? TryFindExistingRow(
+    /// <param name="cancellationToken">The worker cancellation token.</param>
+    /// <returns>The tracked persisted values and whether a mutation is needed.</returns>
+    internal static async Task<(GameWindow Row, bool Changed)> UpsertAsync(
         EchoglossianDbContext context,
-        GameWindow gameWindow)
+        GameWindow gameWindow,
+        CancellationToken cancellationToken)
     {
-        return TryFindExistingExactPayloadRow(context, gameWindow);
+        ArgumentNullException.ThrowIfNull(gameWindow);
+        ArgumentException.ThrowIfNullOrWhiteSpace(gameWindow.WindowAddonName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(gameWindow.OriginalWindowStringsLang);
+        var candidates = await context.GameWindow.Where(row => row.WindowAddonName == gameWindow.WindowAddonName &&
+            row.ClassJobId == gameWindow.ClassJobId && row.TranslationEngine == gameWindow.TranslationEngine &&
+            row.OriginalWindowStrings == gameWindow.OriginalWindowStrings).ToListAsync(cancellationToken).ConfigureAwait(false);
+        var existing = candidates.FirstOrDefault(row => MatchesIdentity(row, gameWindow));
+        // A batch commits once, so subsequent operations must also see its pending inserts.
+        existing ??= context.GameWindow.Local.FirstOrDefault(row =>
+            context.Entry(row).State == EntityState.Added && MatchesIdentity(row, gameWindow));
+        if (existing == null)
+        {
+            var inserted = Clone(gameWindow);
+            inserted.Id = 0;
+            inserted.RowVersion = null;
+            inserted.CreatedDate = DateTime.UtcNow;
+            inserted.UpdatedDate = inserted.CreatedDate;
+            context.GameWindow.Add(inserted);
+            return (inserted, true);
+        }
+
+        if (existing.OriginalWindowStringsLang == gameWindow.OriginalWindowStringsLang &&
+            existing.OriginalWindowStrings == gameWindow.OriginalWindowStrings &&
+            existing.TranslatedWindowStrings == gameWindow.TranslatedWindowStrings)
+        {
+            return (existing, false);
+        }
+
+        existing.OriginalWindowStringsLang = gameWindow.OriginalWindowStringsLang;
+        existing.OriginalWindowStrings = gameWindow.OriginalWindowStrings;
+        existing.TranslatedWindowStrings = gameWindow.TranslatedWindowStrings;
+        existing.UpdatedDate = DateTime.UtcNow;
+        return (existing, true);
     }
 
-    /// <summary>
-    ///     Tries to find one exact persisted payload row using the default
-    ///     addon semantics.
-    /// </summary>
-    /// <param name="context">The database context.</param>
-    /// <param name="gameWindow">The candidate row.</param>
-    /// <returns>The matching row, or <see langword="null" />.</returns>
-    private static GameWindow? TryFindExistingExactPayloadRow(
-        EchoglossianDbContext context,
-        GameWindow gameWindow)
+    /// <summary>Copies managed persisted values without sharing mutable cache state.</summary>
+    /// <param name="row">The row to copy.</param>
+    /// <returns>A detached row.</returns>
+    internal static GameWindow Clone(GameWindow row) => new(row.WindowAddonName, row.OriginalWindowStrings,
+        row.OriginalWindowStringsLang, row.TranslatedWindowStrings, row.TranslationLang, row.TranslationEngine,
+        row.GameVersion, row.CreatedDate, row.UpdatedDate, row.ClassJobId)
     {
-        return context.GameWindow
-            .AsEnumerable()
-            .FirstOrDefault(g =>
-                g.WindowAddonName == gameWindow.WindowAddonName &&
-                RuntimeLanguageHelper.LanguagesMatch(
-                    g.OriginalWindowStringsLang,
-                    gameWindow.OriginalWindowStringsLang) &&
-                RuntimeLanguageHelper.LanguagesMatch(
-                    g.TranslationLang,
-                    gameWindow.TranslationLang) &&
-                g.ClassJobId == gameWindow.ClassJobId &&
-                g.TranslationEngine == gameWindow.TranslationEngine &&
-                GameVersionLookupHelper.MatchesStoredVersion(
-                    g.GameVersion,
-                    gameWindow.GameVersion) &&
-                g.OriginalWindowStrings == gameWindow.OriginalWindowStrings);
-    }
+        Id = row.Id,
+        RowVersion = row.RowVersion?.ToArray(),
+    };
 
+    /// <summary>Matches both committed rows and pending inserts using the stored lookup semantics.</summary>
+    /// <param name="row">The existing candidate.</param>
+    /// <param name="requested">The requested persisted identity.</param>
+    /// <returns>Whether the candidate can be reused for this request.</returns>
+    private static bool MatchesIdentity(GameWindow row, GameWindow requested)
+    {
+        return row.WindowAddonName == requested.WindowAddonName &&
+            row.ClassJobId == requested.ClassJobId &&
+            row.TranslationEngine == requested.TranslationEngine &&
+            row.OriginalWindowStrings == requested.OriginalWindowStrings &&
+            RuntimeLanguageHelper.LanguagesMatch(row.OriginalWindowStringsLang, requested.OriginalWindowStringsLang) &&
+            RuntimeLanguageHelper.LanguagesMatch(row.TranslationLang, requested.TranslationLang) &&
+            GameVersionLookupHelper.MatchesStoredVersion(row.GameVersion, requested.GameVersion);
+    }
 }

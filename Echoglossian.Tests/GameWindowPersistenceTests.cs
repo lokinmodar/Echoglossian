@@ -24,7 +24,7 @@ public class GameWindowPersistenceTests
     ///     as separate rows instead of overwriting one another.
     /// </summary>
     [Fact]
-    public void InsertGameWindow_PreservesDistinctVariants_ForSameAddonLookupScope()
+    public async Task InsertGameWindow_PreservesDistinctVariants_ForSameAddonLookupScope()
     {
         var configDir = Path.Combine(
             Path.GetTempPath(),
@@ -60,8 +60,8 @@ public class GameWindowPersistenceTests
                 createdDate: DateTime.UtcNow,
                 updatedDate: DateTime.UtcNow);
 
-            GameWindowPersistenceHelper.InsertGameWindow(configDir, first);
-            GameWindowPersistenceHelper.InsertGameWindow(configDir, second);
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(configDir, first);
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(configDir, second);
 
             using var validationContext = new EchoglossianDbContext(configDir);
             var rows = validationContext.GameWindow
@@ -92,7 +92,7 @@ public class GameWindowPersistenceTests
     ///     engine, language, version, and original payload all match.
     /// </summary>
     [Fact]
-    public void InsertGameWindow_UpdatesExactPayloadMatch_InPlace()
+    public async Task InsertGameWindow_UpdatesExactPayloadMatch_InPlace()
     {
         var configDir = Path.Combine(
             Path.GetTempPath(),
@@ -108,7 +108,7 @@ public class GameWindowPersistenceTests
             }
 
             var originalJson = "{\"atkValues\":{\"1\":\"Main Command\"}}";
-            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(configDir, new GameWindow(
                 windowAddonName: "_MainCommand",
                 originalWindowStrings: originalJson,
                 originalWindowStringsLang: "en",
@@ -118,7 +118,7 @@ public class GameWindowPersistenceTests
                 gameVersion: "7.3",
                 createdDate: DateTime.UtcNow,
                 updatedDate: DateTime.UtcNow));
-            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(configDir, new GameWindow(
                 windowAddonName: "_MainCommand",
                 originalWindowStrings: originalJson,
                 originalWindowStringsLang: "en",
@@ -152,7 +152,7 @@ public class GameWindowPersistenceTests
     ///     inserting duplicates for the same effective translation target.
     /// </summary>
     [Fact]
-    public void InsertGameWindow_TreatsNormalizedLanguageAliasesAsOneRow()
+    public async Task InsertGameWindow_TreatsNormalizedLanguageAliasesAsOneRow()
     {
         var configDir = Path.Combine(
             Path.GetTempPath(),
@@ -168,7 +168,7 @@ public class GameWindowPersistenceTests
             }
 
             var originalJson = "{\"atkValues\":{\"1\":\"Main Command\"}}";
-            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(configDir, new GameWindow(
                 windowAddonName: "_MainCommand",
                 originalWindowStrings: originalJson,
                 originalWindowStringsLang: "en",
@@ -178,7 +178,7 @@ public class GameWindowPersistenceTests
                 gameVersion: "7.3",
                 createdDate: DateTime.UtcNow,
                 updatedDate: DateTime.UtcNow));
-            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(configDir, new GameWindow(
                 windowAddonName: "_MainCommand",
                 originalWindowStrings: originalJson,
                 originalWindowStringsLang: "en",
@@ -212,7 +212,7 @@ public class GameWindowPersistenceTests
     ///     provides a concrete game version for the same logical payload.
     /// </summary>
     [Fact]
-    public void InsertGameWindow_ReusesVersionAgnosticRow()
+    public async Task InsertGameWindow_ReusesVersionAgnosticRow()
     {
         var configDir = Path.Combine(
             Path.GetTempPath(),
@@ -228,7 +228,7 @@ public class GameWindowPersistenceTests
             }
 
             var originalJson = "{\"atkValues\":{\"1\":\"Main Command\"}}";
-            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(configDir, new GameWindow(
                 windowAddonName: "_MainCommand",
                 originalWindowStrings: originalJson,
                 originalWindowStringsLang: "en",
@@ -238,7 +238,7 @@ public class GameWindowPersistenceTests
                 gameVersion: null,
                 createdDate: DateTime.UtcNow,
                 updatedDate: DateTime.UtcNow));
-            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(configDir, new GameWindow(
                 windowAddonName: "_MainCommand",
                 originalWindowStrings: originalJson,
                 originalWindowStringsLang: "en",
@@ -268,7 +268,7 @@ public class GameWindowPersistenceTests
     ///     scopes without one row overwriting the other.
     /// </summary>
     [Fact]
-    public void InsertGameWindow_PreservesDistinctClassJobScopedVariants()
+    public async Task InsertGameWindow_PreservesDistinctClassJobScopedVariants()
     {
         var configDir = Path.Combine(
             Path.GetTempPath(),
@@ -284,7 +284,7 @@ public class GameWindowPersistenceTests
             }
 
             var originalJson = "{\"atkValues\":{\"17\":\"Peloton\"}}";
-            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(configDir, new GameWindow(
                 windowAddonName: "ActionMenu",
                 originalWindowStrings: originalJson,
                 originalWindowStringsLang: "en",
@@ -295,7 +295,7 @@ public class GameWindowPersistenceTests
                 createdDate: DateTime.UtcNow,
                 updatedDate: DateTime.UtcNow,
                 classJobId: 38));
-            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(configDir, new GameWindow(
                 windowAddonName: "ActionMenu",
                 originalWindowStrings: originalJson,
                 originalWindowStringsLang: "en",
@@ -330,7 +330,7 @@ public class GameWindowPersistenceTests
     ///     payload and class/job id both match.
     /// </summary>
     [Fact]
-    public void InsertGameWindow_UpdatesExactClassJobScopedMatch_InPlace()
+    public async Task InsertGameWindow_UpdatesExactClassJobScopedMatch_InPlace()
     {
         var configDir = Path.Combine(
             Path.GetTempPath(),
@@ -346,7 +346,7 @@ public class GameWindowPersistenceTests
             }
 
             var originalJson = "{\"atkValues\":{\"17\":\"Peloton\"}}";
-            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(configDir, new GameWindow(
                 windowAddonName: "ActionMenu",
                 originalWindowStrings: originalJson,
                 originalWindowStringsLang: "en",
@@ -357,7 +357,7 @@ public class GameWindowPersistenceTests
                 createdDate: DateTime.UtcNow,
                 updatedDate: DateTime.UtcNow,
                 classJobId: 38));
-            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(configDir, new GameWindow(
                 windowAddonName: "ActionMenu",
                 originalWindowStrings: originalJson,
                 originalWindowStringsLang: "en",
@@ -393,7 +393,7 @@ public class GameWindowPersistenceTests
     ///     scope when the visible page content changes.
     /// </summary>
     [Fact]
-    public void InsertGameWindow_ActionMenuPreservesDistinctPayloads_WithinScope()
+    public async Task InsertGameWindow_ActionMenuPreservesDistinctPayloads_WithinScope()
     {
         var configDir = Path.Combine(
             Path.GetTempPath(),
@@ -408,7 +408,7 @@ public class GameWindowPersistenceTests
                 context.Database.Migrate();
             }
 
-            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(configDir, new GameWindow(
                 windowAddonName: "ActionMenu",
                 originalWindowStrings: "{\"atkValues\":{\"17\":\"Peloton\"}}",
                 originalWindowStringsLang: "en",
@@ -419,7 +419,7 @@ public class GameWindowPersistenceTests
                 createdDate: DateTime.UtcNow,
                 updatedDate: DateTime.UtcNow,
                 classJobId: 38));
-            GameWindowPersistenceHelper.InsertGameWindow(configDir, new GameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(configDir, new GameWindow(
                 windowAddonName: "ActionMenu",
                 originalWindowStrings: "{\"atkValues\":{\"17\":\"Cascade\"}}",
                 originalWindowStringsLang: "en",
@@ -467,7 +467,7 @@ public class GameWindowPersistenceTests
     ///     ActionMenu also preserves distinct payload variants per source.
     /// </summary>
     [Fact]
-    public void InsertGameWindow_PreservesDistinctSourceScopes()
+    public async Task InsertGameWindow_PreservesDistinctSourceScopes()
     {
         var configDir = Path.Combine(
             Path.GetTempPath(),
@@ -483,28 +483,28 @@ public class GameWindowPersistenceTests
             }
 
             const string profilePayload = "{\"textNodes\":{\"0\":\"Profile\"}}";
-            GameWindowPersistenceHelper.InsertGameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(
                 configDir,
                 CreateGameWindow("CharacterProfile", "en", profilePayload));
-            GameWindowPersistenceHelper.InsertGameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(
                 configDir,
                 CreateGameWindow("CharacterProfile", "de", profilePayload));
 
-            GameWindowPersistenceHelper.InsertGameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(
                 configDir,
                 CreateGameWindow(
                     "ActionMenu",
                     "en",
                     "{\"atkValues\":{\"17\":\"Peloton\"}}",
                     classJobId: 38));
-            GameWindowPersistenceHelper.InsertGameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(
                 configDir,
                 CreateGameWindow(
                     "ActionMenu",
                     "English",
                     "{\"atkValues\":{\"17\":\"Cascade\"}}",
                     classJobId: 38));
-            GameWindowPersistenceHelper.InsertGameWindow(
+            await GameWindowPersistenceHelper.InsertGameWindowAsync(
                 configDir,
                 CreateGameWindow(
                     "ActionMenu",

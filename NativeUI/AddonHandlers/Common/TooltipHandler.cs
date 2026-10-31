@@ -309,7 +309,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
                             task.Result.Value.TextNodes,
                             out var rebuiltTextNodes))
                     {
-                        return false;
+                        return Task.FromResult(false);
                     }
 
                     var translatedPayload = new DbFirstGameWindowPayload(
@@ -324,10 +324,10 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
                             originalPayload,
                             translatedPayload))
                     {
-                        return false;
+                        return Task.FromResult(false);
                     }
 
-                    return this.PersistResolvedGameWindowPayload(
+                    return this.PersistResolvedGameWindowPayloadAsync(
                         scope,
                         sourceOperation,
                         originalPayload,
@@ -336,7 +336,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
                             originalPayload,
                             translatedPayload));
                 },
-                TaskScheduler.Default);
+                TaskScheduler.Default).Unwrap();
     }
 
     /// <inheritdoc />
