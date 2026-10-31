@@ -2,6 +2,12 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Relationship to issue 286:** Native LTR glyph fallback is the preferred
+> long-term replacement for destructive diacritic removal. Keep this plan's
+> current behavior until issue
+> [#286](https://github.com/lokinmodar/Echoglossian/issues/286) passes in-game
+> validation. Do not remove this fallback during the #286 feasibility spike.
+
 **Goal:** Replace hardcoded target-language id checks for optional native
 replacement diacritics fallback with explicit language metadata and one shared
 runtime policy, without changing current behavior.
