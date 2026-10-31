@@ -7,6 +7,36 @@ This changelog is curated from two sources:
 
 It is intentionally high-signal rather than a verbatim dump of every commit.
 
+## Submitted Release `v4.2601.1031.2017`
+
+This release submits the first production tranche of the asynchronous
+persistence work tracked by `#258`, through DB-4 and its UI-A companion. It
+moves the highest-impact reference-text, quest, ToDo, action, item, and trait
+database flows away from Dalamud callbacks and adds one coordinated global
+translation control surface.
+
+The release was requested after human in-game validation of the DB-4 + UI-A
+build on 2026-10-31. Publication in the official Dalamud feed remains pending
+until the corresponding `DalamudPluginsD17` pull request is accepted.
+
+Highlights:
+
+- adds one bounded asynchronous persistence coordinator with prioritized
+  admission, coalesced reads and writes, short-lived contexts, serialized
+  SQLite writes, retry handling, and bounded shutdown ownership
+- migrates reference-text, QuestPlate, accepted-quest and ToDo prefetch, plus
+  action, item, and trait detail persistence away from Framework callbacks
+  while preserving existing schemas, canonical identities, lookup fallbacks,
+  and database-first cache publication
+- persists known Google no-translation outcomes so unsupported text is not
+  retried continuously, while generic empty results remain eligible for later
+  recovery
+- adds `/eglo translations on|off|toggle` and an optional draggable HUD button
+  backed by the same persistent activation state as the configuration checkbox
+- restores only plugin-mutated native presentation, clears translated overlays
+  when disabled, and reapplies committed cached translations safely when
+  translation is enabled again
+
 ## Published Release `v4.2601.0829.2219`
 
 This package was published to the official Dalamud feed after the `#274`
