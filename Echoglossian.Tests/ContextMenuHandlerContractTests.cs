@@ -96,15 +96,15 @@ public sealed class ContextMenuHandlerContractTests
     ///     persistence seam before the generic GameWindow path.
     /// </summary>
     [Fact]
-    public void PersistResolvedGameWindowPayload_UsesDedicatedPersistenceSeam()
+    public async Task PersistResolvedGameWindowPayload_UsesDedicatedPersistenceSeam()
     {
         var handler = new DedicatedPersistenceProbe();
         var payload = CreateTextNodePayload(
             ("3:0", "Dismiss"));
 
-        handler.Persist(
+        Assert.True(await handler.Persist(
             new TranslationReuseScope("en", "pt-BR", 0, false),
-            payload);
+            payload));
 
         Assert.Equal(1, handler.DedicatedPersistenceCalls);
     }
@@ -114,15 +114,15 @@ public sealed class ContextMenuHandlerContractTests
     ///     generic GameWindow persistence path.
     /// </summary>
     [Fact]
-    public void PersistResolvedGameWindowPayload_FallsBackToGenericPersistence()
+    public async Task PersistResolvedGameWindowPayload_FallsBackToGenericPersistence()
     {
         var handler = new GenericPersistenceProbe();
         var payload = CreateTextNodePayload(
             ("3:0", "Dismiss"));
 
-        handler.Persist(
+        Assert.False(await handler.Persist(
             new TranslationReuseScope("en", "pt-BR", 0, false),
-            payload);
+            payload));
 
         Assert.Equal(1, handler.GenericPersistencePreparations);
     }
@@ -334,11 +334,12 @@ public sealed class ContextMenuHandlerContractTests
         /// </summary>
         /// <param name="scope">The captured reuse scope.</param>
         /// <param name="payload">The resolved payload.</param>
-        public void Persist(
+        /// <returns>The observed persistence result.</returns>
+        public Task<bool> Persist(
             TranslationReuseScope scope,
             DbFirstGameWindowPayload payload)
         {
-            this.PersistResolvedGameWindowPayload(
+            return this.PersistResolvedGameWindowPayload(
                 scope,
                 payload,
                 payload,
@@ -386,11 +387,12 @@ public sealed class ContextMenuHandlerContractTests
         /// </summary>
         /// <param name="scope">The captured reuse scope.</param>
         /// <param name="payload">The resolved payload.</param>
-        public void Persist(
+        /// <returns>The observed persistence result.</returns>
+        public Task<bool> Persist(
             TranslationReuseScope scope,
             DbFirstGameWindowPayload payload)
         {
-            this.PersistResolvedGameWindowPayload(
+            return this.PersistResolvedGameWindowPayload(
                 scope,
                 payload,
                 payload,

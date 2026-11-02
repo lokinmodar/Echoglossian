@@ -17520,6 +17520,7 @@
             <param name="sourceLanguage">The operation-captured source identity.</param>
             <param name="originalPayload">The original payload.</param>
             <param name="translatedPayload">The translated payload.</param>
+            <returns>The observed persistence outcome.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.PersistResolvedGameWindowPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32})">
             <summary>
@@ -17534,6 +17535,7 @@
             <param name="classJobId">
                 The class/job identifier to persist with the row.
             </param>
+            <returns>The observed persistence outcome.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.PersistResolvedGenericGameWindowPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32},System.Func{System.Action,System.Boolean})">
             <summary>
@@ -17843,6 +17845,16 @@
                 language pair and carries a meaningful translated state.
             </returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.PersistSupplementalGameWindowPayloadAsync(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.String,System.Nullable{System.UInt32})">
+            <summary>Observes supplemental persistence without blocking addon callbacks or retiring uncommitted work.</summary>
+            <param name="scope">The captured reuse scope.</param>
+            <param name="sourceOperation">The captured operation owner.</param>
+            <param name="originalPayload">The original payload.</param>
+            <param name="translatedPayload">The supplemental translated payload.</param>
+            <param name="payloadKey">The existing in-flight payload identity.</param>
+            <param name="classJobId">The captured class/job discriminator.</param>
+            <returns>The observed persistence and refresh completion.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.PersistResolvedGameWindowPayloadAsync(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Nullable{System.UInt32})">
             <summary>
                 Waits for a committed payload while preserving atomic operation ownership at admission.
@@ -18106,13 +18118,14 @@
             <param name="nowUtc">The current UTC time.</param>
             <returns>True when the matching operation is still cooling down.</returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceRetryGate.TryRunIfCurrent(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,System.Action)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceRetryGate.TryRunIfCurrent(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,System.Action,System.Boolean)">
             <summary>
                 Runs a completion mutation and clears its cooldown only when the
                 captured source generation is still current.
             </summary>
             <param name="operation">The captured source operation.</param>
             <param name="mutation">The completion mutation to run.</param>
+            <param name="clearRetry">Whether this completion may clear the retry deadline.</param>
             <returns>True when the completion was accepted.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceRetryGate.Reset">

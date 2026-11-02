@@ -62,6 +62,7 @@ public abstract unsafe partial class DbFirstGameWindowAddonHandler
     private DateTime appliedStatePreDrawRefreshUntilUtc = DateTime.MinValue;
 
     private readonly DbFirstSourceRetryGate retryGate = new();
+    private readonly Guid supplementalPersistenceOwner = Guid.NewGuid();
     private int refreshRequested;
 
     /// <summary>
@@ -1378,19 +1379,10 @@ public abstract unsafe partial class DbFirstGameWindowAddonHandler
                     goto QueueNewTranslation;
                 }
 
-                if (this.ShouldPersistNewGameWindowPayload(
-                        operationSourceLanguage,
-                        originalPayload,
-                        supplementalTranslatedPayload))
-                {
-                    this.PersistResolvedGameWindowPayload(
-                        operationScope,
-                        originalPayload,
-                        supplementalTranslatedPayload,
-                        this.GetPersistedGameWindowClassJobId(
-                            originalPayload,
-                            supplementalTranslatedPayload));
-                }
+                var shouldPersistSupplementalPayload = this.ShouldPersistNewGameWindowPayload(
+                    operationSourceLanguage,
+                    originalPayload,
+                    supplementalTranslatedPayload);
 
                 this.ApplyPayload(
                     addon,
@@ -1399,6 +1391,20 @@ public abstract unsafe partial class DbFirstGameWindowAddonHandler
                     supplementalTranslatedPayload,
                     payloadKey,
                     displayMode);
+                if (shouldPersistSupplementalPayload)
+                {
+                    _ = this.PersistSupplementalGameWindowPayloadAsync(
+                        operationScope,
+                        sourceOperation,
+                        originalPayload,
+                        supplementalTranslatedPayload,
+                        payloadKey,
+                        this.GetPersistedGameWindowClassJobId(
+                            originalPayload,
+                            supplementalTranslatedPayload));
+                    return;
+                }
+
                 ClearFailedPayloadRetry(payloadKey);
                 this.retryGate.TryClearRetry(sourceOperation);
                 return;
@@ -2026,7 +2032,8 @@ public abstract unsafe partial class DbFirstGameWindowAddonHandler
     /// <param name="sourceLanguage">The operation-captured source identity.</param>
     /// <param name="originalPayload">The original payload.</param>
     /// <param name="translatedPayload">The translated payload.</param>
-    private protected void PersistResolvedGameWindowPayload(
+    /// <returns>The observed persistence outcome.</returns>
+    private protected Task<bool> PersistResolvedGameWindowPayload(
         SourceClientLanguage sourceLanguage,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
@@ -2034,7 +2041,7 @@ public abstract unsafe partial class DbFirstGameWindowAddonHandler
         var classJobId = this.GetPersistedGameWindowClassJobId(
             originalPayload,
             translatedPayload);
-        this.PersistResolvedGameWindowPayload(
+        return this.PersistResolvedGameWindowPayload(
             this.CreateReuseScope(sourceLanguage),
             originalPayload,
             translatedPayload,
@@ -2053,7 +2060,8 @@ public abstract unsafe partial class DbFirstGameWindowAddonHandler
     /// <param name="classJobId">
     ///     The class/job identifier to persist with the row.
     /// </param>
-    internal void PersistResolvedGameWindowPayload(
+    /// <returns>The observed persistence outcome.</returns>
+    internal Task<bool> PersistResolvedGameWindowPayload(
         TranslationReuseScope scope,
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload,
@@ -2064,10 +2072,10 @@ public abstract unsafe partial class DbFirstGameWindowAddonHandler
                 originalPayload,
                 translatedPayload))
         {
-            return;
+            return Task.FromResult(true);
         }
 
-        _ = this.PersistResolvedGenericGameWindowPayload(
+        return this.PersistResolvedGenericGameWindowPayload(
             scope,
             originalPayload,
             translatedPayload,
@@ -3838,10 +3846,12 @@ internal sealed class DbFirstSourceRetryGate
     /// </summary>
     /// <param name="operation">The captured source operation.</param>
     /// <param name="mutation">The completion mutation to run.</param>
+    /// <param name="clearRetry">Whether this completion may clear the retry deadline.</param>
     /// <returns>True when the completion was accepted.</returns>
     public bool TryRunIfCurrent(
         DbFirstSourceOperation operation,
-        Action mutation)
+        Action mutation,
+        bool clearRetry = true)
     {
         ArgumentNullException.ThrowIfNull(mutation);
 
@@ -3852,7 +3862,11 @@ internal sealed class DbFirstSourceRetryGate
                 return false;
             }
 
-            this.nextRetryUtc = DateTime.MinValue;
+            if (clearRetry)
+            {
+                this.nextRetryUtc = DateTime.MinValue;
+            }
+
             mutation();
             return true;
         }

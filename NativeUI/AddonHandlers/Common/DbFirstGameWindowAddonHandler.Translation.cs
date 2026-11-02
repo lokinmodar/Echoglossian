@@ -14,6 +14,75 @@ namespace Echoglossian.NativeUI.AddonHandlers.Common;
 /// </summary>
 public abstract partial class DbFirstGameWindowAddonHandler
 {
+    /// <summary>Observes supplemental persistence without blocking addon callbacks or retiring uncommitted work.</summary>
+    /// <param name="scope">The captured reuse scope.</param>
+    /// <param name="sourceOperation">The captured operation owner.</param>
+    /// <param name="originalPayload">The original payload.</param>
+    /// <param name="translatedPayload">The supplemental translated payload.</param>
+    /// <param name="payloadKey">The existing in-flight payload identity.</param>
+    /// <param name="classJobId">The captured class/job discriminator.</param>
+    /// <returns>The observed persistence and refresh completion.</returns>
+    internal async Task PersistSupplementalGameWindowPayloadAsync(
+        TranslationReuseScope scope,
+        DbFirstSourceOperation sourceOperation,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        string payloadKey,
+        uint? classJobId)
+    {
+        // Cleanup can reopen the same payload before its old persistence completion retires.
+        var inFlightKey = $"{payloadKey}|supplemental:{this.supplementalPersistenceOwner:N}:{sourceOperation.Generation}";
+        if (!this.retryGate.TrySetRetry(sourceOperation, DateTime.UtcNow + RetryInterval) ||
+            !InFlightPayloads.TryAdd(inFlightKey, 0))
+        {
+            return;
+        }
+
+        var shutdownToken = Echoglossian.GameWindowWriter?.ShutdownToken ?? CancellationToken.None;
+        try
+        {
+            var persisted = false;
+            try
+            {
+                persisted = await this.PersistResolvedGameWindowPayloadAsync(
+                    scope,
+                    sourceOperation,
+                    originalPayload,
+                    translatedPayload,
+                    classJobId).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                PluginRuntimeLog.Warning("GameWindowPersistence", $"Supplemental persistence failed: {exception.Message}");
+            }
+
+            if (persisted)
+            {
+                this.retryGate.TryRunIfCurrent(sourceOperation, () => ClearFailedPayloadRetry(payloadKey));
+            }
+            else
+            {
+                if (!this.retryGate.TrySetRetry(sourceOperation, DateTime.UtcNow + RetryInterval))
+                {
+                    return;
+                }
+
+                // A delayed refresh also retries applied states that would otherwise short-circuit PreDraw.
+                await Task.Delay(RetryInterval, shutdownToken).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException) when (shutdownToken.IsCancellationRequested)
+        {
+            return;
+        }
+        finally
+        {
+            InFlightPayloads.TryRemove(inFlightKey, out _);
+        }
+
+        this.RequestRefresh(sourceOperation);
+    }
+
     /// <summary>
     ///     Waits for a committed payload while preserving atomic operation ownership at admission.
     /// </summary>
@@ -33,7 +102,8 @@ public abstract partial class DbFirstGameWindowAddonHandler
         var dedicated = false;
         if (!this.retryGate.TryRunIfCurrent(
                 sourceOperation,
-                () => dedicated = this.TryPersistDedicatedPayload(scope, originalPayload, translatedPayload)))
+                () => dedicated = this.TryPersistDedicatedPayload(scope, originalPayload, translatedPayload),
+                clearRetry: false))
         {
             return false;
         }
@@ -48,7 +118,7 @@ public abstract partial class DbFirstGameWindowAddonHandler
             originalPayload,
             translatedPayload,
             classJobId,
-            action => this.retryGate.TryRunIfCurrent(sourceOperation, action)).ConfigureAwait(false);
+            action => this.retryGate.TryRunIfCurrent(sourceOperation, action, clearRetry: false)).ConfigureAwait(false);
     }
 
     /// <summary>
