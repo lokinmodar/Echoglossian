@@ -6,6 +6,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using Echoglossian.Cache;
 using Echoglossian.EFCoreSqlite;
 using Echoglossian.LanguagesHandling;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,76 @@ namespace Echoglossian.Tests;
 /// </summary>
 public sealed class TooltipAddonPersistenceTests
 {
+    /// <summary>
+    ///     Retired owners allow dedicated SQLite writes to commit without publishing their rows to the live cache.
+    /// </summary>
+    /// <param name="updateExisting">Whether the guarded write updates an existing row.</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task InsertTooltipTextData_RetiredOwnerDoesNotPublishCommittedRow(bool updateExisting)
+    {
+        var configDir = CreateTempConfigDirectory();
+        var previousConfigDirectory = PluginEntry.ConfigDirectory;
+        PluginEntry.ConfigDirectory = configDir + Path.DirectorySeparatorChar;
+        TooltipTextCacheManager.Clear();
+        var plugin = CreateFormattingPlugin(new Config
+        {
+            Lang = 28,
+            ChosenTransEngine = 0,
+            TranslateAlreadyTranslatedTexts = true,
+        });
+        var originalTexts = JsonConvert.SerializeObject(new[] { "Social" });
+        var translatedTexts = JsonConvert.SerializeObject(new[] { "Social traduzido" });
+        var row = CreateTooltipTextRow(
+            ResolveTooltipTextType(), "Tooltip", originalTexts, "en", translatedTexts,
+            "pt-BR", 0, "test-version", "tooltip-retired-owner-hash");
+
+        try
+        {
+            await using (var context = new EchoglossianDbContext(configDir))
+            {
+                await context.Database.MigrateAsync();
+                if (updateExisting)
+                {
+                    context.Add(CreateTooltipTextRow(
+                        ResolveTooltipTextType(), "Tooltip", originalTexts, "en",
+                        JsonConvert.SerializeObject(new[] { "Tradução anterior" }),
+                        "pt-BR", 0, "test-version", "tooltip-retired-owner-hash"));
+                    await context.SaveChangesAsync();
+                }
+            }
+
+            var revision = TooltipTextCacheManager.Revision;
+            var guardCalls = 0;
+            string? translationVisibleAtGuard = null;
+            var result = await InvokeInsertTooltipTextDataAsync(plugin, row, _ =>
+            {
+                guardCalls++;
+                using var committed = new EchoglossianDbContext(configDir);
+                translationVisibleAtGuard = committed.TooltipTexts.AsNoTracking().Single().TranslatedTextsAsText;
+                return false;
+            });
+
+            Assert.Equal(updateExisting ? "Data updated in TooltipTexts table." : "Data inserted to TooltipTexts table.", result);
+            Assert.Equal(1, guardCalls);
+            Assert.Equal(translatedTexts, translationVisibleAtGuard);
+            await using var verification = new EchoglossianDbContext(configDir);
+            var persisted = Assert.Single(await verification.TooltipTexts.AsNoTracking().ToListAsync());
+            Assert.Equal(translatedTexts, persisted.TranslatedTextsAsText);
+            Assert.Equal(revision, TooltipTextCacheManager.Revision);
+            Assert.Null(TooltipTextCacheManager.TryFindMatch(
+                "Tooltip", new TranslationReuseScope("en", "pt-BR", 0, true),
+                "test-version", originalTexts, "tooltip-retired-owner-hash"));
+        }
+        finally
+        {
+            TooltipTextCacheManager.Clear();
+            PluginEntry.ConfigDirectory = previousConfigDirectory;
+            TryDeleteDirectory(configDir);
+        }
+    }
+
     /// <summary>
     ///     Ensures the dedicated writer inserts one identity row and updates
     ///     that row rather than creating a duplicate.
@@ -222,17 +293,19 @@ public sealed class TooltipAddonPersistenceTests
     /// </summary>
     /// <param name="plugin">The plugin instance to update.</param>
     /// <param name="row">The row to persist.</param>
+    /// <param name="publishIfCurrent">The optional owner guard for committed cache publication.</param>
     /// <returns>The persistence status text.</returns>
     private static async Task<string> InvokeInsertTooltipTextDataAsync(
         PluginEntry plugin,
-        object row)
+        object row,
+        Func<Action, bool>? publishIfCurrent = null)
     {
         var method = typeof(PluginEntry).GetMethod(
             "InsertTooltipTextData",
             BindingFlags.Instance | BindingFlags.Public);
         Assert.NotNull(method);
 
-        var task = Assert.IsAssignableFrom<Task>(method!.Invoke(plugin, [row]));
+        var task = Assert.IsAssignableFrom<Task>(method!.Invoke(plugin, [row, publishIfCurrent]));
         await task;
         return GetPropertyValue<string>(task, "Result");
     }

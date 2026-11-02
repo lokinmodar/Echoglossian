@@ -2158,8 +2158,9 @@ public partial class Echoglossian
   ///     game-window or selection-dialog persistence.
   /// </summary>
   /// <param name="tooltipText">The Tooltip payload to persist.</param>
+  /// <param name="publishIfCurrent">The optional atomic owner guard for committed cache publication.</param>
   /// <returns>A status message describing the persistence result.</returns>
-  public async Task<string> InsertTooltipTextData(TooltipText tooltipText)
+  public async Task<string> InsertTooltipTextData(TooltipText tooltipText, Func<Action, bool>? publishIfCurrent = null)
   {
     await using var context = new EchoglossianDbContext(ConfigDirectory);
 
@@ -2195,13 +2196,27 @@ public partial class Echoglossian
             tooltipText.TranslatedTextsAsText;
         existingTooltipText.UpdatedDate = DateTime.Now;
         await context.SaveChangesAsync().ConfigureAwait(false);
-        TooltipTextCacheManager.Update(existingTooltipText);
+        if (publishIfCurrent == null)
+        {
+          TooltipTextCacheManager.Update(existingTooltipText);
+        }
+        else
+        {
+          publishIfCurrent(() => TooltipTextCacheManager.Update(existingTooltipText));
+        }
         return "Data updated in TooltipTexts table.";
       }
 
       context.TooltipTexts.Attach(tooltipText);
       await context.SaveChangesAsync().ConfigureAwait(false);
-      TooltipTextCacheManager.Update(tooltipText);
+      if (publishIfCurrent == null)
+      {
+        TooltipTextCacheManager.Update(tooltipText);
+      }
+      else
+      {
+        publishIfCurrent(() => TooltipTextCacheManager.Update(tooltipText));
+      }
       return "Data inserted to TooltipTexts table.";
     }
     catch (Exception e)

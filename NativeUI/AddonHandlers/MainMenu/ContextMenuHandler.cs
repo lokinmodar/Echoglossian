@@ -125,10 +125,21 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <inheritdoc />
-    private protected override bool TryPersistDedicatedPayload(
-        TranslationReuseScope scope,
+    private protected override bool ShouldPersistNewGameWindowPayload(
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
+    {
+        var normalizedPayload = NormalizeContextMenuTranslatedPayload(translatedPayload);
+        return Echoglossian.ShouldSaveToDB(JsonConvert.SerializeObject(
+            GetOrderedTextNodes(normalizedPayload.TextNodes).Select(pair => pair.Value)));
+    }
+
+    /// <inheritdoc />
+    private protected override Task<bool>? PersistDedicatedPayloadAsync(
+        TranslationReuseScope scope,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        Func<Action, bool> publishIfCurrent)
     {
         var normalizedTranslatedPayload = NormalizeContextMenuTranslatedPayload(
             translatedPayload);
@@ -136,8 +147,7 @@ internal sealed unsafe class ContextMenuHandler : DbFirstGameWindowAddonHandler
             scope,
             originalPayload,
             normalizedTranslatedPayload);
-        _ = this.insertContextMenuTextAsync(row);
-        return true;
+        return CompleteDedicatedPersistenceAsync(this.insertContextMenuTextAsync(row));
     }
 
     /// <inheritdoc />

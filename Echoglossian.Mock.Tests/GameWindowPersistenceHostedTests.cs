@@ -25,6 +25,40 @@ namespace Echoglossian.Mock.Tests;
 /// </summary>
 public class GameWindowPersistenceHostedTests
 {
+    /// <summary>Repeated managed supplemental commits do not request a success-driven addon refresh loop.</summary>
+    [Fact]
+    public async Task Supplemental_success_does_not_request_refresh_when_repeated()
+    {
+        using var started = await new TestBoot().StartPluginAsync();
+        var identity = Guid.NewGuid().ToString("N");
+        var addonName = "SuccessfulSupplemental-" + identity;
+        var handler = new SupplementalHandler(addonName);
+        var gate = (DbFirstSourceRetryGate)typeof(DbFirstGameWindowAddonHandler)
+            .GetField("retryGate", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(handler)!;
+        var refresh = typeof(DbFirstGameWindowAddonHandler)
+            .GetField("refreshRequested", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var scope = new TranslationReuseScope("en", "pt", 0, true);
+        var operation = gate.TransitionTo(scope);
+        var original = new DbFirstGameWindowPayload(
+            new SortedDictionary<int, string> { [1] = "Original" }, new(), new());
+        var translated = new DbFirstGameWindowPayload(
+            new SortedDictionary<int, string> { [1] = "Traduzido" }, new(), new());
+
+        for (var i = 0; i < 3; i++)
+        {
+            await handler.PersistSupplementalGameWindowPayloadAsync(
+                scope, operation, original, translated, identity, 38).WaitAsync(TimeSpan.FromSeconds(10));
+
+            gate.IsCoolingDown(operation, DateTime.UtcNow).Should().BeFalse();
+            ((int)refresh.GetValue(handler)!).Should().Be(0);
+            using var context = new EchoglossianDbContext(global::Echoglossian.Echoglossian.ConfigDirectory);
+            var stored = context.GameWindow.Single(row => row.WindowAddonName == addonName);
+            stored.TranslatedWindowStrings.Should().Be(translated.Serialize());
+            GameWindowCacheManager.TryFindMatch(addonName, scope, stored.GameVersion, original.Serialize(), 38)!
+                .TranslatedWindowStrings.Should().Be(translated.Serialize());
+        }
+    }
+
     /// <summary>Failed supplemental persistence keeps retry armed and wakes an already applied state after cooldown.</summary>
     [Fact]
     public async Task Supplemental_failure_rearms_retry_and_delayed_refresh()
@@ -188,7 +222,7 @@ public class GameWindowPersistenceHostedTests
                 GameWindowCacheManager.TryFindMatch(addonName, scope, stored.GameVersion, original.Serialize(), 38)!
                     .TranslatedWindowStrings.Should().Be(translated.Serialize());
                 gate.IsCoolingDown(currentOperation, DateTime.UtcNow).Should().BeFalse();
-                refresh.Should().Be(1);
+                refresh.Should().Be(0);
             }
         }
         finally

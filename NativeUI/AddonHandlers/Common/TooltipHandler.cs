@@ -28,7 +28,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     private readonly Func<TooltipText, TooltipText?> findTooltipText;
     private readonly Func<TooltipText, IReadOnlyList<TooltipText>>
         findTooltipTextCandidates;
-    private readonly Func<TooltipText, Task<string>> insertTooltipTextAsync;
+    private readonly Func<TooltipText, Func<Action, bool>, Task<string>> insertTooltipTextAsync;
     private readonly TooltipAddonAnchoredOverlayRuntime
         tooltipAddonAnchoredOverlayRuntime;
     private readonly TranslationOverlay tooltipAddonOverlay;
@@ -63,7 +63,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         TooltipAddonAnchoredOverlayRuntime tooltipAddonAnchoredOverlayRuntime,
         Func<TooltipText, TooltipText?> findTooltipText,
         Func<TooltipText, IReadOnlyList<TooltipText>> findTooltipTextCandidates,
-        Func<TooltipText, Task<string>> insertTooltipTextAsync)
+        Func<TooltipText, Func<Action, bool>, Task<string>> insertTooltipTextAsync)
         : base(
             addonName: "Tooltip",
             config: configuration,
@@ -390,17 +390,26 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <inheritdoc />
-    private protected override bool TryPersistDedicatedPayload(
-        TranslationReuseScope scope,
+    private protected override bool ShouldPersistNewGameWindowPayload(
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
+    {
+        return Echoglossian.ShouldSaveToDB(JsonConvert.SerializeObject(
+            GetOrderedTextNodes(translatedPayload.TextNodes).Select(pair => pair.Value)));
+    }
+
+    /// <inheritdoc />
+    private protected override Task<bool>? PersistDedicatedPayloadAsync(
+        TranslationReuseScope scope,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        Func<Action, bool> publishIfCurrent)
     {
         var row = this.CreateTooltipText(
             scope,
             originalPayload,
             translatedPayload);
-        _ = this.insertTooltipTextAsync(row);
-        return true;
+        return CompleteDedicatedPersistenceAsync(this.insertTooltipTextAsync(row, publishIfCurrent));
     }
 
     /// <inheritdoc />

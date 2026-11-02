@@ -409,16 +409,17 @@ public abstract unsafe partial class DbFirstGameWindowAddonHandler
     /// <param name="scope">The immutable operation scope used for persistence.</param>
     /// <param name="originalPayload">The original-facing payload.</param>
     /// <param name="translatedPayload">The resolved translated payload.</param>
+    /// <param name="publishIfCurrent">The atomic operation-owned cache publication guard.</param>
     /// <returns>
-    ///     <see langword="true" /> when the derived handler handled
-    ///     persistence; otherwise <see langword="false" />.
+    ///     The observed persistence result, or <see langword="null" /> when this handler has no dedicated store.
     /// </returns>
-    private protected virtual bool TryPersistDedicatedPayload(
+    private protected virtual Task<bool>? PersistDedicatedPayloadAsync(
         TranslationReuseScope scope,
         DbFirstGameWindowPayload originalPayload,
-        DbFirstGameWindowPayload translatedPayload)
+        DbFirstGameWindowPayload translatedPayload,
+        Func<Action, bool> publishIfCurrent)
     {
-        return false;
+        return null;
     }
 
     /// <summary>
@@ -2067,15 +2068,17 @@ public abstract unsafe partial class DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload translatedPayload,
         uint? classJobId)
     {
-        if (this.TryPersistDedicatedPayload(
+        var dedicated = this.PersistDedicatedPayloadAsync(
                 scope,
                 originalPayload,
-                translatedPayload))
-        {
-            return Task.FromResult(true);
-        }
+                translatedPayload,
+                static publish =>
+                {
+                    publish();
+                    return true;
+                });
 
-        return this.PersistResolvedGenericGameWindowPayload(
+        return dedicated ?? this.PersistResolvedGenericGameWindowPayload(
             scope,
             originalPayload,
             translatedPayload,

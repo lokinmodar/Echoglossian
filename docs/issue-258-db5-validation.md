@@ -9,7 +9,7 @@ Branch: `issue-258-06-game-window`, targeting `v4-series`. Release preparation P
 - The existing persistence coordinator owns GameWindow preload, admission, interactive writes, pending replacement, batching, commit and shutdown drain. No schema or translation pipeline changes were introduced.
 - The shared cache is serialized for worker publication and provides candidate snapshots. Publication after commit preserves session generation and cannot repopulate a cleared cache during shutdown.
 - Generic handlers retain original presentation while the committed startup projection loads. Rejected or failed preload retries after five seconds outside frame callbacks and stops on shutdown.
-- Translation completion awaits commit before refresh. Supplemental presentation remains immediate, while its observed persistence waits asynchronously for capacity under the complete operation-scope guard. Retry state is cleared only after commit. Accepted writes retain the coordinator drain deadline.
+- Translation completion awaits commit before refresh. Supplemental presentation remains immediate, while its observed persistence waits asynchronously for capacity under the complete operation-scope guard. Successful supplemental persistence clears retry and returns without a new PreDraw; only failure schedules a delayed refresh. Accepted writes retain the coordinator drain deadline.
 - Identical values generate no UPDATE or timestamp change. Batched operations see pending inserts while retaining the existing directional version fallback and persisted-row preference.
 
 ## Audit attribution
@@ -23,9 +23,9 @@ DB-7 changes from 124 to 122: the GameWindow compatibility caller now uses the c
 - `scripts\audit-sync-db-hotpaths.ps1`: passed, 206 findings, zero DB-5 findings.
 - `dotnet build Echoglossian.sln -c Debug --no-restore`: passed.
 - `dotnet build Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore`: passed.
-- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`: 1,718 passed after F1/F2 corrections.
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`: 1,739 passed after the review and Tooltip corrections.
 - `dotnet build Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-restore`: passed.
-- `dotnet test Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-build -p:VSTestMaxCpuCount=1`: 32 passed after F1/F2 corrections.
+- `dotnet test Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-build -p:VSTestMaxCpuCount=1`: 33 passed after the review and Tooltip corrections.
 - `dotnet build Echoglossian.csproj -c Release --no-restore`: passed. Existing repository warnings remain; no new GameWindow analyzer warning remains.
 
 SQLite tests exercise actual commit, rollback, no-op SQL suppression, snapshot isolation, identity separation, coalescence, preload recovery and accepted-write drain. Hosted Mock validation exercises the production persistence facade, database/cache publication and writer retirement. It does not drive native addon capture or application.
@@ -48,3 +48,21 @@ F1 now observes supplemental persistence completion rather than discarding its r
 Hosted tests block the production writer, fill every interactive slot, verify rejection and non-blocking pending persistence, release capacity and assert the eventual SQLite commit and cache publication. Separate cases cover scope retirement, reopening the same payload in a new generation, duplicate admission suppression, and delayed refresh after failure. These tests exercise managed payload persistence; native capture and application still require the new in-game test.
 
 F2 stops erasing an identifier from the auditor's file-level provenance set when another method materializes an async collection under that name. The new fixture reuses `rows` as an async collection alias in one method and an `EchoglossianDbContext` parameter in another, and requires the later synchronous query to remain detected. The baseline is unchanged at 206 findings, with zero DB-5 findings.
+
+## Tooltip growth regression correction
+
+The Debug build at `45ff806` could repeatedly refresh a supplemental payload after successful persistence. The payload had already been applied, so an unnecessary PreDraw could re-enter Tooltip reflow with an expanded live layout as its new baseline. This affected Gil hover tooltips in both Journal rewards and the HUD/main-menu Gil indicator. Success now clears cooldown and returns without requesting another refresh. Failure retains the existing delayed retry and refresh.
+
+Tooltip and ContextMenu dedicated persistence now return an observable task instead of reporting success before their database delegates complete. An absent dedicated store remains distinct from a failed dedicated save: failure never falls back to the generic GameWindow table. `ErrorSavingData`, empty results and `No data to save.` are failures. Scoped completion rejects retired operations; Tooltip's post-commit cache publication also uses the atomic ownership guard. Accepted database writes may finish without publishing a retired operation into the live cache.
+
+Supplemental admission in both dedicated handlers applies the same persistence filter to the same ordered, serialized translated texts used by the database, including ContextMenu normalization. Known non-persistable markers are rejected before starting persistence, preventing an intentional `No data to save.` from creating a recurring supplemental retry.
+
+Focused tests exercise actual handler delegates held by task-completion sources, success/error statuses, retired ownership, SQLite insert/update with denied cache publication, delayed refresh after failure, and repeated successful supplemental completions with zero refresh requests. These managed tests do not prove native Tooltip dimensions; in-game confirmation remains required.
+
+Retest with the new Debug DLL after moving the cursor off all tooltips, closing Journal/main-menu surfaces and reloading the plugin:
+
+1. Open a Journal quest with a Gil reward. Keep the cursor over Gil for 15 to 20 seconds. The native tooltip background must settle once and remain the same size.
+2. Move off the reward and hover it again several times. Repeat the same hold and re-entry checks on the HUD/main-menu Gil indicator. Neither location may grow on stable hover or progressively widen across re-entry.
+3. Switch between both locations, close/reopen the surfaces and reload the plugin once more. Confirm the translated text remains correct and the tooltip returns to a normal size after leaving the hover.
+
+No merge or release is authorized before the user validates this new DLL.

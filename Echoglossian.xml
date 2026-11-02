@@ -3600,12 +3600,13 @@
             <param name="toDoText">The ToDo payload to persist.</param>
             <returns>A status message describing the persistence result.</returns>
         </member>
-        <member name="M:Echoglossian.Echoglossian.InsertTooltipTextData(Echoglossian.EFCoreSqlite.Models.TooltipText)">
+        <member name="M:Echoglossian.Echoglossian.InsertTooltipTextData(Echoglossian.EFCoreSqlite.Models.TooltipText,System.Func{System.Action,System.Boolean})">
             <summary>
                 Inserts or updates a dedicated Tooltip addon payload without sharing
                 game-window or selection-dialog persistence.
             </summary>
             <param name="tooltipText">The Tooltip payload to persist.</param>
+            <param name="publishIfCurrent">The optional atomic owner guard for committed cache publication.</param>
             <returns>A status message describing the persistence result.</returns>
         </member>
         <member name="M:Echoglossian.Echoglossian.InsertErrorToastMessageData(Echoglossian.EFCoreSqlite.Models.ToastMessage)">
@@ -17000,7 +17001,7 @@
                 otherwise <see langword="false" />.
             </returns>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryPersistDedicatedPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.PersistDedicatedPayloadAsync(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Func{System.Action,System.Boolean})">
             <summary>
                 Tries to persist one resolved payload pair through an addon-local
                 dedicated store instead of the shared <see cref="T:Echoglossian.EFCoreSqlite.Models.GameWindow" />
@@ -17009,9 +17010,9 @@
             <param name="scope">The immutable operation scope used for persistence.</param>
             <param name="originalPayload">The original-facing payload.</param>
             <param name="translatedPayload">The resolved translated payload.</param>
+            <param name="publishIfCurrent">The atomic operation-owned cache publication guard.</param>
             <returns>
-                <see langword="true" /> when the derived handler handled
-                persistence; otherwise <see langword="false" />.
+                The observed persistence result, or <see langword="null" /> when this handler has no dedicated store.
             </returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.NormalizeResolvedTranslatedPayload(Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
@@ -17866,6 +17867,11 @@
             <param name="classJobId">The captured class/job discriminator.</param>
             <returns>Whether the dedicated store or coordinator persisted the payload.</returns>
         </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.CompleteDedicatedPersistenceAsync(System.Threading.Tasks.Task{System.String})">
+            <summary>Observes the existing dedicated persistence status without treating a failed save as completion.</summary>
+            <param name="completion">The actual database delegate completion.</param>
+            <returns>Whether the dedicated save succeeded.</returns>
+        </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TranslateAndPersistGameWindowPayloadAsync(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstSourceOperation,Echoglossian.SourceClientLanguage,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>
                 Translates and persists one non-structured
@@ -18471,7 +18477,7 @@
                 Handles DB-first translation for the Tooltip addon.
             </summary>
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.NativeUI.Helpers.TooltipAddonAnchoredOverlayRuntime,System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,Echoglossian.EFCoreSqlite.Models.TooltipText},System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,System.Collections.Generic.IReadOnlyList{Echoglossian.EFCoreSqlite.Models.TooltipText}},System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,System.Threading.Tasks.Task{System.String}})">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.#ctor(Echoglossian.Config,Echoglossian.NativeUI.Helpers.HoverTooltipManager,Echoglossian.Translators.TranslationService,Echoglossian.UIOverlays.TranslationOverlay.TranslationOverlay,Echoglossian.NativeUI.Helpers.TooltipAddonAnchoredOverlayRuntime,System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,Echoglossian.EFCoreSqlite.Models.TooltipText},System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,System.Collections.Generic.IReadOnlyList{Echoglossian.EFCoreSqlite.Models.TooltipText}},System.Func{Echoglossian.EFCoreSqlite.Models.TooltipText,System.Func{System.Action,System.Boolean},System.Threading.Tasks.Task{System.String}})">
             <summary>
                 Initializes a new instance of the <see cref="T:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler" />
                 class.
@@ -18536,7 +18542,10 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.AfterRestoreStaleTranslatedTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryPersistDedicatedPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.ShouldPersistNewGameWindowPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.PersistDedicatedPayloadAsync(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Func{System.Action,System.Boolean})">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.TooltipHandler.TryApplyCustomTextNodePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
@@ -19066,7 +19075,10 @@
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.NormalizeCapturedTextNodes(System.Collections.Generic.SortedDictionary{System.String,System.String})">
             <inheritdoc />
         </member>
-        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.TryPersistDedicatedPayload(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.ShouldPersistNewGameWindowPayload(Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <inheritdoc />
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.PersistDedicatedPayloadAsync(Echoglossian.TranslationReuseScope,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,System.Func{System.Action,System.Boolean})">
             <inheritdoc />
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.MainMenu.ContextMenuHandler.TryApplyCustomTextNodePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">

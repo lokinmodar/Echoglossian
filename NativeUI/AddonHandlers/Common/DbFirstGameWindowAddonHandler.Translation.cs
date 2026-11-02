@@ -59,6 +59,7 @@ public abstract partial class DbFirstGameWindowAddonHandler
             if (persisted)
             {
                 this.retryGate.TryRunIfCurrent(sourceOperation, () => ClearFailedPayloadRetry(payloadKey));
+                return;
             }
             else
             {
@@ -99,18 +100,31 @@ public abstract partial class DbFirstGameWindowAddonHandler
         DbFirstGameWindowPayload translatedPayload,
         uint? classJobId)
     {
-        var dedicated = false;
+        var shutdownToken = Echoglossian.GameWindowWriter?.ShutdownToken ?? CancellationToken.None;
+        if (shutdownToken.IsCancellationRequested)
+        {
+            return false;
+        }
+
+        Task<bool>? dedicated = null;
         if (!this.retryGate.TryRunIfCurrent(
                 sourceOperation,
-                () => dedicated = this.TryPersistDedicatedPayload(scope, originalPayload, translatedPayload),
+                () => dedicated = this.PersistDedicatedPayloadAsync(
+                    scope,
+                    originalPayload,
+                    translatedPayload,
+                    publish => !shutdownToken.IsCancellationRequested &&
+                        this.retryGate.TryRunIfCurrent(sourceOperation, publish, clearRetry: false)),
                 clearRetry: false))
         {
             return false;
         }
 
-        if (dedicated)
+        if (dedicated != null)
         {
-            return true;
+            return await dedicated.ConfigureAwait(false) &&
+                !shutdownToken.IsCancellationRequested &&
+                this.retryGate.TryRunIfCurrent(sourceOperation, static () => { }, clearRetry: false);
         }
 
         return await this.PersistResolvedGenericGameWindowPayload(
@@ -119,6 +133,17 @@ public abstract partial class DbFirstGameWindowAddonHandler
             translatedPayload,
             classJobId,
             action => this.retryGate.TryRunIfCurrent(sourceOperation, action, clearRetry: false)).ConfigureAwait(false);
+    }
+
+    /// <summary>Observes the existing dedicated persistence status without treating a failed save as completion.</summary>
+    /// <param name="completion">The actual database delegate completion.</param>
+    /// <returns>Whether the dedicated save succeeded.</returns>
+    private protected static async Task<bool> CompleteDedicatedPersistenceAsync(Task<string> completion)
+    {
+        var status = await completion.ConfigureAwait(false);
+        return !string.IsNullOrWhiteSpace(status) &&
+            !status.StartsWith("ErrorSavingData", StringComparison.Ordinal) &&
+            !string.Equals(status, "No data to save.", StringComparison.Ordinal);
     }
 
     /// <summary>
