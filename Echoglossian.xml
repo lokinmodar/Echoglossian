@@ -17145,10 +17145,11 @@
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.AfterRestoreStaleTranslatedTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*)">
             <summary>
-                Performs addon-local follow-up work after stale translated
-                text-node values have been restored before the next live capture.
+                Restores addon-owned layout on a payload transition, independently
+                of whether any stale translated text was still present.
             </summary>
             <param name="addon">The live addon.</param>
+            <returns>Whether owned layout changed and requires a fresh capture.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.ShouldRefreshAppliedStateOnPreDraw">
             <summary>
@@ -17743,6 +17744,14 @@
             </summary>
             <param name="addon">The live addon.</param>
             <param name="translatedTextNodes">The translated text-node payload.</param>
+        </member>
+        <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryCleanupStaleTextNodePayload(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
+            <summary>
+                Cleans up text and owned layout before a reused addon captures its next payload.
+            </summary>
+            <param name="addon">The reused live addon.</param>
+            <param name="livePayload">The newly captured payload.</param>
+            <returns>Whether cleanup changed owned state and requires recapture.</returns>
         </member>
         <member name="M:Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowAddonHandler.TryRestoreStaleTranslatedTextNodes(FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase*,Echoglossian.NativeUI.AddonHandlers.Common.DbFirstGameWindowPayload)">
             <summary>

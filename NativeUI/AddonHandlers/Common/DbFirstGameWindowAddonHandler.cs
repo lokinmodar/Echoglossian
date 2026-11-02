@@ -602,13 +602,15 @@ public abstract unsafe partial class DbFirstGameWindowAddonHandler
     }
 
     /// <summary>
-    ///     Performs addon-local follow-up work after stale translated
-    ///     text-node values have been restored before the next live capture.
+    ///     Restores addon-owned layout on a payload transition, independently
+    ///     of whether any stale translated text was still present.
     /// </summary>
     /// <param name="addon">The live addon.</param>
-    private protected virtual void AfterRestoreStaleTranslatedTextNodes(
+    /// <returns>Whether owned layout changed and requires a fresh capture.</returns>
+    private protected virtual bool AfterRestoreStaleTranslatedTextNodes(
         AtkUnitBase* addon)
     {
+        return false;
     }
 
     /// <summary>
@@ -1174,14 +1176,8 @@ public abstract unsafe partial class DbFirstGameWindowAddonHandler
             return;
         }
 
-        if (this.useTextNodes &&
-            this.runtimeState != null &&
-            this.ShouldRestoreStaleTranslatedTextNodesOnPayloadChange() &&
-            !livePayload.MatchesTranslated(this.runtimeState.TranslatedPayload) &&
-            !livePayload.MatchesOriginal(this.runtimeState.OriginalPayload) &&
-            this.TryRestoreStaleTranslatedTextNodes(addon, livePayload))
+        if (this.TryCleanupStaleTextNodePayload(addon, livePayload))
         {
-            this.AfterRestoreStaleTranslatedTextNodes(addon);
             livePayload = this.CaptureLivePayload(addon);
             if (livePayload.IsEmpty)
             {
@@ -3054,6 +3050,28 @@ public abstract unsafe partial class DbFirstGameWindowAddonHandler
 
             textNode->SetText(translatedText);
         }
+    }
+
+    /// <summary>
+    ///     Cleans up text and owned layout before a reused addon captures its next payload.
+    /// </summary>
+    /// <param name="addon">The reused live addon.</param>
+    /// <param name="livePayload">The newly captured payload.</param>
+    /// <returns>Whether cleanup changed owned state and requires recapture.</returns>
+    internal bool TryCleanupStaleTextNodePayload(AtkUnitBase* addon, DbFirstGameWindowPayload livePayload)
+    {
+        if (!this.useTextNodes ||
+            this.runtimeState == null ||
+            !this.ShouldRestoreStaleTranslatedTextNodesOnPayloadChange() ||
+            livePayload.MatchesTranslated(this.runtimeState.TranslatedPayload) ||
+            livePayload.MatchesOriginal(this.runtimeState.OriginalPayload))
+        {
+            return false;
+        }
+
+        var restoredText = this.TryRestoreStaleTranslatedTextNodes(addon, livePayload);
+        var restoredLayout = this.AfterRestoreStaleTranslatedTextNodes(addon);
+        return restoredText || restoredLayout;
     }
 
     /// <summary>

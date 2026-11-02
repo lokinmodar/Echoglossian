@@ -23,7 +23,7 @@ DB-7 changes from 124 to 122: the GameWindow compatibility caller now uses the c
 - `scripts\audit-sync-db-hotpaths.ps1`: passed, 206 findings, zero DB-5 findings.
 - `dotnet build Echoglossian.sln -c Debug --no-restore`: passed.
 - `dotnet build Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-restore`: passed.
-- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`: 1,739 passed after the review and Tooltip corrections.
+- `dotnet test Echoglossian.Tests\Echoglossian.Tests.csproj -c Debug --no-build`: 1,753 passed after the Tooltip height follow-up.
 - `dotnet build Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-restore`: passed.
 - `dotnet test Echoglossian.Mock.Tests\Echoglossian.Mock.Tests.csproj -c Debug --no-build -p:VSTestMaxCpuCount=1`: 33 passed after the review and Tooltip corrections.
 - `dotnet build Echoglossian.csproj -c Release --no-restore`: passed. Existing repository warnings remain; no new GameWindow analyzer warning remains.
@@ -66,3 +66,21 @@ Retest with the new Debug DLL after moving the cursor off all tooltips, closing 
 3. Switch between both locations, close/reopen the surfaces and reload the plugin once more. Confirm the translated text remains correct and the tooltip returns to a normal size after leaving the hover.
 
 No merge or release is authorized before the user validates this new DLL.
+
+## Tooltip height stabilization follow-up
+
+The user confirmed the width correction in `644dd9e`, but reported intermittent retained height. A reused Tooltip can receive entirely new game text while still retaining geometry mutated by the plugin. Shared payload-transition cleanup now invokes the addon-local layout hook independently of whether selective text restoration found any old translated strings. A boolean hook result requests recapture only when text or owned layout changed; the default hook remains inert for other addon owners.
+
+Tooltip restores only its recorded applied layout snapshots before recapture, preserving the game's newly replaced text. Its reflow enables compact wrapped text height and compact detached height baselines, matching the existing MiniTalk helper path. Width options and formulas are unchanged. Retained snapshot baselines and the existing container formulas preserve measured translated height plus the minimum eight-pixel background padding; there is no fixed height or cap on legitimate multiline growth. Successful supplemental persistence still does not request a new PreDraw.
+
+Focused tests exercise cleanup dispatch when no old translated text remains, unchanged stable payloads, missing mutation ownership, inert non-Tooltip hooks, compact short/long/short container heights, long measured text plus padding and unchanged widths. Native sizing functions are FFXIVClientStructs member-function calls, so these tests cover managed payload dispatch and production geometry formulas rather than native text measurement or actual dimensions. Mock startup/persistence tests do not remove that in-game gap.
+
+Retest from a clean tooltip state with the new Debug DLL:
+
+1. Move off all tooltips, close Journal/main-menu surfaces and reload the plugin. Hover the Journal Gil reward for 15 to 20 seconds, then repeat on the HUD/main-menu Gil indicator. Confirm width stays stable and short content has no retained blank vertical area.
+2. Open a longer translated help tooltip with several lines, then immediately return to each Gil location. Repeat short/long/short several times without reloading between transitions. Long content must fit without clipping, and the short tooltips must return to a stable compact height.
+3. Leave/re-enter each hover and close/reopen the surfaces. Confirm normal restoration and no repeated success-refresh growth. Compare height for the same short text across repetitions; longer translations may legitimately need more height.
+
+PR #292 remains blocked on renewed human validation. No merge or release is authorized.
+
+Validation note: the first full height-follow-up run passed 1,752 tests and failed the existing `QuestPlatePersistenceWriterTests.TryPersist_ExistingRow_MergesAndPublishesAfterCommit` at its cache assertion. That test passed in isolation, followed by a complete rerun with all 1,753 tests passing. This is recorded as a pre-existing flake under the maintainer's requested validation procedure; no QuestPlate code or test was changed, and its underlying cause was not corrected in this Tooltip patch.

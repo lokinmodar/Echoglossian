@@ -382,11 +382,17 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <inheritdoc />
-    private protected override void AfterRestoreStaleTranslatedTextNodes(
+    private protected override bool AfterRestoreStaleTranslatedTextNodes(
         AtkUnitBase* addon)
     {
+        if (this.appliedLayoutSnapshots.Count == 0)
+        {
+            return false;
+        }
+
         this.ClearAnchoredOverlay(addon);
         this.RestoreAppliedLayoutSnapshots(addon);
+        return true;
     }
 
     /// <inheritdoc />
@@ -475,7 +481,9 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
                     MinimumTooltipBackgroundHorizontalPadding,
                     minimumSecondaryVerticalPadding:
                     MinimumTooltipBackgroundVerticalPadding,
-                    replacementPayload: replacementPayload);
+                    preferCompactDetachedBaselineForHeight: true,
+                    replacementPayload: replacementPayload,
+                    preferCompactWrappedHeight: true);
             if (layoutSnapshot != null)
             {
                 this.appliedLayoutSnapshots[textNodeKey] = layoutSnapshot;
