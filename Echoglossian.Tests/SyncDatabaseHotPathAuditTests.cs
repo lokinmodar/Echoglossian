@@ -70,6 +70,29 @@ public sealed class SyncDatabaseHotPathAuditTests
     }
 
     /// <summary>
+    ///     Ensures an async collection alias does not erase a database-context parameter in another method.
+    /// </summary>
+    [Fact]
+    public void AuditScript_AwaitedCollection_DoesNotEraseContextParameterInAnotherMethod()
+    {
+        using var fixture = this.CreateFixture();
+        fixture.WriteSource(
+            "DBHelpers/RepeatedIdentifierFixture.cs",
+            "public async Task Load(EchoglossianDbContext context) { " +
+            "var rows = await context.Rows.ToListAsync().ConfigureAwait(false); } " +
+            "public void Read(EchoglossianDbContext rows) { _ = rows.Rows.FirstOrDefault(); }");
+
+        var result = this.RunAudit(fixture, updateBaseline: true);
+        using var document = JsonDocument.Parse(File.ReadAllText(fixture.BaselinePath));
+        var queries = document.RootElement.GetProperty("allowedFindings").EnumerateArray()
+            .Where(finding => finding.GetProperty("category").GetString() == "sync-ef-query")
+            .ToArray();
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("FirstOrDefault( [occurrence 1]", Assert.Single(queries).GetProperty("evidence").GetString());
+    }
+
+    /// <summary>
     ///     Ensures EF local-view operations are memory-only without exempting real queries in the same statement.
     /// </summary>
     [Fact]

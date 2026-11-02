@@ -359,12 +359,8 @@ function Add-DatabaseQueryMatchesForContent {
         if ($queryMatches.Count -eq 0 -and $foreachMatches.Count -eq 0) {
             $queryAliasMatch = $queryAliasPattern.Match($statement)
             if ($queryAliasMatch.Success -and
-                $asyncMaterializationPattern.IsMatch(
-                    $queryAliasMatch.Groups['value'].Value)) {
-                $databaseSourceNames.Remove(
-                    $queryAliasMatch.Groups['name'].Value) | Out-Null
-            }
-            elseif ($queryAliasMatch.Success -and
+                -not $asyncMaterializationPattern.IsMatch(
+                    $queryAliasMatch.Groups['value'].Value) -and
                 $databaseSourcePattern.IsMatch($localViewPattern.Replace(
                     $queryAliasMatch.Groups['value'].Value, ''))) {
                 $databaseSourceNames.Add(
