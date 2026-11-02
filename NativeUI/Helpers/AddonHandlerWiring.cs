@@ -343,7 +343,7 @@ public partial class Echoglossian
                   this.tooltipAddonAnchoredOverlayRuntime,
                   this.FindTooltipText,
                   this.FindTooltipTextCandidates,
-                  row => this.InsertTooltipTextData(row))));
+                  (row, publishIfCurrent) => this.InsertTooltipTextData(row, publishIfCurrent))));
     }
 
     var questAddonDependencies = this.CreateQuestAddonHandlerDependencies();

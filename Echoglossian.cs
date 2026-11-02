@@ -138,6 +138,10 @@ public partial class Echoglossian : IDalamudPlugin
   private QuestPlatePersistenceWriter? questPlatePersistenceWriter;
   private ReferenceTextPersistenceWriter? referenceTextPersistenceWriter;
   private ActionItemTooltipPersistenceWriter? actionItemTooltipPersistenceWriter;
+
+  private GameWindowPersistenceWriter? gameWindowPersistenceWriter;
+
+  private Task? gameWindowPreloadTask;
   private TranslationFailurePersistenceWriter? translationFailurePersistenceWriter;
   private LlmCapabilityObservationWriter? capabilityObservationWriter;
   private Task? persistenceCompletionTask;
@@ -278,6 +282,7 @@ public partial class Echoglossian : IDalamudPlugin
       this.capabilityObservationWriter = new LlmCapabilityObservationWriter(this.persistenceCoordinator);
       this.referenceTextPersistenceWriter = new ReferenceTextPersistenceWriter(this.persistenceCoordinator);
       this.actionItemTooltipPersistenceWriter = new ActionItemTooltipPersistenceWriter(this.persistenceCoordinator);
+      this.gameWindowPersistenceWriter = new GameWindowPersistenceWriter(this.persistenceCoordinator);
       this.translationFailurePersistenceWriter = new TranslationFailurePersistenceWriter(this.persistenceCoordinator);
       TranslationFailurePersistenceRuntime.Register(this.translationFailurePersistenceWriter);
       this.questPlatePersistenceWriter = new QuestPlatePersistenceWriter(
@@ -440,7 +445,7 @@ public partial class Echoglossian : IDalamudPlugin
     this.LoadAllOtherToasts();
 
     DbFirstGameWindowAddonHandler.ClearSessionCaches();
-    GameWindowCacheManager.Preload(ConfigDirectory);
+    this.gameWindowPreloadTask = this.gameWindowPersistenceWriter?.PreloadAsync();
     NamePlateCacheManager.Preload(ConfigDirectory);
     StringArrayDataCacheManager.Preload(ConfigDirectory);
     TranslationFailureCacheManager.Preload(ConfigDirectory);
@@ -601,6 +606,7 @@ public partial class Echoglossian : IDalamudPlugin
     }
     this.referenceTextPersistenceWriter?.DisablePublication();
     this.actionItemTooltipPersistenceWriter?.DisablePublication();
+    this.gameWindowPersistenceWriter?.DisablePublication();
     if (this.translationFailurePersistenceWriter is not null)
     {
       TranslationFailurePersistenceRuntime.Unregister(this.translationFailurePersistenceWriter);

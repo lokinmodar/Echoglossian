@@ -15,6 +15,18 @@ namespace Echoglossian.Tests;
 /// </summary>
 public sealed class TooltipAddonNativePresentationContractTests
 {
+    /// <summary>Ensures native Tooltip reflow requests compact baseline and wrapped heights.</summary>
+    [Fact]
+    public void TooltipHandler_RequestsCompactNativeReflowHeight()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot().FullName,
+            "NativeUI", "AddonHandlers", "Common", "TooltipHandler.cs"));
+
+        Assert.Contains("preferCompactDetachedBaselineForHeight: true", source, StringComparison.Ordinal);
+        Assert.Contains("preferCompactWrappedHeight: true", source, StringComparison.Ordinal);
+    }
+
     /// <summary>
     ///     Ensures the dedicated Tooltip handler owns a custom text-node apply
     ///     path that reflows the text node and its background instead of

@@ -5,9 +5,13 @@
 
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+
+using Dalamud.Plugin.Services;
 
 using Echoglossian.NativeUI.AddonHandlers.Common;
 using Echoglossian.NativeUI.AddonHandlers.MainMenu;
+using Echoglossian.Translators;
 using Xunit;
 
 namespace Echoglossian.Tests;
@@ -96,17 +100,196 @@ public sealed class ContextMenuHandlerContractTests
     ///     persistence seam before the generic GameWindow path.
     /// </summary>
     [Fact]
-    public void PersistResolvedGameWindowPayload_UsesDedicatedPersistenceSeam()
+    public async Task PersistResolvedGameWindowPayload_UsesDedicatedPersistenceSeam()
     {
         var handler = new DedicatedPersistenceProbe();
         var payload = CreateTextNodePayload(
             ("3:0", "Dismiss"));
 
-        handler.Persist(
+        Assert.True(await handler.Persist(
             new TranslationReuseScope("en", "pt-BR", 0, false),
-            payload);
+            payload));
 
         Assert.Equal(1, handler.DedicatedPersistenceCalls);
+    }
+
+    /// <summary>
+    ///     Ensures dedicated persistence failure does not redirect the payload to the generic store.
+    /// </summary>
+    [Fact]
+    public async Task PersistResolvedGameWindowPayload_DedicatedFailureDoesNotFallBack()
+    {
+        var handler = new DedicatedPersistenceProbe { PersistenceSucceeds = false };
+        var payload = CreateTextNodePayload(("3:0", "Dismiss"));
+
+        Assert.False(await handler.Persist(
+            new TranslationReuseScope("en", "pt-BR", 0, false),
+            payload));
+
+        Assert.Equal(1, handler.DedicatedPersistenceCalls);
+    }
+
+    /// <summary>
+    ///     Ensures dedicated owners reject provider failure markers before admitting persistence.
+    /// </summary>
+    /// <param name="tooltip">Whether to exercise Tooltip instead of ContextMenu.</param>
+    /// <param name="translatedText">The proposed translated node text.</param>
+    /// <param name="expected">Whether the payload may be persisted.</param>
+    [Theory]
+    [InlineData(true, "Dispensar", true)]
+    [InlineData(false, "Dispensar", true)]
+    [InlineData(true, GoogleTranslator.V2NoTranslationMarker, false)]
+    [InlineData(false, GoogleTranslator.V2NoTranslationMarker, false)]
+    public void DedicatedHandler_RejectsNonpersistablePayloadBeforeAdmission(bool tooltip, string translatedText, bool expected)
+    {
+        DbFirstGameWindowAddonHandler handler = tooltip
+            ? new TooltipHandler(
+                new Config(), null!, null!, null!, null!, static _ => null, static _ => [],
+                static (_, _) => throw new InvalidOperationException("Admission checks must not write."))
+            : new ContextMenuHandler(
+                new Config(), null!, null!, static _ => null,
+                static _ => throw new InvalidOperationException("Admission checks must not write."));
+        var method = handler.GetType().GetMethod(
+            "ShouldPersistNewGameWindowPayload",
+            BindingFlags.Instance | BindingFlags.NonPublic,
+            binder: null,
+            types: [typeof(DbFirstGameWindowPayload), typeof(DbFirstGameWindowPayload)],
+            modifiers: null);
+        Assert.NotNull(method);
+
+        var admitted = Assert.IsType<bool>(method.Invoke(handler,
+        [
+            CreateTextNodePayload(("3:0", "Dismiss")),
+            CreateTextNodePayload(("3:0", translatedText)),
+        ]));
+
+        Assert.Equal(expected, admitted);
+    }
+
+    /// <summary>
+    ///     Ensures the actual dedicated handlers await their injected write and propagate its outcome.
+    /// </summary>
+    /// <param name="tooltip">Whether to exercise Tooltip instead of ContextMenu.</param>
+    /// <param name="status">The dedicated persistence completion status.</param>
+    /// <param name="expected">The expected persistence success result.</param>
+    [Theory]
+    [InlineData(true, "Record saved.", true)]
+    [InlineData(false, "Record saved.", true)]
+    [InlineData(true, "ErrorSavingData: unavailable", false)]
+    [InlineData(false, "ErrorSavingData: unavailable", false)]
+    [InlineData(true, "", false)]
+    [InlineData(false, "", false)]
+    [InlineData(true, " ", false)]
+    [InlineData(false, " ", false)]
+    [InlineData(true, null, false)]
+    [InlineData(false, null, false)]
+    [InlineData(true, "No data to save.", false)]
+    [InlineData(false, "No data to save.", false)]
+    public async Task DedicatedHandler_AwaitsWriteAndPropagatesCompletion(bool tooltip, string? status, bool expected)
+    {
+        var originalDataManager = Echoglossian.DManager;
+        try
+        {
+            Echoglossian.DManager = DispatchProxy.Create<IDataManager, DataManagerProxy>();
+            var write = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var calls = 0;
+            DbFirstGameWindowAddonHandler handler = tooltip
+                ? new TooltipHandler(
+                    new Config(), null!, null!, null!, null!, static _ => null, static _ => [],
+                    (_, _) =>
+                    {
+                        calls++;
+                        return write.Task;
+                    })
+                : new ContextMenuHandler(
+                    new Config(), null!, null!, static _ => null,
+                    _ =>
+                    {
+                        calls++;
+                        return write.Task;
+                    });
+            var completion = handler.PersistResolvedGameWindowPayload(
+                new TranslationReuseScope("en", "pt-BR", 0, false),
+                CreateTextNodePayload(("3:0", "Dismiss")),
+                CreateTextNodePayload(("3:0", "Dispensar")),
+                classJobId: null);
+
+            Assert.Equal(1, calls);
+            Assert.False(completion.IsCompleted);
+
+            write.SetResult(status!);
+
+            Assert.Equal(expected, await completion.WaitAsync(TimeSpan.FromSeconds(5)));
+        }
+        finally
+        {
+            Echoglossian.DManager = originalDataManager;
+        }
+    }
+
+    /// <summary>
+    ///     Ensures a stale dedicated completion cannot publish or clear the current operation's cooldown.
+    /// </summary>
+    /// <param name="tooltip">Whether to exercise Tooltip instead of ContextMenu.</param>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task DedicatedHandler_StaleCompletionPreservesNewScope(bool tooltip)
+    {
+        var originalDataManager = Echoglossian.DManager;
+        try
+        {
+            Echoglossian.DManager = DispatchProxy.Create<IDataManager, DataManagerProxy>();
+            var write = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Func<Action, bool>? publishIfCurrent = null;
+            DbFirstGameWindowAddonHandler handler = tooltip
+                ? new TooltipHandler(
+                    new Config(), null!, null!, null!, null!, static _ => null, static _ => [],
+                    (_, guard) =>
+                    {
+                        publishIfCurrent = guard;
+                        return write.Task;
+                    })
+                : new ContextMenuHandler(new Config(), null!, null!, static _ => null, _ => write.Task);
+            var gateField = typeof(DbFirstGameWindowAddonHandler).GetField(
+                "retryGate", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(gateField);
+            var gate = Assert.IsType<DbFirstSourceRetryGate>(gateField.GetValue(handler));
+            var scope = new TranslationReuseScope("en", "pt-BR", 0, false);
+            var operation = gate.TransitionTo(scope);
+            var persistMethod = typeof(DbFirstGameWindowAddonHandler).GetMethod(
+                "PersistResolvedGameWindowPayloadAsync", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(persistMethod);
+            var completion = Assert.IsAssignableFrom<Task<bool>>(persistMethod.Invoke(handler,
+            [
+                scope,
+                operation,
+                CreateTextNodePayload(("3:0", "Dismiss")),
+                CreateTextNodePayload(("3:0", "Dispensar")),
+                null,
+            ]));
+            Assert.False(completion.IsCompleted);
+
+            var next = gate.TransitionTo(new TranslationReuseScope("de", "pt-BR", 0, false));
+            var now = DateTime.UtcNow;
+            Assert.True(gate.TrySetRetry(next, now.AddSeconds(30)));
+            write.SetResult("Record saved.");
+
+            Assert.False(await completion.WaitAsync(TimeSpan.FromSeconds(5)));
+            Assert.True(gate.IsCoolingDown(next, now.AddSeconds(29)));
+            Assert.False(gate.IsCoolingDown(next, now.AddSeconds(31)));
+            if (tooltip)
+            {
+                Assert.NotNull(publishIfCurrent);
+                var publications = 0;
+                Assert.False(publishIfCurrent(() => publications++));
+                Assert.Equal(0, publications);
+            }
+        }
+        finally
+        {
+            Echoglossian.DManager = originalDataManager;
+        }
     }
 
     /// <summary>
@@ -114,15 +297,15 @@ public sealed class ContextMenuHandlerContractTests
     ///     generic GameWindow persistence path.
     /// </summary>
     [Fact]
-    public void PersistResolvedGameWindowPayload_FallsBackToGenericPersistence()
+    public async Task PersistResolvedGameWindowPayload_FallsBackToGenericPersistence()
     {
         var handler = new GenericPersistenceProbe();
         var payload = CreateTextNodePayload(
             ("3:0", "Dismiss"));
 
-        handler.Persist(
+        Assert.False(await handler.Persist(
             new TranslationReuseScope("en", "pt-BR", 0, false),
-            payload);
+            payload));
 
         Assert.Equal(1, handler.GenericPersistencePreparations);
     }
@@ -303,6 +486,23 @@ public sealed class ContextMenuHandlerContractTests
         return methodBody.AsSpan().IndexOf(referencedToken) >= 0;
     }
 
+    /// <summary>Provides game data with no loaded repositories for native-free persistence tests.</summary>
+    private class DataManagerProxy : DispatchProxy
+    {
+        private readonly object gameData = RuntimeHelpers.GetUninitializedObject(typeof(Lumina.GameData));
+
+        /// <inheritdoc />
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+        {
+            if (targetMethod?.Name == "get_GameData")
+            {
+                return this.gameData;
+            }
+
+            throw new NotSupportedException(targetMethod?.Name);
+        }
+    }
+
     /// <summary>
     ///     Probes dedicated persistence dispatch without requiring a live
     ///     addon or database configuration.
@@ -329,16 +529,20 @@ public sealed class ContextMenuHandlerContractTests
         /// </summary>
         public int DedicatedPersistenceCalls { get; private set; }
 
+        /// <summary>Gets the dedicated persistence outcome supplied by the test.</summary>
+        public bool PersistenceSucceeds { get; init; } = true;
+
         /// <summary>
         ///     Invokes the shared resolved-payload persistence path.
         /// </summary>
         /// <param name="scope">The captured reuse scope.</param>
         /// <param name="payload">The resolved payload.</param>
-        public void Persist(
+        /// <returns>The observed persistence result.</returns>
+        public Task<bool> Persist(
             TranslationReuseScope scope,
             DbFirstGameWindowPayload payload)
         {
-            this.PersistResolvedGameWindowPayload(
+            return this.PersistResolvedGameWindowPayload(
                 scope,
                 payload,
                 payload,
@@ -346,13 +550,26 @@ public sealed class ContextMenuHandlerContractTests
         }
 
         /// <inheritdoc />
-        private protected override bool TryPersistDedicatedPayload(
+        private protected override Task<bool>? PersistDedicatedPayloadAsync(
             TranslationReuseScope scope,
             DbFirstGameWindowPayload originalPayload,
-            DbFirstGameWindowPayload translatedPayload)
+            DbFirstGameWindowPayload translatedPayload,
+            Func<Action, bool> publishIfCurrent)
         {
             this.DedicatedPersistenceCalls++;
-            return true;
+            return Task.FromResult(this.PersistenceSucceeds);
+        }
+
+        /// <inheritdoc />
+        private protected override (
+            DbFirstGameWindowPayload OriginalPayload,
+            DbFirstGameWindowPayload TranslatedPayload)
+            PreparePersistedGameWindowPayload(
+                TranslationReuseScope scope,
+                DbFirstGameWindowPayload originalPayload,
+                DbFirstGameWindowPayload translatedPayload)
+        {
+            throw new InvalidOperationException("A dedicated persistence owner must not fall back to GameWindow.");
         }
     }
 
@@ -386,11 +603,12 @@ public sealed class ContextMenuHandlerContractTests
         /// </summary>
         /// <param name="scope">The captured reuse scope.</param>
         /// <param name="payload">The resolved payload.</param>
-        public void Persist(
+        /// <returns>The observed persistence result.</returns>
+        public Task<bool> Persist(
             TranslationReuseScope scope,
             DbFirstGameWindowPayload payload)
         {
-            this.PersistResolvedGameWindowPayload(
+            return this.PersistResolvedGameWindowPayload(
                 scope,
                 payload,
                 payload,

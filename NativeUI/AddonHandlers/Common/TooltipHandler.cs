@@ -28,7 +28,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     private readonly Func<TooltipText, TooltipText?> findTooltipText;
     private readonly Func<TooltipText, IReadOnlyList<TooltipText>>
         findTooltipTextCandidates;
-    private readonly Func<TooltipText, Task<string>> insertTooltipTextAsync;
+    private readonly Func<TooltipText, Func<Action, bool>, Task<string>> insertTooltipTextAsync;
     private readonly TooltipAddonAnchoredOverlayRuntime
         tooltipAddonAnchoredOverlayRuntime;
     private readonly TranslationOverlay tooltipAddonOverlay;
@@ -63,7 +63,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
         TooltipAddonAnchoredOverlayRuntime tooltipAddonAnchoredOverlayRuntime,
         Func<TooltipText, TooltipText?> findTooltipText,
         Func<TooltipText, IReadOnlyList<TooltipText>> findTooltipTextCandidates,
-        Func<TooltipText, Task<string>> insertTooltipTextAsync)
+        Func<TooltipText, Func<Action, bool>, Task<string>> insertTooltipTextAsync)
         : base(
             addonName: "Tooltip",
             config: configuration,
@@ -309,7 +309,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
                             task.Result.Value.TextNodes,
                             out var rebuiltTextNodes))
                     {
-                        return false;
+                        return Task.FromResult(false);
                     }
 
                     var translatedPayload = new DbFirstGameWindowPayload(
@@ -324,10 +324,10 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
                             originalPayload,
                             translatedPayload))
                     {
-                        return false;
+                        return Task.FromResult(false);
                     }
 
-                    return this.PersistResolvedGameWindowPayload(
+                    return this.PersistResolvedGameWindowPayloadAsync(
                         scope,
                         sourceOperation,
                         originalPayload,
@@ -336,7 +336,7 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
                             originalPayload,
                             translatedPayload));
                 },
-                TaskScheduler.Default);
+                TaskScheduler.Default).Unwrap();
     }
 
     /// <inheritdoc />
@@ -382,25 +382,40 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
     }
 
     /// <inheritdoc />
-    private protected override void AfterRestoreStaleTranslatedTextNodes(
+    private protected override bool AfterRestoreStaleTranslatedTextNodes(
         AtkUnitBase* addon)
     {
+        if (this.appliedLayoutSnapshots.Count == 0)
+        {
+            return false;
+        }
+
         this.ClearAnchoredOverlay(addon);
         this.RestoreAppliedLayoutSnapshots(addon);
+        return true;
     }
 
     /// <inheritdoc />
-    private protected override bool TryPersistDedicatedPayload(
-        TranslationReuseScope scope,
+    private protected override bool ShouldPersistNewGameWindowPayload(
         DbFirstGameWindowPayload originalPayload,
         DbFirstGameWindowPayload translatedPayload)
+    {
+        return Echoglossian.ShouldSaveToDB(JsonConvert.SerializeObject(
+            GetOrderedTextNodes(translatedPayload.TextNodes).Select(pair => pair.Value)));
+    }
+
+    /// <inheritdoc />
+    private protected override Task<bool>? PersistDedicatedPayloadAsync(
+        TranslationReuseScope scope,
+        DbFirstGameWindowPayload originalPayload,
+        DbFirstGameWindowPayload translatedPayload,
+        Func<Action, bool> publishIfCurrent)
     {
         var row = this.CreateTooltipText(
             scope,
             originalPayload,
             translatedPayload);
-        _ = this.insertTooltipTextAsync(row);
-        return true;
+        return CompleteDedicatedPersistenceAsync(this.insertTooltipTextAsync(row, publishIfCurrent));
     }
 
     /// <inheritdoc />
@@ -466,7 +481,9 @@ internal sealed unsafe class TooltipHandler : DbFirstGameWindowAddonHandler
                     MinimumTooltipBackgroundHorizontalPadding,
                     minimumSecondaryVerticalPadding:
                     MinimumTooltipBackgroundVerticalPadding,
-                    replacementPayload: replacementPayload);
+                    preferCompactDetachedBaselineForHeight: true,
+                    replacementPayload: replacementPayload,
+                    preferCompactWrappedHeight: true);
             if (layoutSnapshot != null)
             {
                 this.appliedLayoutSnapshots[textNodeKey] = layoutSnapshot;

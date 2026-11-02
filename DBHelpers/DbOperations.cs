@@ -2158,8 +2158,9 @@ public partial class Echoglossian
   ///     game-window or selection-dialog persistence.
   /// </summary>
   /// <param name="tooltipText">The Tooltip payload to persist.</param>
+  /// <param name="publishIfCurrent">The optional atomic owner guard for committed cache publication.</param>
   /// <returns>A status message describing the persistence result.</returns>
-  public async Task<string> InsertTooltipTextData(TooltipText tooltipText)
+  public async Task<string> InsertTooltipTextData(TooltipText tooltipText, Func<Action, bool>? publishIfCurrent = null)
   {
     await using var context = new EchoglossianDbContext(ConfigDirectory);
 
@@ -2195,13 +2196,27 @@ public partial class Echoglossian
             tooltipText.TranslatedTextsAsText;
         existingTooltipText.UpdatedDate = DateTime.Now;
         await context.SaveChangesAsync().ConfigureAwait(false);
-        TooltipTextCacheManager.Update(existingTooltipText);
+        if (publishIfCurrent == null)
+        {
+          TooltipTextCacheManager.Update(existingTooltipText);
+        }
+        else
+        {
+          publishIfCurrent(() => TooltipTextCacheManager.Update(existingTooltipText));
+        }
         return "Data updated in TooltipTexts table.";
       }
 
       context.TooltipTexts.Attach(tooltipText);
       await context.SaveChangesAsync().ConfigureAwait(false);
-      TooltipTextCacheManager.Update(tooltipText);
+      if (publishIfCurrent == null)
+      {
+        TooltipTextCacheManager.Update(tooltipText);
+      }
+      else
+      {
+        publishIfCurrent(() => TooltipTextCacheManager.Update(tooltipText));
+      }
       return "Data inserted to TooltipTexts table.";
     }
     catch (Exception e)
@@ -3556,12 +3571,11 @@ public partial class Echoglossian
   /// </summary>
   /// <param name="gameWindow">The GameWindow entity to insert or update.</param>
   /// <returns>Status message indicating result.</returns>
-  public static string InsertGameWindow(GameWindow gameWindow)
+  public static async Task<string> InsertGameWindowAsync(GameWindow gameWindow)
   {
-    return GameWindowPersistenceHelper.InsertGameWindow(
-        ConfigDirectory,
-        gameWindow,
-        GameWindowCacheManager.Update);
+    return await PersistGameWindowAsync(gameWindow).ConfigureAwait(false)
+        ? "Record persisted."
+        : "Persistence failed.";
   }
 
   /// <summary>
@@ -3672,7 +3686,7 @@ public partial class Echoglossian
   {
     if (entity is GameWindow gameWindow)
     {
-      return InsertGameWindow(gameWindow) ?? "Plugin not available";
+      return await InsertGameWindowAsync(gameWindow).ConfigureAwait(false);
     }
 
     using var context = new EchoglossianDbContext(

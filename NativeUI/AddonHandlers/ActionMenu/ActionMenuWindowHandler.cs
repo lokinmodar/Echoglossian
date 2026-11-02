@@ -286,12 +286,12 @@ public class ActionMenuWindowHandler : DbFirstGameWindowAddonHandler
                 return true;
             }
 
-            var persisted = this.PersistResolvedGameWindowPayload(
+            var persisted = await this.PersistResolvedGameWindowPayloadAsync(
                 scope,
                 sourceOperation,
                 originalPayload,
                 translatedPayload,
-                classJobId);
+                classJobId).ConfigureAwait(false);
             if (!persisted)
             {
                 this.queuedStablePayloadSignatures.Release(

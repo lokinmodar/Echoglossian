@@ -256,8 +256,10 @@ public static class GenericAddonHandlerHelper
       {
         PluginRuntimeLog.Debug($"[{addonName}] [Async] Saving GameWindow...");
         gw.GameVersion = GetGameVersion();
-        InsertGameWindow(gw);
-        GameWindowCacheManager.Update(gw);
+        if (!await PersistGameWindowAsync(gw).ConfigureAwait(false))
+        {
+          return false;
+        }
       }
       else
       {

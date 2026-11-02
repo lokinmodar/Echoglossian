@@ -16,6 +16,85 @@ namespace Echoglossian.Tests;
 public class NativeTextNodeLayoutHelperTests
 {
     /// <summary>
+    ///     Ensures compact measurement with a retained original layout baseline
+    ///     returns to the same short height after a longer translation.
+    /// </summary>
+    /// <param name="primaryHeight">The captured primary container height.</param>
+    /// <param name="secondaryHeight">The captured secondary container height.</param>
+    [Theory]
+    [InlineData(192, 42)]
+    [InlineData(42, 192)]
+    public void CompactTooltipReflow_ShortLongShortHasNoHeightHighWaterMark(
+        ushort primaryHeight, ushort secondaryHeight)
+    {
+        ushort liveHeight = 192;
+        ushort[] drawHeights = [38, 110, 38];
+        ushort[] expectedContainerHeights = [46, 118, 46];
+
+        for (var i = 0; i < drawHeights.Length; i++)
+        {
+            var measured = NativeTextNodeLayoutHelper.ResolveMeasuredTextExtent(
+                liveWidth: 392,
+                liveHeight: liveHeight,
+                drawWidth: 368,
+                drawHeight: drawHeights[i],
+                textFlags: TextFlags.WordWrap | TextFlags.MultiLine | TextFlags.AutoAdjustNodeSize,
+                preferCompactWrappedHeight: true);
+            var containerHeight = NativeTextNodeLayoutHelper.ResolveSynchronizedContainerExtent(
+                primaryContainerExtent: primaryHeight,
+                secondaryContainerExtent: secondaryHeight,
+                currentTextExtent: 37,
+                measuredTextExtent: measured.Height,
+                minimumSecondaryPadding: 8,
+                preferCompactDetachedBaseline: true);
+            var containerWidth = NativeTextNodeLayoutHelper.ResolveSynchronizedContainerExtent(
+                primaryContainerExtent: 408,
+                secondaryContainerExtent: 408,
+                currentTextExtent: 392,
+                measuredTextExtent: measured.Width,
+                minimumSecondaryPadding: 8);
+
+            Assert.Equal(drawHeights[i], measured.Height);
+            Assert.Equal(expectedContainerHeights[i], containerHeight);
+            Assert.Equal((ushort)392, measured.Width);
+            Assert.Equal((ushort)408, containerWidth);
+            liveHeight = measured.Height;
+        }
+    }
+
+    /// <summary>
+    ///     Ensures compact tooltip baselines still grow to fit every measured
+    ///     translated line plus the background's required vertical padding.
+    /// </summary>
+    /// <param name="drawHeight">The measured multiline translation height.</param>
+    /// <param name="expectedHeight">The container height including padding.</param>
+    [Theory]
+    [InlineData(74, 82)]
+    [InlineData(240, 248)]
+    public void CompactTooltipReflow_PreservesLongTranslatedDrawHeightAndPadding(
+        ushort drawHeight, ushort expectedHeight)
+    {
+        var measured = NativeTextNodeLayoutHelper.ResolveMeasuredTextExtent(
+            liveWidth: 392,
+            liveHeight: 42,
+            drawWidth: 368,
+            drawHeight: drawHeight,
+            textFlags: TextFlags.WordWrap | TextFlags.MultiLine | TextFlags.AutoAdjustNodeSize,
+            preferCompactWrappedHeight: true);
+        var containerHeight = NativeTextNodeLayoutHelper.ResolveSynchronizedContainerExtent(
+            primaryContainerExtent: 192,
+            secondaryContainerExtent: 42,
+            currentTextExtent: 37,
+            measuredTextExtent: measured.Height,
+            minimumSecondaryPadding: 8,
+            preferCompactDetachedBaseline: true);
+
+        Assert.Equal(drawHeight, measured.Height);
+        Assert.Equal(expectedHeight, containerHeight);
+        Assert.Equal((ushort)392, measured.Width);
+    }
+
+    /// <summary>
     ///     Ensures wrapped text reflow prefers the draw height when the live
     ///     node height still reflects the stale one-line layout.
     /// </summary>
